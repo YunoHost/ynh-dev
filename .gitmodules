@@ -1,0 +1,22 @@
+[submodule "SSOwat"]
+	path = SSOwat
+	url = https://github.com/Kloadut/SSOwat
+    branch = unstable
+[submodule "yunohost-admin"]
+	path = yunohost-admin
+	url = https://github.com/YunoHost/yunohost-admin.git
+    branch = unstable
+[submodule "yunohost"]
+	path = yunohost
+	url = https://github.com/YunoHost/yunohost
+    branch = unstable
+[submodule "moulinette"]
+	path = moulinette
+	url = https://github.com/YunoHost/moulinette
+    branch = unstable
+[submodule "Dockerfile"]
+	path = Dockerfile
+	url = https://github.com/YunoHost/Dockerfile
+[submodule "yunohost-vagrant"]
+	path = yunohost-vagrant
+	url = https://github.com/zamentur/yunohost-vagrant

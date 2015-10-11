@@ -1,0 +1,71 @@
+#!/bin/bash
+
+usage() {
+    print "
+Usage :
+  `basename $0` setup
+  `basename $0` deploy [PAQUET [PAQUET ...]]
+  `basename $0` watch [PAQUET [PAQUET ...]]
+  
+PAQUET :
+    moulinette
+    ssowat
+    yunohost
+    yunohost-admin
+"
+}
+
+paquets=${@:2}
+if [ "$#" = "1" ]; then
+    paquets=moulinette ssowat yunohost yunohost-admin
+fi
+
+BASE_DIR=/yunohost
+
+if [ ! -d /etc/yunohost ]
+then
+    echo "You need to install YunoHost first. Maybe you are not in a vm ?"
+    exit 100;
+fi
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+    usage
+elif [ "$1" = "setup" ]; then
+    sudo apt-get install -y inotify-tools
+elif [ "$1" = "deploy" ]; then
+    for paquet in $paquets; do
+        case $paquet in
+            moulinette)
+                # Install moulinette
+                cd $BASE_DIR/moulinette
+                ./setup.py install
+                cd ..
+                ;;
+            ssowat)
+                # Install ssowat
+                sed "s@^@cp -Rf --parents $BASE_DIR/@" $BASE_DIR/SSOwat/debian/install | source /dev/stdin
+                service nginx restart || echo 'Fail to restart nginx'
+                ;;
+            yunohost)
+                # Install yunohost
+                sed "s@^@cp -Rf --parents $BASE_DIR/@" $BASE_DIR/yunohost/debian/install | source /dev/stdin
+                service yunohost-api restart || echo 'Fail to restart yunohost-api'
+                ;;
+            yunohost-admin)
+                # Install yunohost-admin
+                sed "s@^@cp -Rf --parents $BASE_DIR/@" $BASE_DIR/yunohost-admin/debian/install | source /dev/stdin
+                ;;
+          esac
+    done
+elif [ "$1" = "watch" ]; then
+
+    while inotifywait -r -e close_write $BASE_DIR/moulinette/ $BASE_DIR/ssowat/ $BASE_DIR/yunohost/ $BASE_DIR/yunohost-admin/; do 
+        $BASE_DIR/$0 deploy ${@:2}; 
+    done
+    
+else
+    usage
+    exit 101
+fi
+
+exit 0;
