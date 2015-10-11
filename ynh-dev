@@ -41,14 +41,16 @@ check_yunohost_vm() {
 
 paquets=${@:2}
 if [ "$#" = "1" ]; then
-    paquets=moulinette ssowat yunohost yunohost-admin
+    paquets=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
 fi
 
 BASE_DIR=/yunohost
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ]; then
     usage
+    
 elif [ "$1" = "create-env" ]; then
+    #Create a development environment
     pwd=`pwd`
     cd $2
     mkdir -p apps
@@ -60,52 +62,66 @@ elif [ "$1" = "create-env" ]; then
     git clone https://github.com/YunoHost/Dockerfile Dockerfile
     git clone https://github.com/zamentur/yunohost-vagrant yunohost-vagrant
     cp $pwd/$0 ./$0
+    ln -s yunohost-vagrant/Vagrantfile Vagrantfile 
+    
 elif [ "$1" = "run" ]; then
+    #Run a vm and give a prompt
     DOMAIN=$2
     VM=$3
     VERSION=$4
     
     if [ "$VM" = "docker" ]; then
         docker exec -t -i $(sudo docker run -h yunohost.$DOMAIN -v $(pwd):/yunohost -d zamentur/yunohost-$VERSION /sbin/init) /bin/bash
-    elif [ "$VM" = "virtualbox" ]; then
+    elif [ "$VM" = "virtualbox" ] || [ "$VM" = "vagrant" ]; then
         vagrant up $VERSION
         vagrant ssh $VERSION
     else
         echo "This kind of VM is not supported"
         exit 100;
     fi
+    
 elif [ "$1" = "setup" ]; then
     check_yunohost_vm
-    sudo apt-get install -y inotify-tools
+    sudo apt-get update
+    sudo apt-get -y upgrade
+    sudo apt-get -y dist-upgrade    
+    sudo apt-get install -y inotify-tools net-tools
+    
 elif [ "$1" = "deploy" ]; then
     check_yunohost_vm
-    for paquet in $paquets; do
-        case $paquet in
+    for i in ${!paquets[@]}; do
+        case ${paquets[i]} in
             moulinette)
                 # Install moulinette
                 cd $BASE_DIR/moulinette
                 ./setup.py install
                 cd ..
+                echo "moulinette deployed"
                 ;;
             ssowat)
                 # Install ssowat
-                sed "s@^@cp -Rf --parents $BASE_DIR/@" $BASE_DIR/SSOwat/debian/install | source /dev/stdin
-                service nginx restart || echo 'Fail to restart nginx'
+                sed "s@^@cp -Rf $BASE_DIR/SSOwat/@" $BASE_DIR/SSOwat/debian/install | source /dev/stdin
+                service nginx stop || true
+                service nginx start || echo 'Fail to restart nginx'
+                echo "ssowat deployed"
                 ;;
             yunohost)
                 # Install yunohost
-                sed "s@^@cp -Rf --parents $BASE_DIR/@" $BASE_DIR/yunohost/debian/install | source /dev/stdin
+                cat ./yunohost/debian/install | awk '{print "mkdir -p " $2}' | source /dev/stdin
+                sed "s@^@cp -Rf $BASE_DIR/yunohost/@" $BASE_DIR/yunohost/debian/install | source /dev/stdin
                 service yunohost-api restart || echo 'Fail to restart yunohost-api'
+                echo "yunohost deployed"
                 ;;
             yunohost-admin)
                 # Install yunohost-admin
-                sed "s@^@cp -Rf --parents $BASE_DIR/@" $BASE_DIR/yunohost-admin/debian/install | source /dev/stdin
+                sed "s@^@cp -Rf $BASE_DIR/yunohost-admin/@" $BASE_DIR/yunohost-admin/debian/install | source /dev/stdin
+                echo "yunohost-admin deployed"
                 ;;
           esac
     done
 elif [ "$1" = "watch" ]; then
     check_yunohost_vm
-    while inotifywait -r -e close_write $BASE_DIR/moulinette/ $BASE_DIR/ssowat/ $BASE_DIR/yunohost/ $BASE_DIR/yunohost-admin/; do 
+    while inotifywait -r -e close_write $BASE_DIR/moulinette/ $BASE_DIR/SSOwat/ $BASE_DIR/yunohost/ $BASE_DIR/yunohost-admin/; do 
         $BASE_DIR/$0 deploy ${@:2}; 
     done
     
