@@ -3,6 +3,10 @@
 usage() {
     print "
 Usage :
+On the host
+  `basename $0` create-env PATH
+  `basename $0` run DOMAIN [VM VERSION]
+Inside the vm
   `basename $0` setup
   `basename $0` deploy [PAQUET [PAQUET ...]]
   `basename $0` watch [PAQUET [PAQUET ...]]
@@ -12,7 +16,27 @@ PAQUET :
     ssowat
     yunohost
     yunohost-admin
+    
+VM
+    docker
+    virtualbox
+    
+VERSION
+    stable8
+    testing8
+    unstable8
+    stable7
+    testing7
+    unstable7
 "
+}
+
+check_yunohost_vm() {
+    if [ ! -d /etc/yunohost ]
+    then
+        echo "You need to install YunoHost first. Maybe you are not in a vm ?"
+        exit 100;
+    fi
 }
 
 paquets=${@:2}
@@ -22,17 +46,39 @@ fi
 
 BASE_DIR=/yunohost
 
-if [ ! -d /etc/yunohost ]
-then
-    echo "You need to install YunoHost first. Maybe you are not in a vm ?"
-    exit 100;
-fi
-
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ]; then
     usage
+elif [ "$1" = "create-env" ]; then
+    pwd=`pwd`
+    cd $2
+    mkdir -p apps
+    mkdir -p backup
+    git clone -b unstable https://github.com/Kloadut/SSOwat SSOwat
+    git clone -b unstable https://github.com/YunoHost/yunohost-admin yunohost-admin
+    git clone -b unstable https://github.com/YunoHost/yunohost yunohost
+    git clone -b unstable https://github.com/YunoHost/moulinette moulinette
+    git clone https://github.com/YunoHost/Dockerfile Dockerfile
+    git clone https://github.com/zamentur/yunohost-vagrant yunohost-vagrant
+    cp $pwd/$0 ./$0
+elif [ "$1" = "run" ]; then
+    DOMAIN=$2
+    VM=$3
+    VERSION=$4
+    
+    if [ "$VM" = "docker" ]; then
+        docker exec -t -i $(sudo docker run -h yunohost.$DOMAIN -v $(pwd):/yunohost -d zamentur/yunohost-$VERSION /sbin/init) /bin/bash
+    elif [ "$VM" = "virtualbox" ]; then
+        vagrant up $VERSION
+        vagrant ssh $VERSION
+    else
+        echo "This kind of VM is not supported"
+        exit 100;
+    fi
 elif [ "$1" = "setup" ]; then
+    check_yunohost_vm
     sudo apt-get install -y inotify-tools
 elif [ "$1" = "deploy" ]; then
+    check_yunohost_vm
     for paquet in $paquets; do
         case $paquet in
             moulinette)
@@ -58,7 +104,7 @@ elif [ "$1" = "deploy" ]; then
           esac
     done
 elif [ "$1" = "watch" ]; then
-
+    check_yunohost_vm
     while inotifywait -r -e close_write $BASE_DIR/moulinette/ $BASE_DIR/ssowat/ $BASE_DIR/yunohost/ $BASE_DIR/yunohost-admin/; do 
         $BASE_DIR/$0 deploy ${@:2}; 
     done
