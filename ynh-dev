@@ -3,13 +3,22 @@
 usage() {
     print "
 Usage :
-On the host
-  `basename $0` create-env PATH
-  `basename $0` run DOMAIN [VM VERSION]
-Inside the vm
-  `basename $0` setup
-  `basename $0` deploy [PAQUET [PAQUET ...]]
-  `basename $0` watch [PAQUET [PAQUET ...]]
+
+    On the host
+        `basename $0` create-env PATH
+            Create a dev environement into PATH
+        `basename $0` run DOMAIN [VM VERSION]
+            Run a docker or virtualbox vm
+        
+    Inside the vm
+        `basename $0` ip
+            Give the ip of the guest container
+        `basename $0` upgrade
+            Upgrade the container
+        `basename $0` deploy [PAQUET [PAQUET ...]]
+            Deploy sources to test it
+        `basename $0` watch [PAQUET [PAQUET ...]]
+            Deploy sources each time there is change
   
 PAQUET :
     moulinette
@@ -80,13 +89,16 @@ elif [ "$1" = "run" ]; then
         exit 100;
     fi
     
-elif [ "$1" = "setup" ]; then
+elif [ "$1" = "upgrade" ]; then
     check_yunohost_vm
     sudo apt-get update
     sudo apt-get -y upgrade
     sudo apt-get -y dist-upgrade    
     sudo apt-get install -y inotify-tools net-tools
-    
+elif [ "$1" = "ip" ]; then
+    check_yunohost_vm
+    sudo apt-get install -y net-tools
+    /sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'    
 elif [ "$1" = "deploy" ]; then
     check_yunohost_vm
     for i in ${!paquets[@]}; do
@@ -121,6 +133,7 @@ elif [ "$1" = "deploy" ]; then
     done
 elif [ "$1" = "watch" ]; then
     check_yunohost_vm
+    sudo apt-get install -y inotify-tools
     while inotifywait -r -e close_write $BASE_DIR/moulinette/ $BASE_DIR/SSOwat/ $BASE_DIR/yunohost/ $BASE_DIR/yunohost-admin/; do 
         $BASE_DIR/$0 deploy ${@:2}; 
     done
