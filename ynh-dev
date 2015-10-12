@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage() {
-    print "
+    cat <<EOF
 Usage :
 
     On the host
@@ -39,7 +39,7 @@ VERSION
     stable7
     testing7
     unstable7
-"
+EOF
 }
 
 check_yunohost_vm() {
