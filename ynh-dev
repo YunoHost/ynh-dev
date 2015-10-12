@@ -9,6 +9,8 @@ Usage :
             Create a dev environement into PATH
         `basename $0` run DOMAIN [VM VERSION]
             Run a docker or virtualbox vm
+        `basename $0` kill VM
+            Kill the last docker or all vagrant
         
     Inside the vm
         `basename $0` ip
@@ -89,6 +91,16 @@ elif [ "$1" = "run" ]; then
         exit 100;
     fi
     
+elif [ "$1" = "kill" ]; then
+    VM=$2
+    if [ "$VM" = "docker" ]; then
+        docker kill $(docker ps -lq)
+    elif [ "$VM" = "virtualbox" ] || [ "$VM" = "vagrant" ]; then
+        vagrant destroy
+    else
+        echo "This kind of VM is not supported"
+        exit 100;
+    fi  
 elif [ "$1" = "upgrade" ]; then
     check_yunohost_vm
     sudo apt-get update
@@ -137,7 +149,6 @@ elif [ "$1" = "watch" ]; then
     while inotifywait -r -e close_write $BASE_DIR/moulinette/ $BASE_DIR/SSOwat/ $BASE_DIR/yunohost/ $BASE_DIR/yunohost-admin/; do 
         $BASE_DIR/$0 deploy ${@:2}; 
     done
-    
 else
     usage
     exit 101
