@@ -131,6 +131,7 @@ elif [ "$1" = "deploy" ]; then
                 cd $BASE_DIR/moulinette
                 ./setup.py install
                 cd ..
+                [-e "./cache/moulinette/actionsmap/yunohost.pkl"] && rm /var/cache/moulinette/actionsmap/yunohost.pkl
                 echo "moulinette deployed"
                 ;;
             ssowat)
