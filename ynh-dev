@@ -63,7 +63,10 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ]; then
 elif [ "$1" = "create-env" ]; then
     #Create a development environment
     pwd=`pwd`
+
+    [ -e "$2" ] || mkdir -p $2
     cd $2
+
     mkdir -p apps
     mkdir -p backup
     git clone -b unstable https://github.com/Kloadut/SSOwat SSOwat
