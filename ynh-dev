@@ -61,6 +61,8 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ]; then
     usage
 
 elif [ "$1" = "create-env" ]; then
+    set -x
+
     #Create a development environment
     pwd=`pwd`
 
