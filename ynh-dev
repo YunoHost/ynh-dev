@@ -66,6 +66,12 @@ elif [ "$1" = "create-env" ]; then
     #Create a development environment
     pwd=`pwd`
 
+    if [ ! "$2" ]
+    then
+        echo "I need a destination folder to create the dev environement"
+        exit 1
+    fi
+
     [ -e "$2" ] || mkdir -p $2
     cd $2
 
