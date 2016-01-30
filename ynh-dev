@@ -11,7 +11,7 @@ Usage :
             Run a docker or virtualbox vm
         `basename $0` kill VM
             Kill the last docker or all vagrant
-        
+
     Inside the vm
         `basename $0` ip
             Give the ip of the guest container
@@ -21,17 +21,17 @@ Usage :
             Deploy sources to test it
         `basename $0` watch [PAQUET [PAQUET ...]]
             Deploy sources each time there is change
-  
+
 PAQUET :
     moulinette
     ssowat
     yunohost
     yunohost-admin
-    
+
 VM
     docker
     virtualbox
-    
+
 VERSION
     stable8
     testing8
@@ -59,11 +59,22 @@ BASE_DIR=/yunohost
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ]; then
     usage
-    
+
 elif [ "$1" = "create-env" ]; then
+    set -x
+
     #Create a development environment
     pwd=`pwd`
+
+    if [ ! "$2" ]
+    then
+        echo "I need a destination folder to create the dev environement"
+        exit 1
+    fi
+
+    [ -e "$2" ] || mkdir -p $2
     cd $2
+
     mkdir -p apps
     mkdir -p backup
     git clone -b unstable https://github.com/Kloadut/SSOwat SSOwat
@@ -73,14 +84,14 @@ elif [ "$1" = "create-env" ]; then
     git clone https://github.com/YunoHost/Dockerfile Dockerfile
     git clone https://github.com/zamentur/yunohost-vagrant yunohost-vagrant
     cp $pwd/$0 ./$0
-    ln -s yunohost-vagrant/Vagrantfile Vagrantfile 
-    
+    ln -s yunohost-vagrant/Vagrantfile Vagrantfile
+
 elif [ "$1" = "run" ]; then
     #Run a vm and give a prompt
     DOMAIN=$2
     VM=$3
     VERSION=$4
-    
+
     if [ "$VM" = "docker" ]; then
         docker exec -t -i $(sudo docker run -h yunohost.$DOMAIN -v $(pwd):/yunohost -d zamentur/yunohost-$VERSION /sbin/init) /bin/bash
     elif [ "$VM" = "virtualbox" ] || [ "$VM" = "vagrant" ]; then
@@ -90,7 +101,7 @@ elif [ "$1" = "run" ]; then
         echo "This kind of VM is not supported"
         exit 100;
     fi
-    
+
 elif [ "$1" = "kill" ]; then
     VM=$2
     if [ "$VM" = "docker" ]; then
@@ -100,17 +111,17 @@ elif [ "$1" = "kill" ]; then
     else
         echo "This kind of VM is not supported"
         exit 100;
-    fi  
+    fi
 elif [ "$1" = "upgrade" ]; then
     check_yunohost_vm
     sudo apt-get update
     sudo apt-get -y upgrade
-    sudo apt-get -y dist-upgrade    
+    sudo apt-get -y dist-upgrade
     sudo apt-get install -y inotify-tools net-tools
 elif [ "$1" = "ip" ]; then
     check_yunohost_vm
     sudo apt-get install -y net-tools
-    /sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'    
+    /sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
 elif [ "$1" = "deploy" ]; then
     check_yunohost_vm
     for i in ${!paquets[@]}; do
@@ -120,6 +131,7 @@ elif [ "$1" = "deploy" ]; then
                 cd $BASE_DIR/moulinette
                 ./setup.py install
                 cd ..
+                [-e "./cache/moulinette/actionsmap/yunohost.pkl"] && rm /var/cache/moulinette/actionsmap/yunohost.pkl
                 echo "moulinette deployed"
                 ;;
             ssowat)
@@ -146,8 +158,8 @@ elif [ "$1" = "deploy" ]; then
 elif [ "$1" = "watch" ]; then
     check_yunohost_vm
     sudo apt-get install -y inotify-tools
-    while inotifywait -r -e close_write $BASE_DIR/moulinette/ $BASE_DIR/SSOwat/ $BASE_DIR/yunohost/ $BASE_DIR/yunohost-admin/; do 
-        $BASE_DIR/$0 deploy ${@:2}; 
+    while inotifywait -r -e close_write $BASE_DIR/moulinette/ $BASE_DIR/SSOwat/ $BASE_DIR/yunohost/ $BASE_DIR/yunohost-admin/; do
+        $BASE_DIR/$0 deploy ${@:2};
     done
 else
     usage
