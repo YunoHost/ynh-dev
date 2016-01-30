@@ -30,6 +30,7 @@ PAQUET :
 
 VM
     docker
+    vagrant
     virtualbox
 
 VERSION
