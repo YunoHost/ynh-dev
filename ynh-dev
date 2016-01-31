@@ -30,6 +30,7 @@ PAQUET :
 
 VM
     docker
+    vagrant
     virtualbox
 
 VERSION
@@ -68,9 +69,20 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ]; then
     usage
 
 elif [ "$1" = "create-env" ]; then
+    set -x
+
     #Create a development environment
     pwd=`pwd`
+
+    if [ ! "$2" ]
+    then
+        echo "I need a destination folder to create the dev environement"
+        exit 1
+    fi
+
+    [ -e "$2" ] || mkdir -p $2
     cd $2
+
     mkdir -p apps
     mkdir -p backup
     git clone -b unstable https://github.com/Kloadut/SSOwat SSOwat
@@ -78,9 +90,9 @@ elif [ "$1" = "create-env" ]; then
     git clone -b unstable https://github.com/YunoHost/yunohost yunohost
     git clone -b unstable https://github.com/YunoHost/moulinette moulinette
     git clone https://github.com/YunoHost/Dockerfile Dockerfile
-    git clone https://github.com/zamentur/yunohost-vagrant yunohost-vagrant
+    git clone https://github.com/YunoHost/Vagrantfile vagrant
     cp $pwd/$0 ./$0
-    ln -s yunohost-vagrant/Vagrantfile Vagrantfile
+    ln -s vagrant/Vagrantfile Vagrantfile
 
 elif [ "$1" = "run" ]; then
     #Run a vm and give a prompt
@@ -137,6 +149,7 @@ elif [ "$1" = "deploy" ]; then
                 cd $BASE_DIR/moulinette
                 ./setup.py install
                 cd ..
+                [-e "./cache/moulinette/actionsmap/yunohost.pkl"] && rm /var/cache/moulinette/actionsmap/yunohost.pkl
                 echo "moulinette deployed"
                 ;;
             ssowat)
