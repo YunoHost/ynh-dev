@@ -10,7 +10,7 @@ sudo apt-get install docker vagrant
 sudo dnf install docker vagrant vagrant-libvirt
 ```
 
-Next upload ynh-dev script
+Next download ynh-dev script
 
 ```shell
 wget https://raw.githubusercontent.com/zamentur/yunohost-development/master/ynh-dev
@@ -20,7 +20,7 @@ chmod u+x ynh-dev
 ### Create the environment
 
 ```shell
-ynh-dev create-env PATH
+ynh-dev create-env /path/to/dev/env
 ```
 
 ### Run a container
@@ -48,10 +48,6 @@ ynh-dev watch
 ynh-dev ip
 ```
 
-### Get ip address of your vm
-```
-ynh-dev ip
-```
 ## More info 
 
-https://yunohost.org/#/dev_fr
+https://yunohost.org/#/dev_fr (french)
