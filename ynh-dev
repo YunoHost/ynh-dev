@@ -17,12 +17,12 @@ Usage :
             Give the ip of the guest container
         `basename $0` upgrade
             Upgrade the container
-        `basename $0` deploy [PAQUET [PAQUET ...]]
+        `basename $0` deploy [PACKAGES [PACKAGES ...]]
             Deploy sources to test it
-        `basename $0` watch [PAQUET [PAQUET ...]]
+        `basename $0` watch [PACKAGES [PACKAGES ...]]
             Deploy sources each time there is change
 
-PAQUET :
+PACKAGES :
     moulinette
     ssowat
     yunohost
@@ -58,9 +58,9 @@ start_dockerd() {
     fi
 }
 
-paquets=${@:2}
+packages=${@:2}
 if [ "$#" = "1" ]; then
-    paquets=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
+    packages=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
 fi
 
 BASE_DIR=./
@@ -142,8 +142,8 @@ elif [ "$1" = "ip" ]; then
     /sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
 elif [ "$1" = "deploy" ]; then
     check_yunohost_vm
-    for i in ${!paquets[@]}; do
-        case ${paquets[i]} in
+    for i in ${!packages[@]}; do
+        case ${packages[i]} in
             moulinette)
                 # Install moulinette
                 cd $BASE_DIR/moulinette
