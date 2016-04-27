@@ -105,6 +105,19 @@ elif [ "$1" = "run" ]; then
         VERSION=$3
     fi
 
+    if [ "$VERSION" = "stable" ]; then
+        IP="192.168.33.80"
+    elif [ "$VERSION" = "testing" ]; then
+        IP="192.168.33.81"
+    elif [ "$VERSION" = "unstable" ]; then
+        IP="192.168.33.82"
+    fi
+
+    echo "Creating $DOMAIN virtual machine with YunoHost $VERSION version"
+    echo ""
+    echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
+    echo ""
+
     vagrant up $VERSION
     vagrant ssh $VERSION
 
