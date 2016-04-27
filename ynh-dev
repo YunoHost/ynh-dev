@@ -83,7 +83,7 @@ elif [ "$1" = "create-env" ]; then
     mkdir -p backup
 
     # Get YunoHost packages
-    git clone -b unstable https://github.com/Kloadut/SSOwat SSOwat
+    git clone -b unstable https://github.com/Kloadut/SSOwat ssowat
     git clone -b unstable https://github.com/YunoHost/yunohost-admin yunohost-admin
     git clone -b unstable https://github.com/YunoHost/yunohost yunohost
     git clone -b unstable https://github.com/YunoHost/moulinette moulinette
