@@ -108,20 +108,42 @@ elif [ "$1" = "run" ]; then
         VERSION=$3
     fi
 
-    if [ "$VERSION" = "stable" ]; then
-        IP="192.168.33.80"
-    elif [ "$VERSION" = "testing" ]; then
-        IP="192.168.33.81"
-    elif [ "$VERSION" = "unstable" ]; then
-        IP="192.168.33.82"
-    fi
-
     echo "Creating $DOMAIN virtual machine with YunoHost $VERSION version"
     echo ""
+
+    # Get vagrant box info from version
+    if [ "$VERSION" = "stable" ]; then
+        BOX_NAME="opi/yunohost-stable"
+        BOX_URL="http://build.yunohost.org/yunohost-stable8-builded.box"
+        IP="192.168.33.80"
+    elif [ "$VERSION" = "testing" ]; then
+        BOX_NAME="opi/yunohost-testing"
+        BOX_URL="http://build.yunohost.org/yunohost-testing8-builded.box"
+        IP="192.168.33.81"
+    elif [ "$VERSION" = "unstable" ]; then
+        BOX_NAME="opi/yunohost-unstable"
+        BOX_URL="http://build.yunohost.org/yunohost-unstable8-builded.box"
+        IP="192.168.33.82"
+    else
+        echo "ERROR: Incorrect version '$VERSION'. See '$(basename $0) --help' for usage."
+        exit 102
+    fi
+
+    # Download box if not available
+    if ! vagrant box list | grep -qc $BOX_NAME ; then
+        echo "Vagrant box '$BOX_NAME' is missing. Trying to download it"
+        vagrant box add $BOX_NAME $BOX_URL --provider virtualbox
+        echo ""
+    fi
+
+    # Run VM
+    vagrant up $VERSION
+
+    # Warn user about hosts file
     echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
     echo ""
 
-    vagrant up $VERSION
+    # Log into the VM
     vagrant ssh $VERSION
 
 
