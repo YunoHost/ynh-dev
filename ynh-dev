@@ -7,10 +7,10 @@ Usage :
     On the host
         `basename $0` create-env PATH
             Create a dev environement into PATH
-        `basename $0` run DOMAIN [VM VERSION]
-            Run a docker or virtualbox vm
-        `basename $0` kill VM
-            Kill the last docker or all vagrant
+        `basename $0` run DOMAIN [VERSION]
+            Run a vagrant or virtualbox vm
+        # `basename $0` kill
+        #     Kill all vagrant
 
     Inside the vm
         `basename $0` ip
@@ -28,18 +28,10 @@ PACKAGES :
     yunohost
     yunohost-admin
 
-VM
-    docker
-    vagrant
-    virtualbox
-
 VERSION
-    stable8
-    testing8
-    unstable8
-    stable7
-    testing7
-    unstable7
+    stable
+    testing
+    unstable
 EOF
 }
 
@@ -51,13 +43,6 @@ check_yunohost_vm() {
     fi
 }
 
-start_dockerd() {
-    status=`sudo service docker status`
-    if [ "$status" = "docker stop/waiting" ]; then
-        sudo service docker start
-    fi
-}
-
 packages=${@:2}
 if [ "$#" = "1" ]; then
     packages=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
@@ -65,13 +50,19 @@ fi
 
 BASE_DIR=./
 
+##################
+## Help message ##
+##################
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ]; then
     usage
 
+
+######################################
+## Create a development environment ##
+######################################
 elif [ "$1" = "create-env" ]; then
     set -x
 
-    #Create a development environment
     pwd=`pwd`
 
     if [ ! "$2" ]
@@ -83,63 +74,71 @@ elif [ "$1" = "create-env" ]; then
     [ -e "$2" ] || mkdir -p $2
     cd $2
 
+    # Create apps & backup folder
     mkdir -p apps
     mkdir -p backup
+
+    # Get YunoHost packages
     git clone -b unstable https://github.com/Kloadut/SSOwat SSOwat
     git clone -b unstable https://github.com/YunoHost/yunohost-admin yunohost-admin
     git clone -b unstable https://github.com/YunoHost/yunohost yunohost
     git clone -b unstable https://github.com/YunoHost/moulinette moulinette
-    git clone https://github.com/YunoHost/Dockerfile Dockerfile
+
+    # Get YunoHost Vagrantfile
     git clone https://github.com/YunoHost/Vagrantfile vagrant
-    cp $pwd/$0 ./$0
     ln -s vagrant/Vagrantfile Vagrantfile
 
+    # Get YunoHost dev tools
+    git clone https://github.com/YunoHost/ynh-dev ynh-dev-tools
+    cp ynh-dev-tools/ynh-dev ynh-dev
+    # cp $pwd/$0 ./$0
+
+
+#################################
+## Run a vm and give a prompt ##
+#################################
 elif [ "$1" = "run" ]; then
-    #Run a vm and give a prompt
+
     DOMAIN=$2
-    VM='docker'
-    VERSION='stable8'
+    VERSION='stable'
     if [ "$#" = "3" ]; then
-        VM=$3
-    elif [ "$#" = "4" ]; then
-        VM=$3
-        VERSION=$4
+        VERSION=$3
     fi
 
-    if [ "$VM" = "docker" ]; then
-        start_dockerd
-        docker exec -t -i $(sudo docker run -h yunohost.$DOMAIN -v $(pwd):/yunohost -d zamentur/yunohost-$VERSION /sbin/init) /bin/bash
-    elif [ "$VM" = "virtualbox" ] || [ "$VM" = "vagrant" ]; then
-        vagrant up $VERSION
-        vagrant ssh $VERSION
-    else
-        echo "This kind of VM is not supported"
-        exit 100;
-    fi
+    vagrant up --debug $VERSION
+    vagrant ssh $VERSION
 
+
+#####################
+## Kill running VM ##
+#####################
 elif [ "$1" = "kill" ]; then
-    VM=$2
-    if [ "$VM" = "docker" ]; then
-        docker kill $(docker ps -lq)
-    elif [ "$VM" = "virtualbox" ] || [ "$VM" = "vagrant" ]; then
-        vagrant destroy
-    elif [ "$VM" = "" ]; then
-        vagrant destroy -f
-        docker kill $(docker ps -lq)
-    else
-        echo "This kind of VM is not supported"
-        exit 100;
-    fi
+    vagrant destroy
+
+
+#######################
+## Update current VM ##
+#######################
 elif [ "$1" = "upgrade" ]; then
     check_yunohost_vm
     sudo apt-get update
     sudo apt-get -y upgrade
     sudo apt-get -y dist-upgrade
     sudo apt-get install -y inotify-tools net-tools
+
+
+#######################
+## Get current VM IP ##
+#######################
 elif [ "$1" = "ip" ]; then
     check_yunohost_vm
-    sudo apt-get install -y net-tools
-    /sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
+    # TODO : check for installed paquage instead of quiet install
+    sudo apt-get install -qq -y net-tools
+    # Print IP
+    ip=$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
+    echo "IP: $ip"
+
+
 elif [ "$1" = "deploy" ]; then
     check_yunohost_vm
     for i in ${!packages[@]}; do
@@ -173,12 +172,17 @@ elif [ "$1" = "deploy" ]; then
                 ;;
           esac
     done
+
+
 elif [ "$1" = "watch" ]; then
     check_yunohost_vm
     sudo apt-get install -y inotify-tools
     while inotifywait -r -e close_write $BASE_DIR/moulinette/ $BASE_DIR/SSOwat/ $BASE_DIR/yunohost/ $BASE_DIR/yunohost-admin/; do
         $BASE_DIR/$0 deploy ${@:2};
     done
+
+
+# Fallback to print usage
 else
     usage
     exit 101

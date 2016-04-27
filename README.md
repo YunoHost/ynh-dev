@@ -1,13 +1,16 @@
 # ynh-dev, a yunohost dev env
-This script is a cli to manage a yunohost development environement. With this you can develop on the unstable version of yunohost quickly.
+
+This script is a cli to manage a yunohost development environement.
+With this you can develop on the unstable version of yunohost quickly.
 
 ## Setup
+
 Install dependencies
 ```shell
 # Debian, Ubuntu, Mint
-sudo apt-get install docker vagrant
+sudo apt-get install vagrant
 # Fedora
-sudo dnf install docker vagrant vagrant-libvirt
+sudo dnf install vagrant vagrant-libvirt
 ```
 
 Next download ynh-dev script
@@ -16,7 +19,13 @@ Next download ynh-dev script
 wget https://raw.githubusercontent.com/zamentur/yunohost-development/master/ynh-dev
 chmod u+x ynh-dev
 ```
-## Usage
+
+## Host usage
+
+The `ynh-dev` tool provides 2 usefull command to run into your host machine. One
+create a development environment by cloning Git repositories, the other one is a
+helper to run a Vagrant virtual machine in the right place.
+
 ### Create the environment
 
 ```shell
@@ -25,27 +34,33 @@ ynh-dev create-env /path/to/dev/env
 
 ### Run a container
 ```
-ynh-dev run ynh.local virtualbox testing8
+cd /path/to/dev/env
+ynh-dev run ynh.local virtualbox testing
 ```
+
+## Inside the Virtual machine (VM)
+
+Once logged into your VM, go to `/vagrant` to enjoy folder sharing, and take
+advantages of the `ynh-dev` script.
 
 ###  Upgrade the container
 ```
-ynh-dev upgrade
+ynh-dev/ynh-dev upgrade
 ```
 
 ###  Deploy your change
 ```
-ynh-dev deploy
+ynh-dev/ynh-dev deploy
 ```
 
 ### Deploy your change in realtime (each time you saved source code)
 ```
-ynh-dev watch
+ynh-dev/ynh-dev watch
 ```
-## Useful command
+
 ### Get ip address of your vm
 ```
-ynh-dev ip
+ynh-dev/ynh-dev ip
 ```
 
 ## More info 
