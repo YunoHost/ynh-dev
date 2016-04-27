@@ -224,7 +224,7 @@ elif [ "$1" = "use-git" ]; then
                 if [ ! -L '/usr/share/yunohost/helpers.d' ]; then sudo rm -rf /usr/share/yunohost/helpers.d; fi
                 sudo ln -s -f /vagrant/yunohost/data/helpers.d /usr/share/yunohost/helpers.d
                 if [ ! -L '/usr/share/yunohost/yunohost-config/moulinette' ]; then sudo rm -rf /usr/share/yunohost/yunohost-config/moulinette; fi
-                sudo ln -s -f /vagrant/yunohost/data/others /usr/share/yunohost/yunohost-config/moulinette
+                sudo ln -s -f /vagrant/yunohost/data/other /usr/share/yunohost/yunohost-config/moulinette
 
                 # debian
                 if [ ! -L '/usr/share/pam-configs/mkhomedir' ]; then sudo rm /usr/share/pam-configs/mkhomedir; fi
