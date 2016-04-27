@@ -35,7 +35,7 @@ ynh-dev create-env /path/to/dev/env
 ### Run a container
 ```
 cd /path/to/dev/env
-ynh-dev run ynh.local virtualbox testing
+ynh-dev run ynh.local testing
 ```
 
 ## Inside the Virtual machine (VM)
