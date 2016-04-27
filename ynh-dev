@@ -6,7 +6,7 @@ Usage :
 
     On the host
         `basename $0` create-env PATH
-            Create a dev environement into PATH
+            Create a dev environment into PATH
         `basename $0` run DOMAIN [VERSION]
             Run a vagrant or virtualbox vm
         # `basename $0` kill
