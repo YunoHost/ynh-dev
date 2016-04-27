@@ -16,7 +16,7 @@ sudo dnf install vagrant vagrant-libvirt
 Next download ynh-dev script
 
 ```shell
-wget https://raw.githubusercontent.com/zamentur/yunohost-development/master/ynh-dev
+wget https://github.com/YunoHost/ynh-dev/raw/opi-boxes/ynh-dev
 chmod u+x ynh-dev
 ```
 
