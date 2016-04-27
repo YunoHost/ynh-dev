@@ -105,7 +105,7 @@ elif [ "$1" = "run" ]; then
         VERSION=$3
     fi
 
-    vagrant up --debug $VERSION
+    vagrant up $VERSION
     vagrant ssh $VERSION
 
 
