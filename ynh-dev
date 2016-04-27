@@ -17,6 +17,8 @@ Usage :
             Give the ip of the guest container
         `basename $0` upgrade
             Upgrade the container
+        `basename $0` use-git [PACKAGES [PACKAGES ...]]
+            Use Git repositories from dev environment path
         `basename $0` deploy [PACKAGES [PACKAGES ...]]
             Deploy sources to test it
         `basename $0` watch [PACKAGES [PACKAGES ...]]
@@ -151,6 +153,101 @@ elif [ "$1" = "ip" ]; then
     ip=$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
     echo "IP: $ip"
 
+
+###########################################
+## Use Git version for YunoHost packages ##
+###########################################
+elif [ "$1" = "use-git" ]; then
+    check_yunohost_vm
+    VERSION=$2
+
+    # Get absolute base dir
+    REPO_DIR=$(realpath $BASE_DIR)
+
+    for i in ${!packages[@]}; do
+        case ${packages[i]} in
+            ssowat)
+                echo "Using Git repository for SSOwat"
+                # Remove current sources if not a symlink
+                if [ ! -L '/usr/share/ssowat' ]; then
+                    sudo rm -rf /usr/share/ssowat
+                fi
+                # Symlink from Git repository
+                sudo ln -s -f $REPO_DIR/ssowat /usr/share/ssowat
+                echo "↳ Don't forget to do 'sudo yunohost app ssowatconf' when hacking SSOwat"
+                echo ""
+                ;;
+            moulinette)
+                echo "Warning, can't use Git repository for moulinette"
+                echo ""
+                ;;
+            yunohost)
+                echo "Using Git repository for yunohost"
+
+                # bin
+                if [ ! -L '/usr/bin/yunohost' ]; then sudo rm /usr/bin/yunohost; fi
+                sudo ln -s -f $REPO_DIR/yunohost/bin/yunohost /usr/bin/yunohost
+                if [ ! -L '/usr/bin/yunohost-api' ]; then sudo rm /usr/bin/yunohost-api; fi
+                sudo ln -s -f $REPO_DIR/yunohost/bin/yunohost-api /usr/bin/yunohost-api
+
+                # data
+                if [ ! -L '/etc/bash_completion.d/yunohost' ]; then sudo rm /etc/bash_completion.d/yunohost; fi
+                sudo ln -s -f $REPO_DIR/yunohost/data/bash-completion.d/yunohost /etc/bash_completion.d/yunohost
+                if [ ! -L '/usr/share/moulinette/actionsmap/yunohost.yml' ]; then sudo rm /usr/share/moulinette/actionsmap/yunohost.yml; fi
+                sudo ln -s -f $REPO_DIR/yunohost/data/actionsmap/yunohost.yml /usr/share/moulinette/actionsmap/yunohost.yml
+                if [ ! -L '/usr/share/yunohost/hooks' ]; then sudo rm -rf /usr/share/yunohost/hooks; fi
+                sudo ln -s -f $REPO_DIR/yunohost/data/hooks /usr/share/yunohost/hooks
+                if [ ! -L '/usr/share/yunohost/templates' ]; then sudo rm -rf /usr/share/yunohost/templates; fi
+                sudo ln -s -f $REPO_DIR/yunohost/data/templates /usr/share/yunohost/templates
+                if [ ! -L '/usr/share/yunohost/helpers' ]; then sudo rm /usr/share/yunohost/helpers; fi
+                sudo ln -s -f $REPO_DIR/yunohost/data/helpers /usr/share/yunohost/helpers
+                if [ ! -L '/usr/share/yunohost/helpers.d' ]; then sudo rm -rf /usr/share/yunohost/helpers.d; fi
+                sudo ln -s -f $REPO_DIR/yunohost/data/helpers.d /usr/share/yunohost/helpers.d
+                if [ ! -L '/usr/share/yunohost/yunohost-config/moulinette' ]; then sudo rm -rf /usr/share/yunohost/yunohost-config/moulinette; fi
+                sudo ln -s -f $REPO_DIR/yunohost/data/others /usr/share/yunohost/yunohost-config/moulinette
+
+                # debian
+                if [ ! -L '/usr/share/pam-configs/mkhomedir' ]; then sudo rm /usr/share/pam-configs/mkhomedir; fi
+                sudo ln -s -f $REPO_DIR/yunohost/debian/conf/pam/mkhomedir /usr/share/pam-configs/mkhomedir
+
+                # lib
+                if [ ! -L '/usr/lib/metronome/modules/ldap.lib.lua' ]; then sudo rm /usr/lib/metronome/modules/ldap.lib.lua; fi
+                sudo ln -s -f $REPO_DIR/yunohost/lib/metronome/modules/ldap.lib.lua /usr/lib/metronome/modules/ldap.lib.lua
+                if [ ! -L '/usr/lib/metronome/modules/mod_auth_ldap2.lua' ]; then sudo rm /usr/lib/metronome/modules/mod_auth_ldap2.lua; fi
+                sudo ln -s -f $REPO_DIR/yunohost/lib/metronome/modules/mod_auth_ldap2.lua /usr/lib/metronome/modules/mod_auth_ldap2.lua
+                if [ ! -L '/usr/lib/metronome/modules/mod_legacyauth.lua' ]; then sudo rm /usr/lib/metronome/modules/mod_legacyauth.lua; fi
+                sudo ln -s -f $REPO_DIR/yunohost/lib/metronome/modules/mod_legacyauth.lua /usr/lib/metronome/modules/mod_legacyauth.lua
+                if [ ! -L '/usr/lib/metronome/modules/mod_storage_ldap.lua' ]; then sudo rm /usr/lib/metronome/modules/mod_storage_ldap.lua; fi
+                sudo ln -s -f $REPO_DIR/yunohost/lib/metronome/modules/mod_storage_ldap.lua /usr/lib/metronome/modules/mod_storage_ldap.lua
+                if [ ! -L '/usr/lib/metronome/modules/vcard.lib.lua' ]; then sudo rm /usr/lib/metronome/modules/vcard.lib.lua; fi
+                sudo ln -s -f $REPO_DIR/yunohost/lib/metronome/modules/vcard.lib.lua /usr/lib/metronome/modules/vcard.lib.lua
+
+                # locales
+                if [ ! -L '/usr/lib/moulinette/yunohost/locales' ]; then sudo rm -rf /usr/lib/moulinette/yunohost/locales; fi
+                sudo ln -s -f $REPO_DIR/yunohost/locales /usr/lib/moulinette/yunohost/locales
+
+                # src
+                if [ ! -L '/usr/lib/moulinette/yunohost' ]; then sudo rm -rf /usr/lib/moulinette/yunohost; fi
+                sudo ln -s -f $REPO_DIR/yunohost/src/yunohost /usr/lib/moulinette/yunohost
+
+                # Remove actionsmap cache
+                [ -e '/var/cache/moulinette/actionsmap/yunohost.pkl' ] && sudo rm /var/cache/moulinette/actionsmap/yunohost.pkl
+                echo "↳ Don't forget to remove '/var/cache/moulinette/actionsmap/yunohost.pkl' cache when hacking SSOwat"
+                echo ""
+                ;;
+            yunohost-admin)
+                echo "Using Git repository for yunohost-admin"
+                # Remove current sources if not a symlink
+                if [ ! -L '/usr/share/yunohost/admin' ]; then
+                    sudo rm -rf /usr/share/yunohost/admin
+                fi
+                # Symlink from Git repository
+                sudo ln -s -f $REPO_DIR/yunohost-admin/src /usr/share/yunohost/admin
+                echo "↳ Don't forget to do build admin with Gulp when hacking yunohost-admin. See README file"
+                echo ""
+                ;;
+        esac
+    done
 
 elif [ "$1" = "deploy" ]; then
     check_yunohost_vm

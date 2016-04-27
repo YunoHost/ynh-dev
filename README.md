@@ -44,8 +44,27 @@ Once logged into your VM, go to `/vagrant` to enjoy folder sharing, and take
 advantages of the `ynh-dev` script.
 
 ###  Upgrade the container
+
+It will update every debian packages.
 ```
 /vagrant/ynh-dev upgrade
+```
+
+###  Use Git repositories
+
+When doing `create-env` command, every YunoHost package have been cloned in the
+corresponding path. Use these Git repositories inside the VM (with symlink).
+Your changes will be available immediatly in your VM.
+```
+/vagrant/ynh-dev use-git
+```
+
+***Note***: These changes can be reverted now.
+
+Alternatively you can use Git only for one packages (ssowat, yunohost,
+moulinette, yunohost-admin)
+```
+/vagrant/ynh-dev use-git PACKAGE_NAME
 ```
 
 ###  Deploy your change
