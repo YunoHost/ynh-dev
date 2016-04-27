@@ -45,22 +45,22 @@ advantages of the `ynh-dev` script.
 
 ###  Upgrade the container
 ```
-ynh-dev/ynh-dev upgrade
+/vagrant/ynh-dev upgrade
 ```
 
 ###  Deploy your change
 ```
-ynh-dev/ynh-dev deploy
+/vagrant/ynh-dev deploy
 ```
 
 ### Deploy your change in realtime (each time you saved source code)
 ```
-ynh-dev/ynh-dev watch
+/vagrant/ynh-dev watch
 ```
 
 ### Get ip address of your vm
 ```
-ynh-dev/ynh-dev ip
+/vagrant/ynh-dev ip
 ```
 
 ## More info 
