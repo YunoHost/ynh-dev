@@ -23,6 +23,8 @@ Usage :
             Deploy sources to test it
         `basename $0` watch [PACKAGES [PACKAGES ...]]
             Deploy sources each time there is change
+        `basename $0` self-update
+            Update this script (`basename $0`)
 
 PACKAGES :
     moulinette
@@ -287,6 +289,10 @@ elif [ "$1" = "watch" ]; then
         $BASE_DIR/$0 deploy ${@:2};
     done
 
+
+elif [ "$1" = "self-update" ]; then
+    check_yunohost_vm
+    cd /vagrant/ynh-dev-tools && git pull && cp ynh-dev ../ynh-dev
 
 # Fallback to print usage
 else
