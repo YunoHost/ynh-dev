@@ -92,7 +92,7 @@ elif [ "$1" = "create-env" ]; then
 
     # Get YunoHost dev tools
     git clone -b opi-boxes https://github.com/YunoHost/ynh-dev ynh-dev-tools
-    ln -s ynh-dev-tools/ynh-dev ynh-dev
+    cp ynh-dev-tools/ynh-dev ynh-dev
 
 
 #################################
