@@ -10,7 +10,7 @@ Install dependencies
 # Debian, Ubuntu, Mint
 sudo apt-get install vagrant
 # Fedora
-sudo dnf install vagrant vagrant-libvirt
+sudo dnf install vagrant
 ```
 
 Next download ynh-dev script

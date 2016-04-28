@@ -137,7 +137,7 @@ elif [ "$1" = "run" ]; then
     fi
 
     # Run VM
-    vagrant up $VERSION
+    vagrant up $VERSION --provider virtualbox
 
     # Warn user about hosts file
     echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
