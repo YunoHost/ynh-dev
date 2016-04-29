@@ -162,7 +162,7 @@ elif [ "$1" = "upgrade" ]; then
     sudo apt-get update
     sudo apt-get -y upgrade
     sudo apt-get -y dist-upgrade
-    sudo apt-get install -y inotify-tools net-tools
+    sudo apt-get install -y inotify-tools
 
 
 #######################
@@ -170,10 +170,8 @@ elif [ "$1" = "upgrade" ]; then
 #######################
 elif [ "$1" = "ip" ]; then
     check_yunohost_vm
-    # TODO : check for installed paquage instead of quiet install
-    sudo apt-get install -qq -y net-tools
     # Print IP
-    ip=$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
+    ip=$(/bin/ip a | grep 'inet 192.168' | awk -F " " '{print $2}' | awk -F "/" '{print $1}')
     echo "IP: $ip"
 
 
