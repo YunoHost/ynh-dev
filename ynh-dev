@@ -235,13 +235,13 @@ elif [ "$1" = "use-git" ]; then
                 if [ ! -L '/usr/lib/metronome/modules/vcard.lib.lua' ]; then sudo rm /usr/lib/metronome/modules/vcard.lib.lua; fi
                 sudo ln -s -f /vagrant/yunohost/lib/metronome/modules/vcard.lib.lua /usr/lib/metronome/modules/vcard.lib.lua
 
-                # locales
-                if [ ! -L '/usr/lib/moulinette/yunohost/locales' ]; then sudo rm -rf /usr/lib/moulinette/yunohost/locales; fi
-                sudo ln -s -f /vagrant/yunohost/locales /usr/lib/moulinette/yunohost/locales
-
                 # src
                 if [ ! -L '/usr/lib/moulinette/yunohost' ]; then sudo rm -rf /usr/lib/moulinette/yunohost; fi
                 sudo ln -s -f /vagrant/yunohost/src/yunohost /usr/lib/moulinette/yunohost
+
+                # locales
+                if [ ! -L '/usr/lib/moulinette/yunohost/locales' ]; then sudo rm -rf /usr/lib/moulinette/yunohost/locales; fi
+                sudo ln -s -f /vagrant/yunohost/locales /usr/lib/moulinette/yunohost/locales
 
                 # Remove actionsmap cache
                 [ -e '/var/cache/moulinette/actionsmap/yunohost.pkl' ] && sudo rm /var/cache/moulinette/actionsmap/yunohost.pkl
