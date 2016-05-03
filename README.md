@@ -38,6 +38,13 @@ cd /path/to/dev/env
 ynh-dev run ynh.local testing
 ```
 
+You'll be automatically logged in the VM through ssh.
+
+You probably wan't to run the postinstall now:
+```bash
+(sudo) yunohost tools postinstall
+```
+
 ## Inside the Virtual machine (VM)
 
 Once logged into your VM, go to `/vagrant` to enjoy folder sharing, and take
