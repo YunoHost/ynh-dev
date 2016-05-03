@@ -28,22 +28,20 @@ helper to run a Vagrant virtual machine in the right place.
 
 ### Create the environment
 
-```shell
-ynh-dev create-env /path/to/dev/env
-```
+    ynh-dev create-env /path/to/dev/env
+
 
 ### Run a container
-```
-cd /path/to/dev/env
-ynh-dev run ynh.local testing
-```
+
+    cd /path/to/dev/env
+    ynh-dev run ynh.local testing
 
 You'll be automatically logged in the VM through ssh.
 
 You probably wan't to run the postinstall now:
-```bash
-(sudo) yunohost tools postinstall
-```
+
+    (sudo) yunohost tools postinstall
+
 
 ## Inside the Virtual machine (VM)
 
@@ -53,42 +51,37 @@ advantages of the `ynh-dev` script.
 ###  Upgrade the container
 
 It will update every debian packages.
-```
-/vagrant/ynh-dev upgrade
-```
+
+    /vagrant/ynh-dev upgrade
 
 ###  Use Git repositories
 
 When doing `create-env` command, every YunoHost package have been cloned in the
 corresponding path. Use these Git repositories inside the VM (with symlink).
 Your changes will be available immediatly in your VM.
-```
-/vagrant/ynh-dev use-git
-```
+
+    /vagrant/ynh-dev use-git
 
 ***Note***: These changes can be reverted now.
 
 Alternatively you can use Git only for one packages (ssowat, yunohost,
 moulinette, yunohost-admin)
-```
-/vagrant/ynh-dev use-git PACKAGE_NAME
-```
+
+    /vagrant/ynh-dev use-git PACKAGE_NAME
+
 
 ###  Deploy your change
-```
-/vagrant/ynh-dev deploy
-```
+
+    /vagrant/ynh-dev deploy
 
 ### Deploy your change in realtime (each time you saved source code)
-```
-/vagrant/ynh-dev watch
-```
+
+    /vagrant/ynh-dev watch
 
 ### Get ip address of your vm
-```
-/vagrant/ynh-dev ip
-```
+
+    /vagrant/ynh-dev ip
 
 ## More info 
 
-https://yunohost.org/#/dev_fr (french)
+[yunohost.org/dev_fr](https://yunohost.org/dev_fr) (in french)
