@@ -19,10 +19,6 @@ Usage :
             Upgrade the container
         `basename $0` use-git [PACKAGES [PACKAGES ...]]
             Use Git repositories from dev environment path
-        `basename $0` deploy [PACKAGES [PACKAGES ...]]
-            Deploy sources to test it
-        `basename $0` watch [PACKAGES [PACKAGES ...]]
-            Deploy sources each time there is change
         `basename $0` self-update
             Update this script (`basename $0`)
 
@@ -162,7 +158,6 @@ elif [ "$1" = "upgrade" ]; then
     sudo apt-get update
     sudo apt-get -y upgrade
     sudo apt-get -y dist-upgrade
-    sudo apt-get install -y inotify-tools
 
 
 #######################
@@ -265,48 +260,6 @@ elif [ "$1" = "use-git" ]; then
                 echo ""
                 ;;
         esac
-    done
-
-elif [ "$1" = "deploy" ]; then
-    check_yunohost_vm
-    for i in ${!packages[@]}; do
-        case ${packages[i]} in
-            moulinette)
-                # Install moulinette
-                cd $BASE_DIR/moulinette
-                ./setup.py install
-                cd ..
-                [ -e "./cache/moulinette/actionsmap/yunohost.pkl" ] && rm /var/cache/moulinette/actionsmap/yunohost.pkl
-                echo "moulinette deployed"
-                ;;
-            ssowat)
-                # Install ssowat
-                sed "s@^@cp -Rf $BASE_DIR/SSOwat/@" $BASE_DIR/SSOwat/debian/install | source /dev/stdin
-                service nginx stop || true
-                service nginx start || echo 'Fail to restart nginx'
-                echo "ssowat deployed"
-                ;;
-            yunohost)
-                # Install yunohost
-                cat $BASE_DIR/yunohost/debian/install | awk '{print "mkdir -p " $2}' | source /dev/stdin
-                sed "s@^@cp -Rf $BASE_DIR/yunohost/@" $BASE_DIR/yunohost/debian/install | source /dev/stdin
-                service yunohost-api restart || echo 'Fail to restart yunohost-api'
-                echo "yunohost deployed"
-                ;;
-            yunohost-admin)
-                # Install yunohost-admin
-                sed "s@^@cp -Rf $BASE_DIR/yunohost-admin/@" $BASE_DIR/yunohost-admin/debian/install | source /dev/stdin
-                echo "yunohost-admin deployed"
-                ;;
-          esac
-    done
-
-
-elif [ "$1" = "watch" ]; then
-    check_yunohost_vm
-    sudo apt-get install -y inotify-tools
-    while inotifywait -r -e close_write $BASE_DIR/moulinette/ $BASE_DIR/SSOwat/ $BASE_DIR/yunohost/ $BASE_DIR/yunohost-admin/; do
-        $BASE_DIR/$0 deploy ${@:2};
     done
 
 

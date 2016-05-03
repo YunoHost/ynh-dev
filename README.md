@@ -50,7 +50,7 @@ advantages of the `ynh-dev` script.
 
 ###  Upgrade the container
 
-It will update every debian packages.
+It will update every debian packages, including YunoHost ones.
 
     /vagrant/ynh-dev upgrade
 
@@ -70,17 +70,15 @@ moulinette, yunohost-admin)
     /vagrant/ynh-dev use-git PACKAGE_NAME
 
 
-###  Deploy your change
-
-    /vagrant/ynh-dev deploy
-
-### Deploy your change in realtime (each time you saved source code)
-
-    /vagrant/ynh-dev watch
-
 ### Get ip address of your vm
 
     /vagrant/ynh-dev ip
+
+
+### Update `ynh-dev` script
+
+    /vagrant/ynh-dev self-update
+
 
 ## More info 
 
