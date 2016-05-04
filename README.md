@@ -40,7 +40,7 @@ You'll be automatically logged in the VM through ssh.
 
 You probably wan't to run the postinstall now:
 
-    (sudo) yunohost tools postinstall
+    (sudo) yunohost tools postinstall -d ynh.local
 
 
 ## Inside the Virtual machine (VM)
