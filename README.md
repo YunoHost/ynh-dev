@@ -29,13 +29,13 @@ helper to run a Vagrant virtual machine in the right place.
 ### Create the environment
 
 ```shell
-ynh-dev create-env /path/to/dev/env
+./ynh-dev create-env /path/to/dev/env
 ```
 
 ### Run a container
 ```
 cd /path/to/dev/env
-ynh-dev run ynh.local virtualbox testing
+./ynh-dev run ynh.local virtualbox testing
 ```
 
 ## Inside the Virtual machine (VM)
