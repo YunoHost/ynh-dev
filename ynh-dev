@@ -249,6 +249,21 @@ elif [ "$1" = "use-git" ]; then
                 echo ""
                 ;;
             yunohost-admin)
+
+                # Install npm dependencies if needed
+                which gulp > /dev/null
+                if [ $? -eq 1 ]
+                then
+                    sudo apt-get -y install nodejs-legacy npm
+                    cd /vagrant/yunohost-admin/src
+                    sudo npm install
+                    sudo npm install -g bower
+                    sudo npm install -g gulp
+                fi
+                cd /vagrant/yunohost-admin/src
+                sudo su -c "bower install" vagrant
+                sudo su -c "gulp build --dev" vagrant
+
                 echo "Using Git repository for yunohost-admin"
                 # Remove current sources if not a symlink
                 if [ ! -L '/usr/share/yunohost/admin' ]; then
@@ -256,8 +271,9 @@ elif [ "$1" = "use-git" ]; then
                 fi
                 # Symlink from Git repository
                 sudo ln -s -f /vagrant/yunohost-admin/src /usr/share/yunohost/admin
-                echo "↳ Don't forget to do build admin with Gulp when hacking yunohost-admin. See README file"
-                echo ""
+
+                sudo su -c "gulp watch --dev" vagrant
+
                 ;;
         esac
     done
