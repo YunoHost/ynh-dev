@@ -6,7 +6,7 @@ Usage :
 
     On the host
         `basename $0` create-env PATH
-            Create a dev environement into PATH
+            Create a dev environment into PATH
         `basename $0` run DOMAIN [VERSION]
             Run a vagrant or virtualbox vm
         # `basename $0` kill
@@ -17,10 +17,10 @@ Usage :
             Give the ip of the guest container
         `basename $0` upgrade
             Upgrade the container
-        `basename $0` deploy [PACKAGES [PACKAGES ...]]
-            Deploy sources to test it
-        `basename $0` watch [PACKAGES [PACKAGES ...]]
-            Deploy sources each time there is change
+        `basename $0` use-git [PACKAGES [PACKAGES ...]]
+            Use Git repositories from dev environment path
+        `basename $0` self-update
+            Update this script (`basename $0`)
 
 PACKAGES :
     moulinette
@@ -79,19 +79,18 @@ elif [ "$1" = "create-env" ]; then
     mkdir -p backup
 
     # Get YunoHost packages
-    git clone -b unstable https://github.com/Kloadut/SSOwat SSOwat
+    git clone -b unstable https://github.com/YunoHost/SSOwat ssowat
     git clone -b unstable https://github.com/YunoHost/yunohost-admin yunohost-admin
     git clone -b unstable https://github.com/YunoHost/yunohost yunohost
     git clone -b unstable https://github.com/YunoHost/moulinette moulinette
 
     # Get YunoHost Vagrantfile
-    git clone https://github.com/YunoHost/Vagrantfile vagrant
+    git clone -b opi-boxes https://github.com/YunoHost/Vagrantfile vagrant
     ln -s vagrant/Vagrantfile Vagrantfile
 
     # Get YunoHost dev tools
-    git clone https://github.com/YunoHost/ynh-dev ynh-dev-tools
+    git clone -b opi-boxes https://github.com/YunoHost/ynh-dev ynh-dev-tools
     cp ynh-dev-tools/ynh-dev ynh-dev
-    # cp $pwd/$0 ./$0
 
 
 #################################
@@ -105,7 +104,42 @@ elif [ "$1" = "run" ]; then
         VERSION=$3
     fi
 
-    vagrant up --debug $VERSION
+    echo "Creating $DOMAIN virtual machine with YunoHost $VERSION version"
+    echo ""
+
+    # Get vagrant box info from version
+    if [ "$VERSION" = "stable" ]; then
+        BOX_NAME="opi/yunohost-stable"
+        BOX_URL="http://build.yunohost.org/yunohost-stable8-builded.box"
+        IP="192.168.33.80"
+    elif [ "$VERSION" = "testing" ]; then
+        BOX_NAME="opi/yunohost-testing"
+        BOX_URL="http://build.yunohost.org/yunohost-testing8-builded.box"
+        IP="192.168.33.81"
+    elif [ "$VERSION" = "unstable" ]; then
+        BOX_NAME="opi/yunohost-unstable"
+        BOX_URL="http://build.yunohost.org/yunohost-unstable8-builded.box"
+        IP="192.168.33.82"
+    else
+        echo "ERROR: Incorrect version '$VERSION'. See '$(basename $0) --help' for usage."
+        exit 102
+    fi
+
+    # Download box if not available
+    if ! vagrant box list | grep -qc $BOX_NAME ; then
+        echo "Vagrant box '$BOX_NAME' is missing. Trying to download it"
+        vagrant box add $BOX_NAME $BOX_URL --provider virtualbox
+        echo ""
+    fi
+
+    # Run VM
+    vagrant up $VERSION --provider virtualbox
+
+    # Warn user about hosts file
+    echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
+    echo ""
+
+    # Log into the VM
     vagrant ssh $VERSION
 
 
@@ -124,7 +158,6 @@ elif [ "$1" = "upgrade" ]; then
     sudo apt-get update
     sudo apt-get -y upgrade
     sudo apt-get -y dist-upgrade
-    sudo apt-get install -y inotify-tools net-tools
 
 
 #######################
@@ -132,55 +165,123 @@ elif [ "$1" = "upgrade" ]; then
 #######################
 elif [ "$1" = "ip" ]; then
     check_yunohost_vm
-    # TODO : check for installed paquage instead of quiet install
-    sudo apt-get install -qq -y net-tools
     # Print IP
-    ip=$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
+    ip=$(/bin/ip a | grep 'inet 192.168' | awk -F " " '{print $2}' | awk -F "/" '{print $1}')
     echo "IP: $ip"
 
 
-elif [ "$1" = "deploy" ]; then
+###########################################
+## Use Git version for YunoHost packages ##
+###########################################
+elif [ "$1" = "use-git" ]; then
     check_yunohost_vm
+    VERSION=$2
+
     for i in ${!packages[@]}; do
         case ${packages[i]} in
-            moulinette)
-                # Install moulinette
-                cd $BASE_DIR/moulinette
-                ./setup.py install
-                cd ..
-                [-e "./cache/moulinette/actionsmap/yunohost.pkl"] && rm /var/cache/moulinette/actionsmap/yunohost.pkl
-                echo "moulinette deployed"
-                ;;
             ssowat)
-                # Install ssowat
-                sed "s@^@cp -Rf $BASE_DIR/SSOwat/@" $BASE_DIR/SSOwat/debian/install | source /dev/stdin
-                service nginx stop || true
-                service nginx start || echo 'Fail to restart nginx'
-                echo "ssowat deployed"
+                echo "Using Git repository for SSOwat"
+                # Remove current sources if not a symlink
+                if [ ! -L '/usr/share/ssowat' ]; then
+                    sudo rm -rf /usr/share/ssowat
+                fi
+                # Symlink from Git repository
+                sudo ln -s -f /vagrant/ssowat /usr/share/ssowat
+                echo "↳ Don't forget to do 'sudo yunohost app ssowatconf' when hacking SSOwat"
+                echo ""
+                ;;
+            moulinette)
+                echo "Warning, can't use Git repository for moulinette"
+                echo ""
                 ;;
             yunohost)
-                # Install yunohost
-                cat $BASE_DIR/yunohost/debian/install | awk '{print "mkdir -p " $2}' | source /dev/stdin
-                sed "s@^@cp -Rf $BASE_DIR/yunohost/@" $BASE_DIR/yunohost/debian/install | source /dev/stdin
-                service yunohost-api restart || echo 'Fail to restart yunohost-api'
-                echo "yunohost deployed"
+                echo "Using Git repository for yunohost"
+
+                # bin
+                if [ ! -L '/usr/bin/yunohost' ]; then sudo rm /usr/bin/yunohost; fi
+                sudo ln -s -f /vagrant/yunohost/bin/yunohost /usr/bin/yunohost
+                if [ ! -L '/usr/bin/yunohost-api' ]; then sudo rm /usr/bin/yunohost-api; fi
+                sudo ln -s -f /vagrant/yunohost/bin/yunohost-api /usr/bin/yunohost-api
+
+                # data
+                if [ ! -L '/etc/bash_completion.d/yunohost' ]; then sudo rm /etc/bash_completion.d/yunohost; fi
+                sudo ln -s -f /vagrant/yunohost/data/bash-completion.d/yunohost /etc/bash_completion.d/yunohost
+                if [ ! -L '/usr/share/moulinette/actionsmap/yunohost.yml' ]; then sudo rm /usr/share/moulinette/actionsmap/yunohost.yml; fi
+                sudo ln -s -f /vagrant/yunohost/data/actionsmap/yunohost.yml /usr/share/moulinette/actionsmap/yunohost.yml
+                if [ ! -L '/usr/share/yunohost/hooks' ]; then sudo rm -rf /usr/share/yunohost/hooks; fi
+                sudo ln -s -f /vagrant/yunohost/data/hooks /usr/share/yunohost/hooks
+                if [ ! -L '/usr/share/yunohost/templates' ]; then sudo rm -rf /usr/share/yunohost/templates; fi
+                sudo ln -s -f /vagrant/yunohost/data/templates /usr/share/yunohost/templates
+                if [ ! -L '/usr/share/yunohost/helpers' ]; then sudo rm /usr/share/yunohost/helpers; fi
+                sudo ln -s -f /vagrant/yunohost/data/helpers /usr/share/yunohost/helpers
+                if [ ! -L '/usr/share/yunohost/helpers.d' ]; then sudo rm -rf /usr/share/yunohost/helpers.d; fi
+                sudo ln -s -f /vagrant/yunohost/data/helpers.d /usr/share/yunohost/helpers.d
+                if [ ! -L '/usr/share/yunohost/yunohost-config/moulinette' ]; then sudo rm -rf /usr/share/yunohost/yunohost-config/moulinette; fi
+                sudo ln -s -f /vagrant/yunohost/data/other /usr/share/yunohost/yunohost-config/moulinette
+
+                # debian
+                if [ ! -L '/usr/share/pam-configs/mkhomedir' ]; then sudo rm /usr/share/pam-configs/mkhomedir; fi
+                sudo ln -s -f /vagrant/yunohost/debian/conf/pam/mkhomedir /usr/share/pam-configs/mkhomedir
+
+                # lib
+                if [ ! -L '/usr/lib/metronome/modules/ldap.lib.lua' ]; then sudo rm /usr/lib/metronome/modules/ldap.lib.lua; fi
+                sudo ln -s -f /vagrant/yunohost/lib/metronome/modules/ldap.lib.lua /usr/lib/metronome/modules/ldap.lib.lua
+                if [ ! -L '/usr/lib/metronome/modules/mod_auth_ldap2.lua' ]; then sudo rm /usr/lib/metronome/modules/mod_auth_ldap2.lua; fi
+                sudo ln -s -f /vagrant/yunohost/lib/metronome/modules/mod_auth_ldap2.lua /usr/lib/metronome/modules/mod_auth_ldap2.lua
+                if [ ! -L '/usr/lib/metronome/modules/mod_legacyauth.lua' ]; then sudo rm /usr/lib/metronome/modules/mod_legacyauth.lua; fi
+                sudo ln -s -f /vagrant/yunohost/lib/metronome/modules/mod_legacyauth.lua /usr/lib/metronome/modules/mod_legacyauth.lua
+                if [ ! -L '/usr/lib/metronome/modules/mod_storage_ldap.lua' ]; then sudo rm /usr/lib/metronome/modules/mod_storage_ldap.lua; fi
+                sudo ln -s -f /vagrant/yunohost/lib/metronome/modules/mod_storage_ldap.lua /usr/lib/metronome/modules/mod_storage_ldap.lua
+                if [ ! -L '/usr/lib/metronome/modules/vcard.lib.lua' ]; then sudo rm /usr/lib/metronome/modules/vcard.lib.lua; fi
+                sudo ln -s -f /vagrant/yunohost/lib/metronome/modules/vcard.lib.lua /usr/lib/metronome/modules/vcard.lib.lua
+
+                # src
+                if [ ! -L '/usr/lib/moulinette/yunohost' ]; then sudo rm -rf /usr/lib/moulinette/yunohost; fi
+                sudo ln -s -f /vagrant/yunohost/src/yunohost /usr/lib/moulinette/yunohost
+
+                # locales
+                if [ ! -L '/usr/lib/moulinette/yunohost/locales' ]; then sudo rm -rf /usr/lib/moulinette/yunohost/locales; fi
+                sudo ln -s -f /vagrant/yunohost/locales /usr/lib/moulinette/yunohost/locales
+
+                # Remove actionsmap cache
+                [ -e '/var/cache/moulinette/actionsmap/yunohost.pkl' ] && sudo rm /var/cache/moulinette/actionsmap/yunohost.pkl
+                echo "↳ Don't forget to remove '/var/cache/moulinette/actionsmap/yunohost.pkl' cache when hacking yunohost"
+                echo ""
                 ;;
             yunohost-admin)
-                # Install yunohost-admin
-                sed "s@^@cp -Rf $BASE_DIR/yunohost-admin/@" $BASE_DIR/yunohost-admin/debian/install | source /dev/stdin
-                echo "yunohost-admin deployed"
+
+                # Install npm dependencies if needed
+                which gulp > /dev/null
+                if [ $? -eq 1 ]
+                then
+                    sudo apt-get -y install nodejs-legacy npm
+                    cd /vagrant/yunohost-admin/src
+                    sudo npm install
+                    sudo npm install -g bower
+                    sudo npm install -g gulp
+                fi
+                cd /vagrant/yunohost-admin/src
+                sudo su -c "bower install" vagrant
+                sudo su -c "gulp build --dev" vagrant
+
+                echo "Using Git repository for yunohost-admin"
+                # Remove current sources if not a symlink
+                if [ ! -L '/usr/share/yunohost/admin' ]; then
+                    sudo rm -rf /usr/share/yunohost/admin
+                fi
+                # Symlink from Git repository
+                sudo ln -s -f /vagrant/yunohost-admin/src /usr/share/yunohost/admin
+
+                sudo su -c "gulp watch --dev" vagrant
+
                 ;;
-          esac
+        esac
     done
 
 
-elif [ "$1" = "watch" ]; then
+elif [ "$1" = "self-update" ]; then
     check_yunohost_vm
-    sudo apt-get install -y inotify-tools
-    while inotifywait -r -e close_write $BASE_DIR/moulinette/ $BASE_DIR/SSOwat/ $BASE_DIR/yunohost/ $BASE_DIR/yunohost-admin/; do
-        $BASE_DIR/$0 deploy ${@:2};
-    done
-
+    cd /vagrant/ynh-dev-tools && git pull && cp ynh-dev ../ynh-dev
 
 # Fallback to print usage
 else

@@ -10,13 +10,13 @@ Install dependencies
 # Debian, Ubuntu, Mint
 sudo apt-get install vagrant
 # Fedora
-sudo dnf install vagrant vagrant-libvirt
+sudo dnf install vagrant
 ```
 
 Next download ynh-dev script
 
 ```shell
-wget https://raw.githubusercontent.com/zamentur/yunohost-development/master/ynh-dev
+wget https://github.com/YunoHost/ynh-dev/raw/opi-boxes/ynh-dev
 chmod u+x ynh-dev
 ```
 
@@ -33,10 +33,16 @@ helper to run a Vagrant virtual machine in the right place.
 ```
 
 ### Run a container
-```
+```shell
 cd /path/to/dev/env
 ./ynh-dev run ynh.local virtualbox testing
 ```
+
+You'll be automatically logged in the VM through ssh.
+
+You probably wan't to run the postinstall now:
+
+    (sudo) yunohost tools postinstall -d ynh.local
 
 ## Inside the Virtual machine (VM)
 
@@ -44,25 +50,37 @@ Once logged into your VM, go to `/vagrant` to enjoy folder sharing, and take
 advantages of the `ynh-dev` script.
 
 ###  Upgrade the container
-```
-ynh-dev/ynh-dev upgrade
-```
 
-###  Deploy your change
-```
-ynh-dev/ynh-dev deploy
-```
+It will update every debian packages, including YunoHost ones.
 
-### Deploy your change in realtime (each time you saved source code)
-```
-ynh-dev/ynh-dev watch
-```
+    /vagrant/ynh-dev upgrade
+
+###  Use Git repositories
+
+When doing `create-env` command, every YunoHost package have been cloned in the
+corresponding path. Use these Git repositories inside the VM (with symlink).
+Your changes will be available immediatly in your VM.
+
+    /vagrant/ynh-dev use-git
+
+***Note***: These changes can be reverted now.
+
+Alternatively you can use Git only for one packages (ssowat, yunohost,
+moulinette, yunohost-admin)
+
+    /vagrant/ynh-dev use-git PACKAGE_NAME
+
 
 ### Get ip address of your vm
-```
-ynh-dev/ynh-dev ip
-```
+
+    /vagrant/ynh-dev ip
+
+
+### Update `ynh-dev` script
+
+    /vagrant/ynh-dev self-update
+
 
 ## More info 
 
-https://yunohost.org/#/dev_fr (french)
+[yunohost.org/dev_fr](https://yunohost.org/dev_fr) (in french)
