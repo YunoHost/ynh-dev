@@ -109,16 +109,16 @@ elif [ "$1" = "run" ]; then
 
     # Get vagrant box info from version
     if [ "$VERSION" = "stable" ]; then
-        BOX_NAME="opi/yunohost-stable"
-        BOX_URL="http://build.yunohost.org/yunohost-stable8-builded.box"
+        BOX_NAME="yunohost/yunohost-jessie-stable"
+        BOX_URL="https://build.yunohost.org/yunohost-jessie-stable.box"
         IP="192.168.33.80"
     elif [ "$VERSION" = "testing" ]; then
-        BOX_NAME="opi/yunohost-testing"
-        BOX_URL="http://build.yunohost.org/yunohost-testing8-builded.box"
+        BOX_NAME="yunohost/yunohost-jessie-testing"
+        BOX_URL="https://build.yunohost.org/yunohost-jessie-testing.box"
         IP="192.168.33.81"
     elif [ "$VERSION" = "unstable" ]; then
-        BOX_NAME="opi/yunohost-unstable"
-        BOX_URL="http://build.yunohost.org/yunohost-unstable8-builded.box"
+        BOX_NAME="yunohost/yunohost-jessie-unstable"
+        BOX_URL="https://build.yunohost.org/yunohost-jessie-unstable.box"
         IP="192.168.33.82"
     else
         echo "ERROR: Incorrect version '$VERSION'. See '$(basename $0) --help' for usage."
