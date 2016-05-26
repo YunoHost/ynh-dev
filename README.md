@@ -63,7 +63,7 @@ Your changes will be available immediatly in your VM.
 
     /vagrant/ynh-dev use-git
 
-***Note***: These changes can be reverted now.
+***Note***: These changes can't be reverted now.
 
 Alternatively you can use Git only for one packages (ssowat, yunohost,
 moulinette, yunohost-admin)
