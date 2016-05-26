@@ -85,11 +85,11 @@ elif [ "$1" = "create-env" ]; then
     git clone -b unstable https://github.com/YunoHost/moulinette moulinette
 
     # Get YunoHost Vagrantfile
-    git clone -b opi-boxes https://github.com/YunoHost/Vagrantfile vagrant
+    git clone -b master https://github.com/YunoHost/Vagrantfile vagrant
     ln -s vagrant/Vagrantfile Vagrantfile
 
     # Get YunoHost dev tools
-    git clone -b opi-boxes https://github.com/YunoHost/ynh-dev ynh-dev-tools
+    git clone -b master https://github.com/YunoHost/ynh-dev ynh-dev-tools
     cp ynh-dev-tools/ynh-dev ynh-dev
 
 
