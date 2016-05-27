@@ -109,15 +109,15 @@ elif [ "$1" = "run" ]; then
 
     # Get vagrant box info from version
     if [ "$VERSION" = "stable" ]; then
-        BOX_NAME="yunohost/yunohost-jessie-stable"
+        BOX_NAME="yunohost/jessie-stable"
         BOX_URL="https://build.yunohost.org/yunohost-jessie-stable.box"
         IP="192.168.33.80"
     elif [ "$VERSION" = "testing" ]; then
-        BOX_NAME="yunohost/yunohost-jessie-testing"
+        BOX_NAME="yunohost/jessie-testing"
         BOX_URL="https://build.yunohost.org/yunohost-jessie-testing.box"
         IP="192.168.33.81"
     elif [ "$VERSION" = "unstable" ]; then
-        BOX_NAME="yunohost/yunohost-jessie-unstable"
+        BOX_NAME="yunohost/jessie-unstable"
         BOX_URL="https://build.yunohost.org/yunohost-jessie-unstable.box"
         IP="192.168.33.82"
     else
