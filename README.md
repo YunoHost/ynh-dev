@@ -8,9 +8,9 @@ With this you can develop on the unstable version of yunohost quickly.
 Install dependencies
 ```shell
 # Debian, Ubuntu, Mint
-sudo apt-get install vagrant
+sudo apt-get install vagrant virtualbox
 # Fedora
-sudo dnf install vagrant
+sudo dnf install vagrant virtualbox
 ```
 
 Next download ynh-dev script
