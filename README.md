@@ -33,10 +33,13 @@ helper to run a Vagrant virtual machine in the right place.
 ```
 
 ### Run a container
+
 ```shell
 cd /path/to/dev/env
-./ynh-dev run ynh.local virtualbox testing
+./ynh-dev run ynh.local testing
 ```
+
+The `run` command takes 2 arguments: domain and YunoHost version.
 
 You'll be automatically logged in the VM through ssh.
 
