@@ -281,7 +281,8 @@ elif [ "$1" = "use-git" ]; then
 
 elif [ "$1" = "self-update" ]; then
     check_yunohost_vm
-    cd /vagrant/ynh-dev-tools && git pull && cp ynh-dev ../ynh-dev
+    cd /vagrant/vagrant && git pull origin master
+    cd /vagrant/ynh-dev-tools && git pull origin master && cp ynh-dev ../ynh-dev
 
 # Fallback to print usage
 else
