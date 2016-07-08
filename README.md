@@ -9,12 +9,12 @@ Install dependencies:
 
 ##### Debian, Ubuntu, Mint
 ```shell
-sudo apt-get install vagrant virtualbox
+sudo apt-get install vagrant virtualbox git
 ```
 
 ##### Fedora
 ```shell
-sudo dnf install vagrant
+sudo dnf install vagrant git
 ```
 - [Install Virtualbox](https://copr.fedorainfracloud.org/coprs/sergiomb/vboxfor23)
 
