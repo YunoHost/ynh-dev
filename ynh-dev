@@ -137,6 +137,7 @@ elif [ "$1" = "run" ]; then
 
     # Warn user about hosts file
     echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
+    echo "sudo su -c \"echo  '$IP $DOMAIN' >> /etc/hosts\" root"
     echo ""
 
     # Log into the VM
