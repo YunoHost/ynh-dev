@@ -1,6 +1,6 @@
 # ynh-dev, a yunohost dev env
 
-This script is a cli command helper to manage a YunoHost development environement.
+This script is a Command line tool to manage your local development environement for YunoHost
 With this you can develop on the unstable version of YunoHost quickly.
 
 ## Setup
@@ -16,12 +16,16 @@ sudo apt-get install vagrant virtualbox git
 ```shell
 sudo dnf install vagrant git
 ```
-- [Install Virtualbox](https://copr.fedorainfracloud.org/coprs/sergiomb/vboxfor23):
+
+- [Install Virtualbox 5.0.26](https://copr.fedorainfracloud.org/coprs/sergiomb/vboxfor23):
 
 ```shell
 sudo dnf copr enable sergiomb/vboxfor23
 sudo dnf install VirtualBox
 ```
+<!-- VirtualBox 5.1.4 do not works with Vagrant 1.8.1. It should works with Vagrant 1.8.5 when it will be available.
+- [Install Virtualbox 5.1.4](http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel)
+-->
 
 ### Download ynh-dev script
 
@@ -53,12 +57,15 @@ The `run` command takes 2 arguments: domain and YunoHost version.
 
 You'll be automatically logged in the VM through ssh.
 
-You probably wan't to run the postinstall now:
+You probably want to run the postinstall now:
 
     (sudo) yunohost tools postinstall -d ynh.local
 
 ## Inside the Virtual machine (VM)
 
+### Sharing folder between host and virtual machines
+
+A shared folder between host and virtal machines could ease your development.
 Once logged into your VM, go to `/vagrant` to enjoy folder sharing, and take
 advantages of the `ynh-dev` script.
 
@@ -96,4 +103,4 @@ moulinette, yunohost-admin)
 
 ## More info 
 
-[yunohost.org/dev_fr](https://yunohost.org/dev_fr) (in french)
+[yunohost.org/dev_fr](https://yunohost.org/dev_fr) (in french) not up-to-date.
