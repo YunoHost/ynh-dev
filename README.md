@@ -1,24 +1,29 @@
 # ynh-dev, a yunohost dev env
 
-This script is a cli to manage a yunohost development environement.
-With this you can develop on the unstable version of yunohost quickly.
+This script is a cli command helper to manage a YunoHost development environement.
+With this you can develop on the unstable version of YunoHost quickly.
 
 ## Setup
 
-Install dependencies:
+### Install dependencies
 
-##### Debian, Ubuntu, Mint
+#### Debian, Ubuntu, Mint
 ```shell
 sudo apt-get install vagrant virtualbox git
 ```
 
-##### Fedora
+#### Fedora
 ```shell
 sudo dnf install vagrant git
 ```
-- [Install Virtualbox](https://copr.fedorainfracloud.org/coprs/sergiomb/vboxfor23)
+- [Install Virtualbox](https://copr.fedorainfracloud.org/coprs/sergiomb/vboxfor23):
 
-##### Next download ynh-dev script
+```shell
+sudo dnf copr enable sergiomb/vboxfor23
+sudo dnf install VirtualBox
+```
+
+### Download ynh-dev script
 
 ```shell
 wget https://github.com/YunoHost/ynh-dev/raw/master/ynh-dev
