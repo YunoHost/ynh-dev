@@ -17,15 +17,8 @@ sudo apt-get install vagrant virtualbox git
 sudo dnf install vagrant git
 ```
 
-- [Install Virtualbox 5.0.26](https://copr.fedorainfracloud.org/coprs/sergiomb/vboxfor23):
-
-```shell
-sudo dnf copr enable sergiomb/vboxfor23
-sudo dnf install VirtualBox
-```
-<!-- VirtualBox 5.1.4 do not works with Vagrant 1.8.1. It should works with Vagrant 1.8.5 when it will be available.
-- [Install Virtualbox 5.1.4](http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel)
--->
+ VirtualBox 5.1.4 only works with Vagrant ≥ 1.8.5. It could be installed from Fedora 25 or [rawhide](https://stackoverflow.com/a/24968411).
+- [Install Virtualbox 5.1.x](http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel)
 
 ### Download ynh-dev script
 
