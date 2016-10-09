@@ -255,6 +255,7 @@ elif [ "$1" = "use-git" ]; then
                 which gulp > /dev/null
                 if [ $? -eq 1 ]
                 then
+                    sudo apt-get update --fix-missing
                     sudo apt-get -y install nodejs-legacy npm
                     cd /vagrant/yunohost-admin/src
                     sudo npm install
