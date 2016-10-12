@@ -9,6 +9,8 @@ Usage :
             Create a dev environment into PATH
         `basename $0` run DOMAIN [VERSION]
             Run a vagrant or virtualbox vm
+        `basename $0` halt
+            Turn off running vm
         # `basename $0` kill
         #     Kill all vagrant
 
@@ -142,6 +144,21 @@ elif [ "$1" = "run" ]; then
 
     # Log into the VM
     vagrant ssh $VERSION
+
+
+#####################
+## Halt running VM ##
+#####################
+elif [ "$1" = "halt" ]; then
+    vm=$(vagrant global-status | head -3 | tail -1)
+    vm_status=$(echo $vm | cut -d ' ' -f 4)
+    if [ $vm_status == "running" ]; then
+        vm_id=$(echo $vm | cut -d ' ' -f 1)
+        vagrant halt $vm_id
+        echo "–> VM turned off."
+    else
+        echo "–> No running vm."; exit
+    fi
 
 
 #####################
