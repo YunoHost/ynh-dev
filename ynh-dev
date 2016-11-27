@@ -274,6 +274,13 @@ elif [ "$1" = "use-git" ]; then
                 # Symlink from Git repository
                 sudo ln -s -f /vagrant/yunohost-admin/src /usr/share/yunohost/admin
 
+                echo "--------------------------------------------------------"
+                echo "Launching gulp ... "
+                echo "NB : This command will keep running and watch for changes"
+                echo " in the folder /vagrant/yunohost-admin/src, such that you"
+                echo "don't need to re-run npm yourself everytime you change"
+                echo "something !"
+                echo "--------------------------------------------------------"
                 sudo su -c "gulp watch --dev" vagrant
 
                 ;;
