@@ -192,7 +192,27 @@ elif [ "$1" = "use-git" ]; then
                 echo ""
                 ;;
             moulinette)
-                echo "Warning, can't use Git repository for moulinette"
+                if [ ! -L '/usr/share/moulinette/locale' ]; then sudo rm -rf /usr/share/moulinette/locale; fi
+                sudo ln -s -f /vagrant/moulinette/locales /usr/share/moulinette/locale
+
+                if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/authenticators' ]; then sudo rm -rf /usr/lib/python2.7/dist-packages/moulinette/authenticators; fi
+                sudo ln -s -f /vagrant/moulinette/moulinette/authenticators /usr/lib/python2.7/dist-packages/moulinette/authenticators
+
+                if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/interfaces' ]; then sudo rm -rf /usr/lib/python2.7/dist-packages/moulinette/interfaces; fi
+                sudo ln -s -f /vagrant/moulinette/moulinette/interfaces /usr/lib/python2.7/dist-packages/moulinette/interfaces
+
+                if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/utils' ]; then sudo rm -rf /usr/lib/python2.7/dist-packages/moulinette/utils; fi
+                sudo ln -s -f /vagrant/moulinette/moulinette/utils /usr/lib/python2.7/dist-packages/moulinette/utils
+
+                if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/__init__.py' ]; then sudo rm /usr/lib/python2.7/dist-packages/moulinette/__init__.py; fi
+                sudo ln -s -f /vagrant/moulinette/moulinette/__init__.py /usr/lib/python2.7/dist-packages/moulinette/__init__.py
+
+                if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/core.py' ]; then sudo rm /usr/lib/python2.7/dist-packages/moulinette/core.py; fi
+                sudo ln -s -f /vagrant/moulinette/moulinette/core.py /usr/lib/python2.7/dist-packages/moulinette/core.py
+
+                if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/actionsmap.py' ]; then sudo rm /usr/lib/python2.7/dist-packages/moulinette/actionsmap.py; fi
+                sudo ln -s -f /vagrant/moulinette/moulinette/actionsmap.py /usr/lib/python2.7/dist-packages/moulinette/actionsmap.py
+                echo "↳ If you add files at the root of this directory /vagrant/moulinette/moulinette/ you should adapt ynh-dev"
                 echo ""
                 ;;
             yunohost)
