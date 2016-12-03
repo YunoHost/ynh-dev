@@ -32,6 +32,7 @@ Here is the development flow:
 These operation need to be done on the host machine.
 
 #### Install dependencies
+
 ##### Debian, Ubuntu, Mint
 ```shell
 sudo apt-get install vagrant virtualbox git
@@ -44,6 +45,16 @@ sudo dnf install vagrant git
 
  VirtualBox 5.1.4 only works with Vagrant ≥ 1.8.5. It could be installed from Fedora 25 or [rawhide](https://stackoverflow.com/a/24968411).
 - [Install Virtualbox 5.1.x](http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel)
+
+##### Archlinux, Manjaro
+```shell
+sudo pacman -S vagrant virtualbox git
+sudo pacman -S linux44-virtualbox-host-modules
+sudo modprobe vboxdrv
+sudo modprobe vboxnetadp
+sudo insmod /lib/modules/4.4.33-1-MANJARO/extramodules/vboxnetflt.ko.gz 
+sudo insmod /lib/modules/4.4.33-1-MANJARO/extramodules/vboxnetadp.ko.gz
+```
 
 
 #### Install ynh-dev
