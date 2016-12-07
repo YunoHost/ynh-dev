@@ -271,6 +271,13 @@ elif [ "$1" = "use-git" ]; then
                 ;;
             yunohost-admin)
 
+                # Trick to check vagrant user exists (for install on VPS..)
+                getent passwd vagrant > /dev/null
+                if [ $? -eq 2 ]; then
+                    useradd vagrant
+                    chown -R vagrant: /vagrant/yunohost-admin
+                fi
+
                 # Install npm dependencies if needed
                 which gulp > /dev/null
                 if [ $? -eq 1 ]
