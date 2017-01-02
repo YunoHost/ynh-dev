@@ -187,31 +187,31 @@ elif [ "$1" = "use-git" ]; then
                     sudo rm -rf /usr/share/ssowat
                 fi
                 # Symlink from Git repository
-                sudo ln -s -f /vagrant/ssowat /usr/share/ssowat
+                sudo ln -sfn /vagrant/ssowat /usr/share/ssowat
                 echo "↳ Don't forget to do 'sudo yunohost app ssowatconf' when hacking SSOwat"
                 echo ""
                 ;;
             moulinette)
                 if [ ! -L '/usr/share/moulinette/locale' ]; then sudo rm -rf /usr/share/moulinette/locale; fi
-                sudo ln -s -f /vagrant/moulinette/locales /usr/share/moulinette/locale
+                sudo ln -sfn /vagrant/moulinette/locales /usr/share/moulinette/locale
 
                 if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/authenticators' ]; then sudo rm -rf /usr/lib/python2.7/dist-packages/moulinette/authenticators; fi
-                sudo ln -s -f /vagrant/moulinette/moulinette/authenticators /usr/lib/python2.7/dist-packages/moulinette/authenticators
+                sudo ln -sfn /vagrant/moulinette/moulinette/authenticators /usr/lib/python2.7/dist-packages/moulinette/authenticators
 
                 if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/interfaces' ]; then sudo rm -rf /usr/lib/python2.7/dist-packages/moulinette/interfaces; fi
-                sudo ln -s -f /vagrant/moulinette/moulinette/interfaces /usr/lib/python2.7/dist-packages/moulinette/interfaces
+                sudo ln -sfn /vagrant/moulinette/moulinette/interfaces /usr/lib/python2.7/dist-packages/moulinette/interfaces
 
                 if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/utils' ]; then sudo rm -rf /usr/lib/python2.7/dist-packages/moulinette/utils; fi
-                sudo ln -s -f /vagrant/moulinette/moulinette/utils /usr/lib/python2.7/dist-packages/moulinette/utils
+                sudo ln -sfn /vagrant/moulinette/moulinette/utils /usr/lib/python2.7/dist-packages/moulinette/utils
 
                 if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/__init__.py' ]; then sudo rm /usr/lib/python2.7/dist-packages/moulinette/__init__.py; fi
-                sudo ln -s -f /vagrant/moulinette/moulinette/__init__.py /usr/lib/python2.7/dist-packages/moulinette/__init__.py
+                sudo ln -sfn /vagrant/moulinette/moulinette/__init__.py /usr/lib/python2.7/dist-packages/moulinette/__init__.py
 
                 if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/core.py' ]; then sudo rm /usr/lib/python2.7/dist-packages/moulinette/core.py; fi
-                sudo ln -s -f /vagrant/moulinette/moulinette/core.py /usr/lib/python2.7/dist-packages/moulinette/core.py
+                sudo ln -sfn /vagrant/moulinette/moulinette/core.py /usr/lib/python2.7/dist-packages/moulinette/core.py
 
                 if [ ! -L '/usr/lib/python2.7/dist-packages/moulinette/actionsmap.py' ]; then sudo rm /usr/lib/python2.7/dist-packages/moulinette/actionsmap.py; fi
-                sudo ln -s -f /vagrant/moulinette/moulinette/actionsmap.py /usr/lib/python2.7/dist-packages/moulinette/actionsmap.py
+                sudo ln -sfn /vagrant/moulinette/moulinette/actionsmap.py /usr/lib/python2.7/dist-packages/moulinette/actionsmap.py
                 echo "↳ If you add files at the root of this directory /vagrant/moulinette/moulinette/ you should adapt ynh-dev"
                 echo ""
                 ;;
@@ -220,49 +220,49 @@ elif [ "$1" = "use-git" ]; then
 
                 # bin
                 if [ ! -L '/usr/bin/yunohost' ]; then sudo rm /usr/bin/yunohost; fi
-                sudo ln -s -f /vagrant/yunohost/bin/yunohost /usr/bin/yunohost
+                sudo ln -sfn /vagrant/yunohost/bin/yunohost /usr/bin/yunohost
                 if [ ! -L '/usr/bin/yunohost-api' ]; then sudo rm /usr/bin/yunohost-api; fi
-                sudo ln -s -f /vagrant/yunohost/bin/yunohost-api /usr/bin/yunohost-api
+                sudo ln -sfn /vagrant/yunohost/bin/yunohost-api /usr/bin/yunohost-api
 
                 # data
                 if [ ! -L '/etc/bash_completion.d/yunohost' ]; then sudo rm /etc/bash_completion.d/yunohost; fi
-                sudo ln -s -f /vagrant/yunohost/data/bash-completion.d/yunohost /etc/bash_completion.d/yunohost
+                sudo ln -sfn /vagrant/yunohost/data/bash-completion.d/yunohost /etc/bash_completion.d/yunohost
                 if [ ! -L '/usr/share/moulinette/actionsmap/yunohost.yml' ]; then sudo rm /usr/share/moulinette/actionsmap/yunohost.yml; fi
-                sudo ln -s -f /vagrant/yunohost/data/actionsmap/yunohost.yml /usr/share/moulinette/actionsmap/yunohost.yml
+                sudo ln -sfn /vagrant/yunohost/data/actionsmap/yunohost.yml /usr/share/moulinette/actionsmap/yunohost.yml
                 if [ ! -L '/usr/share/yunohost/hooks' ]; then sudo rm -rf /usr/share/yunohost/hooks; fi
-                sudo ln -s -f /vagrant/yunohost/data/hooks /usr/share/yunohost/hooks
+                sudo ln -sfn /vagrant/yunohost/data/hooks /usr/share/yunohost/hooks
                 if [ ! -L '/usr/share/yunohost/templates' ]; then sudo rm -rf /usr/share/yunohost/templates; fi
-                sudo ln -s -f /vagrant/yunohost/data/templates /usr/share/yunohost/templates
+                sudo ln -sfn /vagrant/yunohost/data/templates /usr/share/yunohost/templates
                 if [ ! -L '/usr/share/yunohost/helpers' ]; then sudo rm /usr/share/yunohost/helpers; fi
-                sudo ln -s -f /vagrant/yunohost/data/helpers /usr/share/yunohost/helpers
+                sudo ln -sfn /vagrant/yunohost/data/helpers /usr/share/yunohost/helpers
                 if [ ! -L '/usr/share/yunohost/helpers.d' ]; then sudo rm -rf /usr/share/yunohost/helpers.d; fi
-                sudo ln -s -f /vagrant/yunohost/data/helpers.d /usr/share/yunohost/helpers.d
+                sudo ln -sfn /vagrant/yunohost/data/helpers.d /usr/share/yunohost/helpers.d
                 if [ ! -L '/usr/share/yunohost/yunohost-config/moulinette' ]; then sudo rm -rf /usr/share/yunohost/yunohost-config/moulinette; fi
-                sudo ln -s -f /vagrant/yunohost/data/other /usr/share/yunohost/yunohost-config/moulinette
+                sudo ln -sfn /vagrant/yunohost/data/other /usr/share/yunohost/yunohost-config/moulinette
 
                 # debian
                 if [ ! -L '/usr/share/pam-configs/mkhomedir' ]; then sudo rm /usr/share/pam-configs/mkhomedir; fi
-                sudo ln -s -f /vagrant/yunohost/debian/conf/pam/mkhomedir /usr/share/pam-configs/mkhomedir
+                sudo ln -sfn /vagrant/yunohost/debian/conf/pam/mkhomedir /usr/share/pam-configs/mkhomedir
 
                 # lib
                 if [ ! -L '/usr/lib/metronome/modules/ldap.lib.lua' ]; then sudo rm /usr/lib/metronome/modules/ldap.lib.lua; fi
-                sudo ln -s -f /vagrant/yunohost/lib/metronome/modules/ldap.lib.lua /usr/lib/metronome/modules/ldap.lib.lua
+                sudo ln -sfn /vagrant/yunohost/lib/metronome/modules/ldap.lib.lua /usr/lib/metronome/modules/ldap.lib.lua
                 if [ ! -L '/usr/lib/metronome/modules/mod_auth_ldap2.lua' ]; then sudo rm /usr/lib/metronome/modules/mod_auth_ldap2.lua; fi
-                sudo ln -s -f /vagrant/yunohost/lib/metronome/modules/mod_auth_ldap2.lua /usr/lib/metronome/modules/mod_auth_ldap2.lua
+                sudo ln -sfn /vagrant/yunohost/lib/metronome/modules/mod_auth_ldap2.lua /usr/lib/metronome/modules/mod_auth_ldap2.lua
                 if [ ! -L '/usr/lib/metronome/modules/mod_legacyauth.lua' ]; then sudo rm /usr/lib/metronome/modules/mod_legacyauth.lua; fi
-                sudo ln -s -f /vagrant/yunohost/lib/metronome/modules/mod_legacyauth.lua /usr/lib/metronome/modules/mod_legacyauth.lua
+                sudo ln -sfn /vagrant/yunohost/lib/metronome/modules/mod_legacyauth.lua /usr/lib/metronome/modules/mod_legacyauth.lua
                 if [ ! -L '/usr/lib/metronome/modules/mod_storage_ldap.lua' ]; then sudo rm /usr/lib/metronome/modules/mod_storage_ldap.lua; fi
-                sudo ln -s -f /vagrant/yunohost/lib/metronome/modules/mod_storage_ldap.lua /usr/lib/metronome/modules/mod_storage_ldap.lua
+                sudo ln -sfn /vagrant/yunohost/lib/metronome/modules/mod_storage_ldap.lua /usr/lib/metronome/modules/mod_storage_ldap.lua
                 if [ ! -L '/usr/lib/metronome/modules/vcard.lib.lua' ]; then sudo rm /usr/lib/metronome/modules/vcard.lib.lua; fi
-                sudo ln -s -f /vagrant/yunohost/lib/metronome/modules/vcard.lib.lua /usr/lib/metronome/modules/vcard.lib.lua
+                sudo ln -sfn /vagrant/yunohost/lib/metronome/modules/vcard.lib.lua /usr/lib/metronome/modules/vcard.lib.lua
 
                 # src
                 if [ ! -L '/usr/lib/moulinette/yunohost' ]; then sudo rm -rf /usr/lib/moulinette/yunohost; fi
-                sudo ln -s -f /vagrant/yunohost/src/yunohost /usr/lib/moulinette/yunohost
+                sudo ln -sfn /vagrant/yunohost/src/yunohost /usr/lib/moulinette/yunohost
 
                 # locales
                 if [ ! -L '/usr/lib/moulinette/yunohost/locales' ]; then sudo rm -rf /usr/lib/moulinette/yunohost/locales; fi
-                sudo ln -s -f /vagrant/yunohost/locales /usr/lib/moulinette/yunohost/locales
+                sudo ln -sfn /vagrant/yunohost/locales /usr/lib/moulinette/yunohost/locales
 
                 # Remove actionsmap cache
                 [ -e '/var/cache/moulinette/actionsmap/yunohost.pkl' ] && sudo rm /var/cache/moulinette/actionsmap/yunohost.pkl
@@ -299,7 +299,7 @@ elif [ "$1" = "use-git" ]; then
                     sudo rm -rf /usr/share/yunohost/admin
                 fi
                 # Symlink from Git repository
-                sudo ln -s -f /vagrant/yunohost-admin/src /usr/share/yunohost/admin
+                sudo ln -sfn /vagrant/yunohost-admin/src /usr/share/yunohost/admin
 
                 echo "--------------------------------------------------------"
                 echo "Launching gulp ... "
