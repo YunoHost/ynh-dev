@@ -162,7 +162,7 @@ elif [ "$1" = "run" ]; then
     IP=$(grep "$IP_LINE" Vagrantfile | sed "s/${IP_LINE}//")
     IP=${IP::-1}
     echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
-    echo "sudo sh -s 'echo \"$IP $DOMAIN\" > /etc/hosts'"
+    echo "sudo sh -s 'echo \"$IP $DOMAIN\" >> /etc/hosts'"
     echo ""
 
     # Log into the VM
