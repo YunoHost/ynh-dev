@@ -264,9 +264,6 @@ elif [ "$1" = "use-git" ]; then
                 if [ ! -L '/usr/lib/moulinette/yunohost/locales' ]; then sudo rm -rf /usr/lib/moulinette/yunohost/locales; fi
                 sudo ln -sfn /vagrant/yunohost/locales /usr/lib/moulinette/yunohost/locales
 
-                # Remove actionsmap cache
-                [ -e '/var/cache/moulinette/actionsmap/yunohost.pkl' ] && sudo rm /var/cache/moulinette/actionsmap/yunohost.pkl
-                echo "↳ Don't forget to remove '/var/cache/moulinette/actionsmap/yunohost.pkl' cache when hacking yunohost"
                 echo ""
                 ;;
             yunohost-admin)
