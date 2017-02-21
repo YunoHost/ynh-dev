@@ -29,9 +29,12 @@ PACKAGES :
     yunohost-admin
 
 VERSION
-    stable
-    testing
-    unstable
+    stable32
+    testing32
+    unstable32
+    stable64
+    testing64
+    unstable64
 EOF
 }
 
@@ -99,7 +102,7 @@ elif [ "$1" = "create-env" ]; then
 elif [ "$1" = "run" ]; then
 
     DOMAIN=$2
-    VERSION='stable'
+    VERSION='stable64'
     if [ "$#" = "3" ]; then
         VERSION=$3
     fi
@@ -108,18 +111,31 @@ elif [ "$1" = "run" ]; then
     echo ""
 
     # Get vagrant box info from version
-    if [ "$VERSION" = "stable" ]; then
-        BOX_NAME="yunohost/jessie-stable"
-        BOX_URL="https://build.yunohost.org/yunohost-jessie-stable.box"
+    if [ "$VERSION" = "stable64" ]; then
+        BOX_NAME="yunohost/jessie-amd64-stable"
+        BOX_URL="https://build.yunohost.org/yunohost-jessie-amd64-stable.box"
         IP="192.168.33.80"
-    elif [ "$VERSION" = "testing" ]; then
-        BOX_NAME="yunohost/jessie-testing"
-        BOX_URL="https://build.yunohost.org/yunohost-jessie-testing.box"
+    elif [ "$VERSION" = "testing64" ]; then
+        BOX_NAME="yunohost/jessie-amd64-testing"
+        BOX_URL="https://build.yunohost.org/yunohost-jessie-amd64-testing.box"
         IP="192.168.33.81"
-    elif [ "$VERSION" = "unstable" ]; then
-        BOX_NAME="yunohost/jessie-unstable"
-        BOX_URL="https://build.yunohost.org/yunohost-jessie-unstable.box"
+    elif [ "$VERSION" = "unstable64" ]; then
+        BOX_NAME="yunohost/jessie-amd64-unstable"
+        BOX_URL="https://build.yunohost.org/yunohost-jessie-amd64-unstable.box"
         IP="192.168.33.82"
+    elif [ "$VERSION" = "stable32" ]; then
+        BOX_NAME="yunohost/jessie-i386-stable"
+        BOX_URL="https://build.yunohost.org/yunohost-jessie-i386-stable.box"
+        IP="192.168.33.83"
+    elif [ "$VERSION" = "testing32" ]; then
+        BOX_NAME="yunohost/jessie-i386-testing"
+        BOX_URL="https://build.yunohost.org/yunohost-jessie-i386-testing.box"
+        IP="192.168.33.84"
+    elif [ "$VERSION" = "unstable32" ]; then
+        BOX_NAME="yunohost/jessie-i386-unstable"
+        BOX_URL="https://build.yunohost.org/yunohost-jessie-i386-unstable.box"
+        IP="192.168.33.85"
+    else
     else
         echo "ERROR: Incorrect version '$VERSION'. See '$(basename $0) --help' for usage."
         exit 102
