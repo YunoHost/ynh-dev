@@ -136,7 +136,6 @@ elif [ "$1" = "run" ]; then
         BOX_URL="https://build.yunohost.org/yunohost-jessie-i386-unstable.box"
         IP="192.168.33.85"
     else
-    else
         echo "ERROR: Incorrect version '$VERSION'. See '$(basename $0) --help' for usage."
         exit 102
     fi
