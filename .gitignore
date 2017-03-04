@@ -1,0 +1,17 @@
+# Apps
+*_ynh
+
+# Tools
+vagrant
+ynh-dev-tools
+Vagrantfile
+
+# Sources repositories
+moulinette
+yunohost
+yunohost-admin
+ssowat
+
+# Folders
+apps
+backup
