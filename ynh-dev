@@ -58,6 +58,7 @@ if [ "$#" = "1" ]; then
 fi
 
 BASE_DIR=./
+IP_BASE="192.168.33."
 
 ##################
 ## Help message ##
@@ -120,15 +121,12 @@ elif [ "$1" = "run" ]; then
     if [ "$VERSION" = "stable" ]; then
         BOX_NAME="yunohost/jessie-stable"
         BOX_URL="https://build.yunohost.org/yunohost-jessie-stable.box"
-        IP="192.168.33.80"
     elif [ "$VERSION" = "testing" ]; then
         BOX_NAME="yunohost/jessie-testing"
         BOX_URL="https://build.yunohost.org/yunohost-jessie-testing.box"
-        IP="192.168.33.81"
     elif [ "$VERSION" = "unstable" ]; then
         BOX_NAME="yunohost/jessie-unstable"
         BOX_URL="https://build.yunohost.org/yunohost-jessie-unstable.box"
-        IP="192.168.33.82"
     else
         echo "ERROR: Incorrect version '$VERSION'. See '$(basename $0) --help' for usage."
         exit 102
@@ -141,12 +139,39 @@ elif [ "$1" = "run" ]; then
         echo ""
     fi
 
+    # Deduce the vm name
+    VMNAME=${DOMAIN//./_}
+
+
+    # Add the vm vagrant config in Vagrantfile
+    vagrant status $VMNAME &> /dev/null || {
+
+        # Find an available ip
+        for i in `seq 1 254`;
+        do
+            grep "${IP_BASE//./\.}$i" Vagrantfile &> /dev/null || {
+                IP="${IP_BASE}$i"
+                break
+            }
+        done
+
+        sed -i "/  ### END AUTOMATIC YNH-DEV ###/ i \\
+  config.vm.define \"${VMNAME}\" do |${VMNAME}| \
+\n    ${VMNAME}.vm.box = \"yunohost/jessie-${VERSION}\" \
+\n    ${VMNAME}.vm.network :private_network, ip: \"${IP}\" \
+\n  end \
+\n" ./Vagrantfile
+    }
+
     # Run VM
     vagrant up $VERSION --provider virtualbox
 
     # Warn user about hosts file
+    IP_LINE="\s\s*${VMNAME}.vm.network\s\s*:private_network,\s*ip:\s*\""
+    IP=$(grep "$IP_LINE" Vagrantfile | sed "s/${IP_LINE}//")
+    IP=${IP::-1}
     echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
-    echo "sudo su -c \"echo  '$IP $DOMAIN' >> /etc/hosts\" root"
+    echo "sudo sh -s 'echo \"$IP $DOMAIN\" >> /etc/hosts'"
     echo ""
 
     # Log into the VM
