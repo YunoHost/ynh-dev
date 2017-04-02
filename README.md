@@ -175,6 +175,12 @@ cd /path/to/dev/env
 vagrant suspend unstable
 ```
 
+To halt a vm:
+
+```bash
+./ynh-dev halt
+```
+
 ## 2. Directly on a YunoHost instance
 
 Firstly, you need to understand that it is a dev tool, you shouldn't run it on a production environment !
