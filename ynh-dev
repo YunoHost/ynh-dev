@@ -19,6 +19,8 @@ Usage :
             Upgrade the container
         `basename $0` use-git [PACKAGES [PACKAGES ...]]
             Use Git repositories from dev environment path
+        `basename $0` test [PACKAGES [PACKAGES ...]]
+            Deploy, update and run tests for some packages
         `basename $0` self-update
             Update this script (`basename $0`)
 
@@ -301,6 +303,52 @@ elif [ "$1" = "use-git" ]; then
                 echo "--------------------------------------------------------"
                 sudo su -c "gulp watch --dev" vagrant
 
+                ;;
+        esac
+    done
+
+
+elif [ "$1" = "test" ]; then
+    check_yunohost_vm
+    VERSION=$2
+
+    for i in ${!packages[@]}; do
+        case ${packages[i]} in
+            yunohost)
+                # Pytest and tests dependencies
+                if ! type "pytest" > /dev/null; then
+                    echo "======================="
+                    echo "> Installing pytest ..."
+                    echo "======================="
+                    apt-get install python-pip
+                    pip2 install pytest
+                fi
+                PIP_DEPENDENCIES="pytest-mock requests-mock"
+                for DEP in $PIP_DEPENDENCIES
+                do
+                    if [ -z "pip show $DEP" ]; then
+                        echo "======================="
+                        echo "Installing $DEP with pip"
+                        echo "======================="
+                        pip2 install $DEP
+                    fi
+                done
+
+                # Apps for test
+                cd /vagrant/yunohost/src/yunohost/tests
+                if [ ! -d "apps" ]; then
+                    git clone https://github.com/YunoHost/test_apps ./apps
+                else
+                    cd apps
+                    git pull > /dev/null 2>&1
+                fi
+
+                # Run tests
+                echo "Running tests for Yunohost"
+                cd /vagrant/yunohost/
+                py.test tests
+                cd /vagrant/yunohost/src/yunohost
+                py.test tests
                 ;;
         esac
     done
