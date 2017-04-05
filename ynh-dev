@@ -344,7 +344,7 @@ elif [ "$1" = "test" ]; then
                 fi
 
                 # Run tests
-                echo "Running tests for Yunohost"
+                echo "Running tests for YunoHost"
                 cd /vagrant/yunohost/
                 py.test tests
                 cd /vagrant/yunohost/src/yunohost
