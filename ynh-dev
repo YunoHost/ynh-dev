@@ -326,7 +326,7 @@ elif [ "$1" = "test" ]; then
                 PIP_DEPENDENCIES="pytest-mock requests-mock"
                 for DEP in $PIP_DEPENDENCIES
                 do
-                    if [ -z "pip show $DEP" ]; then
+                    if [ -z `pip show $DEP` ]; then
                         echo "======================="
                         echo "Installing $DEP with pip"
                         echo "======================="
