@@ -1,51 +1,148 @@
 #!/bin/bash
 
-usage() {
-    cat <<EOF
-Usage :
+###############################################################################
+# Global variables                                                            #
+###############################################################################
 
-    On the host
-        `basename $0` create-env PATH
-            Create a dev environment into PATH
-        `basename $0` run DOMAIN [VERSION]
-            Run a vagrant or virtualbox vm
-        # `basename $0` kill
-        #     Kill all vagrant
+readonly IP_BASE="192.168.33."
+readonly SCRIPT_NAME=`basename $0`
+readonly KNOWN_PACKAGES="moulinette ssowat yunohost yunohost-admin"
+readonly KNOWN_VERSIONS="stable testing unstable"
+readonly BASE_INSIDE_VM="/vagrant"
 
-    Inside the vm
-        `basename $0` ip
-            Give the ip of the guest container
-        `basename $0` upgrade
-            Upgrade the container
-        `basename $0` use-git [PACKAGES [PACKAGES ...]]
-            Use Git repositories from dev environment path
-        `basename $0` test [PACKAGES [PACKAGES ...]]
-            Deploy, update and run tests for some packages
-        `basename $0` self-update
-            Update this script (`basename $0`)
+###############################################################################
+# Usage and options parsing                                                   #
+###############################################################################
 
-PACKAGES :
-    moulinette
-    ssowat
-    yunohost
-    yunohost-admin
+show_usage()
+{
+    cat <<- EOF
+	Usage :
 
-VERSION
-    stable
-    testing
-    unstable
-EOF
+	    On the host
+	    -----------
+
+	        create-env PATH
+	            Create a dev environment into PATH
+	        run DOMAIN [VERSION]
+	            Run a vagrant or virtualbox vm
+	        kill
+	            Kill all vagrant
+
+	    Inside the vm
+	    -------------
+
+	        ip
+	            Give the ip of the guest container
+	        upgrade
+	            Upgrade the container
+	        use-git [PACKAGE [PACKAGE ...]]
+	            Use Git repositories from dev environment path
+	        test [PACKAGE [PACKAGE ...]]
+	            Deploy, update and run tests for some packages
+	        self-update
+	            Update this script (${SCRIPT_NAME})
+
+	# PACKAGES
+
+	    moulinette
+	    ssowat
+	    yunohost
+	    yunohost-admin
+
+	# VERSIONS
+
+	    stable
+	    testing
+	    unstable
+	EOF
 }
 
-check_yunohost_vm() {
-    if [ ! -d /etc/yunohost ]
-    then
-        echo "You need to install YunoHost first. Maybe you are not in a vm ?"
-        exit 100;
-    fi
+execute_action()
+{
+    local ACTION="$1"
+    local ARGUMENTS="${@:2}"
+
+    case "${ACTION}" in
+        help|-h|--help)            show_usage  $ARGUMENTS ;;
+        create-env|--create-env)   create_env  $ARGUMENTS ;;
+        run|--run)                 run_vm      $ARGUMENTS ;;
+        kill|--kill)               kill_vm     $ARGUMENTS ;;
+        ip|--ip)                   show_vm_ip  $ARGUMENTS ;;
+        upgrade|--upgrade)         upgrade_vm  $ARGUMENTS ;;
+        use-git|--use-git)         use_git     $ARGUMENTS ;;
+        test|--test)               run_tests   $ARGUMENTS ;;
+        self-update|--self-update) self_update $ARGUMENTS ;;
+        *)
+            echo "Unknown action ${ACTION}."
+            show_usage
+            exit 100
+            ;;
+    esac
 }
 
-create_sym_link() {
+###############################################################################
+# Helpers                                                                     #
+###############################################################################
+
+is_empty_string()
+{
+    [[ -z "$1" ]]
+}
+
+is_not_empty_string()
+{
+    [[ -n "$1" ]]
+}
+
+file_exists()
+{
+    [[ -e "$1" ]]
+}
+
+is_directory()
+{
+    [[ -d "$1" ]]
+}
+
+list_contains_element () {
+    local LIST="$1"
+    local ELEMENT_TO_FIND="$2"
+    local ELEMENT
+    for ELEMENT in ${LIST}; do
+        [[ "$ELEMENT" == "$ELEMENT_TO_FIND" ]] && return 0;
+    done
+    return 1
+}
+
+assert_inside_yunohost_vm()
+{
+    is_directory "/etc/yunohost" || {
+        echo "You are not inside a Yunohost instance. Maybe you need to install it first ?"
+        exit 101;
+    }
+}
+
+assert_package_is_known()
+{
+    local PACKAGE="$1"
+    list_contains_element "$KNOWN_PACKAGES" "$PACKAGE" || {
+        echo "ERROR: Incorrect package '$PACKAGE'. See '${SCRIPT_NAME} --help' for usage."
+        exit 102
+    }
+}
+
+assert_version_is_known()
+{
+    local VERSION="$1"
+    list_contains_element "$KNOWN_VERSIONS" "$VERSION" || {
+        echo "ERROR: Incorrect version '$VERSION'. See '${SCRIPT_NAME} --help' for usage."
+        exit 103
+    }
+}
+
+create_sym_link()
+{
     # Remove current sources if not a symlink
     if [ ! -L '$2' ]; then
         sudo rm -rf $2
@@ -54,37 +151,27 @@ create_sym_link() {
     sudo ln -sfn $1 $2
 }
 
-packages=${@:2}
-if [ "$#" = "1" ]; then
-    packages=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
-fi
-
-BASE_DIR=./
-IP_BASE="192.168.33."
-
-##################
-## Help message ##
-##################
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ]; then
-    usage
 
 
-######################################
-## Create a development environment ##
-######################################
-elif [ "$1" = "create-env" ]; then
+###############################################################################
+# Create a development environment                                            #
+###############################################################################
+
+create_env()
+{
     set -x
 
-    pwd=`pwd`
+    local PATH_="$1"
 
-    if [ ! "$2" ]
-    then
-        echo "I need a destination folder to create the dev environement"
-        exit 1
-    fi
+    is_not_empty_string "$PATH_" \
+        || { echo "I need a destination folder to create the dev environnement"
+             exit 104 
+    }
 
-    [ -e "$2" ] || mkdir -p $2
-    cd $2
+    file_exists "$PATH_" \
+        || mkdir -p "$PATH_"
+
+    cd "$PATH_"
 
     # Create apps & backup folder
     mkdir -p apps
@@ -103,47 +190,37 @@ elif [ "$1" = "create-env" ]; then
     # Get YunoHost dev tools
     git clone -b master https://github.com/YunoHost/ynh-dev ynh-dev-tools
     cp ynh-dev-tools/ynh-dev ynh-dev
+}
 
+###############################################################################
+# Run a vm and give a prompt                                                  #
+###############################################################################
 
-#################################
-## Run a vm and give a prompt ##
-#################################
-elif [ "$1" = "run" ]; then
+run_vm()
+{
+    local DOMAIN="$1"
+    local VERSION="${2:-stable}" # (use $2, or "stable" by default)
 
-    DOMAIN=$2
-    VERSION='stable'
-    if [ "$#" = "3" ]; then
-        VERSION=$3
-    fi
+    # Get vagrant box info from version
+    local VMNAME="${DOMAIN//./_}"
+    local BOX_NAME="yunohost/jessie-${VERSION}"
+    local BOX_URL="https://build.yunohost.org/yunohost-jessie-${VERSION}.box"
+
+    assert_version_is_known "$VERSION"
 
     echo "Creating $DOMAIN virtual machine with YunoHost $VERSION version"
     echo ""
-
-    # Get vagrant box info from version
-    if [ "$VERSION" = "stable" ]; then
-        BOX_NAME="yunohost/jessie-stable"
-        BOX_URL="https://build.yunohost.org/yunohost-jessie-stable.box"
-    elif [ "$VERSION" = "testing" ]; then
-        BOX_NAME="yunohost/jessie-testing"
-        BOX_URL="https://build.yunohost.org/yunohost-jessie-testing.box"
-    elif [ "$VERSION" = "unstable" ]; then
-        BOX_NAME="yunohost/jessie-unstable"
-        BOX_URL="https://build.yunohost.org/yunohost-jessie-unstable.box"
-    else
-        echo "ERROR: Incorrect version '$VERSION'. See '$(basename $0) --help' for usage."
-        exit 102
-    fi
 
     # Download box if not available
     if ! vagrant box list | grep -qc $BOX_NAME ; then
         echo "Vagrant box '$BOX_NAME' is missing. Trying to download it"
         vagrant box add $BOX_NAME $BOX_URL --provider virtualbox
+        #[ $? -eq 0 ] || {
+        #    echo "Download failed of $BOX_NAME from $BOX_URL failed !"
+        #    exit 105
+        #}
         echo ""
     fi
-
-    # Deduce the vm name
-    VMNAME=${DOMAIN//./_}
-
 
     # Add the vm vagrant config in Vagrantfile
     vagrant status $VMNAME &> /dev/null || {
@@ -152,14 +229,14 @@ elif [ "$1" = "run" ]; then
         for i in `seq 1 254`;
         do
             grep "${IP_BASE//./\.}$i" Vagrantfile &> /dev/null || {
-                IP="${IP_BASE}$i"
+                local IP="${IP_BASE}$i"
                 break
             }
         done
 
         sed -i "/  ### END AUTOMATIC YNH-DEV ###/ i \\
   config.vm.define \"${VMNAME}\" do |${VMNAME}| \
-\n    ${VMNAME}.vm.box = \"yunohost/jessie-${VERSION}\" \
+\n    ${VMNAME}.vm.box = \"${BOX_NAME}\" \
 \n    ${VMNAME}.vm.network :private_network, ip: \"${IP}\" \
 \n  end \
 \n" ./Vagrantfile
@@ -169,8 +246,8 @@ elif [ "$1" = "run" ]; then
     vagrant up $VERSION --provider virtualbox
 
     # Warn user about hosts file
-    IP_LINE="\s\s*${VMNAME}.vm.network\s\s*:private_network,\s*ip:\s*\""
-    IP=$(grep "$IP_LINE" Vagrantfile | sed "s/${IP_LINE}//")
+    local IP_LINE="\s\s*${VMNAME}.vm.network\s\s*:private_network,\s*ip:\s*\""
+    local IP=$(grep "$IP_LINE" Vagrantfile | sed "s/${IP_LINE}//")
     IP=${IP::-1}
     echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
     echo "sudo sh -s 'echo \"$IP $DOMAIN\" >> /etc/hosts'"
@@ -179,91 +256,107 @@ elif [ "$1" = "run" ]; then
     # Log into the VM
     vagrant ssh $VERSION
 
+}
 
-#####################
-## Kill running VM ##
-#####################
-elif [ "$1" = "kill" ]; then
+###############################################################################
+# Kill running VM                                                             #
+###############################################################################
+
+kill_vm()
+{
     vagrant destroy
+}
 
+###############################################################################
+# Upgrade current VM                                                          #
+###############################################################################
 
-#######################
-## Update current VM ##
-#######################
-elif [ "$1" = "upgrade" ]; then
-    check_yunohost_vm
+upgrade_vm()
+{
+    assert_inside_yunohost_vm
     sudo apt-get update
     sudo apt-get -y upgrade
     sudo apt-get -y dist-upgrade
+}
 
+###############################################################################
+# Get current VM IP                                                           #
+###############################################################################
 
-#######################
-## Get current VM IP ##
-#######################
-elif [ "$1" = "ip" ]; then
-    check_yunohost_vm
+show_vm_ip()
+{
+    assert_inside_yunohost_vm
     # Print IP
-    ip=$(/bin/ip a | grep 'inet 192.168' | awk -F " " '{print $2}' | awk -F "/" '{print $1}')
+    local ip=$(/bin/ip a | grep 'inet 192.168' | awk -F " " '{print $2}' | awk -F "/" '{print $1}')
     echo "IP: $ip"
+}
 
+###############################################################################
+# Use Git version for YunoHost packages                                       #
+###############################################################################
 
-###########################################
-## Use Git version for YunoHost packages ##
-###########################################
-elif [ "$1" = "use-git" ]; then
-    check_yunohost_vm
-    VERSION=$2
+use_git()
+{
+    assert_inside_yunohost_vm
+    PACKAGES="$@"
 
-    for i in ${!packages[@]}; do
-        case ${packages[i]} in
+    is_not_empty_string "$PACKAGES" || PACKAGES=${KNOWN_PACKAGES}
+
+    echo $PACKAGES
+
+    local PACKAGE
+    for PACKAGE in $PACKAGES; do
+        echo $PACKAGE
+        assert_package_is_known $PACKAGE
+        case "$PACKAGE" in
             ssowat)
                 echo "Using Git repository for SSOwat"
-                create_sym_link "/vagrant/ssowat" "/usr/share/ssowat"
+                create_sym_link "${BASE_INSIDE_VM}/ssowat" "/usr/share/ssowat"
                 echo "↳ Don't forget to do 'sudo yunohost app ssowatconf' when hacking SSOwat"
                 echo ""
                 ;;
             moulinette)
-                create_sym_link "/vagrant/moulinette/locales" "/usr/share/moulinette/locale"
-                create_sym_link "/vagrant/moulinette/moulinette/authenticators" "/usr/lib/python2.7/dist-packages/moulinette/authenticator"
-                create_sym_link "/vagrant/moulinette/moulinette/interfaces" "/usr/lib/python2.7/dist-packages/moulinette/interfaces"
-                create_sym_link "/vagrant/moulinette/moulinette/utils" "/usr/lib/python2.7/dist-packages/moulinette/utils"
-                create_sym_link "/vagrant/moulinette/moulinette/__init__.py" "/usr/lib/python2.7/dist-packages/moulinette/__init__.py"
-                create_sym_link "/vagrant/moulinette/moulinette/core.py" "/usr/lib/python2.7/dist-packages/moulinette/core.py"
-                create_sym_link "/vagrant/moulinette/moulinette/actionsmap.py" "/usr/lib/python2.7/dist-packages/moulinette/actionsmap.py"
-                echo "↳ If you add files at the root of this directory /vagrant/moulinette/moulinette/ you should adapt ynh-dev"
+                create_sym_link "${BASE_INSIDE_VM}/moulinette/locales" "/usr/share/moulinette/locale"
+                create_sym_link "${BASE_INSIDE_VM}/moulinette/moulinette/authenticators" "/usr/lib/python2.7/dist-packages/moulinette/authenticator"
+                create_sym_link "${BASE_INSIDE_VM}/moulinette/moulinette/interfaces" "/usr/lib/python2.7/dist-packages/moulinette/interfaces"
+                create_sym_link "${BASE_INSIDE_VM}/moulinette/moulinette/utils" "/usr/lib/python2.7/dist-packages/moulinette/utils"
+                create_sym_link "${BASE_INSIDE_VM}/moulinette/moulinette/__init__.py" "/usr/lib/python2.7/dist-packages/moulinette/__init__.py"
+                create_sym_link "${BASE_INSIDE_VM}/moulinette/moulinette/core.py" "/usr/lib/python2.7/dist-packages/moulinette/core.py"
+                create_sym_link "${BASE_INSIDE_VM}/moulinette/moulinette/actionsmap.py" "/usr/lib/python2.7/dist-packages/moulinette/actionsmap.py"
+                echo "↳ If you add files at the root of this directory ${BASE_INSIDE_VM}/moulinette/moulinette/ you should adapt ynh-dev"
                 echo ""
                 ;;
             yunohost)
                 echo "Using Git repository for yunohost"
 
                 # bin
-                create_sym_link "/vagrant/yunohost/bin/yunohost" "/usr/bin/yunohost" 
-                create_sym_link "/vagrant/yunohost/bin/yunohost-api" "/usr/bin/yunohost-api"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/bin/yunohost" "/usr/bin/yunohost"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/bin/yunohost-api" "/usr/bin/yunohost-api"
 
                 # data
-                create_sym_link "/vagrant/yunohost/data/bash-completion.d/yunohost" "/etc/bash_completion.d/yunohost"
-                create_sym_link "/vagrant/yunohost/data/actionsmap/yunohost.yml" "/usr/share/moulinette/actionsmap/yunohost.yml"
-                create_sym_link "/vagrant/yunohost/data/hooks" "/usr/share/yunohost/hooks"
-                create_sym_link "/vagrant/yunohost/data/templates" "/usr/share/yunohost/templates"
-                create_sym_link "/vagrant/yunohost/data/helpers" "/usr/share/yunohost/helpers"
-                create_sym_link "/vagrant/yunohost/data/helpers.d" "/usr/share/yunohost/helpers.d"
-                create_sym_link "/vagrant/yunohost/data/other" "/usr/share/yunohost/yunohost-config/moulinette"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/data/bash-completion.d/yunohost" "/etc/bash_completion.d/yunohost"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/data/actionsmap/yunohost.yml" "/usr/share/moulinette/actionsmap/yunohost.yml"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/data/hooks" "/usr/share/yunohost/hooks"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/data/templates" "/usr/share/yunohost/templates"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/data/helpers" "/usr/share/yunohost/helpers"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/data/helpers.d" "/usr/share/yunohost/helpers.d"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/data/other" "/usr/share/yunohost/yunohost-config/moulinette"
 
                 # debian
-                create_sym_link "/vagrant/yunohost/debian/conf/pam/mkhomedir" "/usr/share/pam-configs/mkhomedir"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/debian/conf/pam/mkhomedir" "/usr/share/pam-configs/mkhomedir"
 
                 # lib
-                create_sym_link "/vagrant/yunohost/lib/metronome/modules/ldap.lib.lua" "/usr/lib/metronome/modules/ldap.lib.lua"
-                create_sym_link "/vagrant/yunohost/lib/metronome/modules/mod_auth_ldap2.lua" "/usr/lib/metronome/modules/mod_auth_ldap2.lua"
-                create_sym_link "/vagrant/yunohost/lib/metronome/modules/mod_legacyauth.lua" "/usr/lib/metronome/modules/mod_legacyauth.lua"
-                create_sym_link "/vagrant/yunohost/lib/metronome/modules/mod_storage_ldap.lua" "/usr/lib/metronome/modules/mod_storage_ldap.lua"
-                create_sym_link "/vagrant/yunohost/lib/metronome/modules/vcard.lib.lua" "/usr/lib/metronome/modules/vcard.lib.lua"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/lib/metronome/modules/ldap.lib.lua" "/usr/lib/metronome/modules/ldap.lib.lua"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/lib/metronome/modules/mod_auth_ldap2.lua" "/usr/lib/metronome/modules/mod_auth_ldap2.lua"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/lib/metronome/modules/mod_legacyauth.lua" "/usr/lib/metronome/modules/mod_legacyauth.lua"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/lib/metronome/modules/mod_storage_ldap.lua" "/usr/lib/metronome/modules/mod_storage_ldap.lua"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/lib/metronome/modules/vcard.lib.lua" "/usr/lib/metronome/modules/vcard.lib.lua"
 
                 # src
-                create_sym_link "/vagrant/yunohost/src/yunohost" "/usr/lib/moulinette/yunohost"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/src/yunohost" "/usr/lib/moulinette/yunohost"
 
                 # locales
-                create_sym_link "/vagrant/yunohost/locales" "/usr/lib/moulinette/yunohost/locales"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost/locales" "/usr/lib/moulinette/yunohost/locales"
 
                 echo ""
                 ;;
@@ -273,7 +366,7 @@ elif [ "$1" = "use-git" ]; then
                 getent passwd vagrant > /dev/null
                 if [ $? -eq 2 ]; then
                     useradd vagrant
-                    chown -R vagrant: /vagrant/yunohost-admin
+                    chown -R vagrant: ${BASE_INSIDE_VM}/yunohost-admin
                 fi
 
                 # Install npm dependencies if needed
@@ -282,22 +375,22 @@ elif [ "$1" = "use-git" ]; then
                 then
                     sudo apt-get update --fix-missing
                     sudo apt-get -y install nodejs-legacy npm
-                    cd /vagrant/yunohost-admin/src
+                    cd ${BASE_INSIDE_VM}/yunohost-admin/src
                     sudo npm install
                     sudo npm install -g bower
                     sudo npm install -g gulp
                 fi
-                cd /vagrant/yunohost-admin/src
+                cd ${BASE_INSIDE_VM}/yunohost-admin/src
                 sudo su -c "bower install" vagrant
                 sudo su -c "gulp build --dev" vagrant
 
                 echo "Using Git repository for yunohost-admin"
-                create_sym_link "/vagrant/yunohost-admin/src" "/usr/share/yunohost/admin"
+                create_sym_link "${BASE_INSIDE_VM}/yunohost-admin/src" "/usr/share/yunohost/admin"
 
                 echo "--------------------------------------------------------"
                 echo "Launching gulp ... "
                 echo "NB : This command will keep running and watch for changes"
-                echo " in the folder /vagrant/yunohost-admin/src, such that you"
+                echo " in the folder ${BASE_INSIDE_VM}/yunohost-admin/src, such that you"
                 echo "don't need to re-run npm yourself everytime you change"
                 echo "something !"
                 echo "--------------------------------------------------------"
@@ -306,63 +399,89 @@ elif [ "$1" = "use-git" ]; then
                 ;;
         esac
     done
+}
 
+###############################################################################
+# Run tests for a given package                                               #
+###############################################################################
 
-elif [ "$1" = "test" ]; then
-    check_yunohost_vm
-    VERSION=$2
+readonly PIP_DEPENDENCIES_FOR_TESTS="pytest-mock requests-mock"
 
-    for i in ${!packages[@]}; do
-        case ${packages[i]} in
+install_or_update_test_dependencies()
+{
+    # Pytest
+    if ! type "pytest" > /dev/null; then
+        echo "======================="
+        echo "> Installing pytest ..."
+        echo "======================="
+        apt-get install python-pip
+        pip2 install pytest
+    fi
+    for DEP in "$PIP_DEPENDENCIES_FOR_TESTS"
+    do
+        # Install this dependency if it's not already there
+        is_not_empty_string "$(pip show $DEP)" || {
+            echo "======================="
+            echo "Installing $DEP with pip"
+            echo "======================="
+            pip2 install $DEP
+        }
+    done
+
+    # Apps for test
+    cd ${BASE_INSIDE_VM}/yunohost/src/yunohost/tests
+    if [ ! -d "apps" ]; then
+        git clone https://github.com/YunoHost/test_apps ./apps
+    else
+        cd apps
+        git pull > /dev/null 2>&1
+    fi
+}
+
+run_tests()
+{
+    PACKAGES="$@"
+
+    assert_inside_yunohost_vm
+    install_or_update_test_dependencies
+    is_not_empty_string "$PACKAGES" || PACKAGES=${KNOWN_PACKAGES}
+
+    for PACKAGE in $PACKAGES; do
+        assert_package_is_known $PACKAGE
+        echo "Running tests for $PACKAGE"
+        case "$PACKAGE" in
             yunohost)
-                # Pytest and tests dependencies
-                if ! type "pytest" > /dev/null; then
-                    echo "======================="
-                    echo "> Installing pytest ..."
-                    echo "======================="
-                    apt-get install python-pip
-                    pip2 install pytest
-                fi
-                PIP_DEPENDENCIES="pytest-mock requests-mock"
-                for DEP in $PIP_DEPENDENCIES
-                do
-                    if [ -z "$(pip show $DEP)" ]; then
-                        echo "======================="
-                        echo "Installing $DEP with pip"
-                        echo "======================="
-                        pip2 install $DEP
-                    fi
-                done
-
-                # Apps for test
-                cd /vagrant/yunohost/src/yunohost/tests
-                if [ ! -d "apps" ]; then
-                    git clone https://github.com/YunoHost/test_apps ./apps
-                else
-                    cd apps
-                    git pull > /dev/null 2>&1
-                fi
-
                 # Run tests
-                echo "Running tests for YunoHost"
-                cd /vagrant/yunohost/
+                cd ${BASE_INSIDE_VM}/yunohost/
                 py.test tests
-                cd /vagrant/yunohost/src/yunohost
+                cd ${BASE_INSIDE_VM}/yunohost/src/yunohost
                 py.test tests
                 ;;
         esac
     done
+}
 
+###############################################################################
+# Self-update                                                                 #
+###############################################################################
 
-elif [ "$1" = "self-update" ]; then
-    check_yunohost_vm
-    cd /vagrant/vagrant && git pull origin master
-    cd /vagrant/ynh-dev-tools && git pull origin master && cp ynh-dev ../ynh-dev
+self_update()
+{
+    assert_inside_yunohost_vm
+    cd ${BASE_INSIDE_VM}/vagrant && git pull origin master
+    cd ${BASE_INSIDE_VM}/ynh-dev-tools && git pull origin master && cp ynh-dev ../ynh-dev
+}
 
-# Fallback to print usage
-else
-    usage
-    exit 101
-fi
+###############################################################################
+# Main                                                                        #
+###############################################################################
 
-exit 0;
+main()
+{
+    local ACTION="$1"
+    local ARGUMENTS="${@:2}"
+
+    execute_action "$ACTION" "$ARGUMENTS"
+}
+
+main "$@"
