@@ -43,7 +43,6 @@ sudo apt-get install vagrant virtualbox git
 sudo dnf install vagrant git
 ```
 
- VirtualBox 5.1.4 only works with Vagrant ≥ 1.8.5. It could be installed from Fedora 25 or [rawhide](https://stackoverflow.com/a/24968411).
 - [Install Virtualbox 5.1.x](http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel)
 
 ##### Archlinux, Manjaro
