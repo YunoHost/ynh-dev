@@ -74,7 +74,7 @@ This command create a clone of main git repositories and organize its.
 This command is a helper to run a Vagrant virtual machine in the right place with YunoHost installed (but not postinstalled).
 ```shell
 cd /path/to/dev/env
-./ynh-dev run ynh.local unstable64
+./ynh-dev run ynh.local unstable
 ```
 
 The `run` command takes 2 arguments: domain and YunoHost version.
@@ -163,7 +163,7 @@ To kill the vm, just do on your host:
 
 ```shell
 cd /path/to/dev/env
-vagrant destroy unstable64
+vagrant destroy unstable
 # or
 ./ynh-dev kill
 ```
@@ -172,7 +172,7 @@ To suspend the vm
 
 ```shell
 cd /path/to/dev/env
-vagrant suspend unstable64
+vagrant suspend unstable
 ```
 
 ## 2. Directly on a YunoHost instance
