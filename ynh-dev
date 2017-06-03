@@ -166,7 +166,7 @@ elif [ "$1" = "run" ]; then
     }
 
     # Run VM
-    vagrant up $VERSION --provider virtualbox
+    vagrant up $VMNAME --provider virtualbox
 
     # Warn user about hosts file
     IP_LINE="\s\s*${VMNAME}.vm.network\s\s*:private_network,\s*ip:\s*\""
@@ -177,7 +177,7 @@ elif [ "$1" = "run" ]; then
     echo ""
 
     # Log into the VM
-    vagrant ssh $VERSION
+    vagrant ssh $VMNAME
 
 
 #####################
