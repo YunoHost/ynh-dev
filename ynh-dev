@@ -166,6 +166,9 @@ elif [ "$1" = "run" ]; then
     }
 
     # Run VM
+    echo "/!\ If you don't refund an old vm, may be the vm has been \
+accidentally named with the VERSION, try to run 'ynh-dev run VERSION' with \
+VERSION as stable, testing or unstable /!\ "
     vagrant up $VMNAME --provider virtualbox
 
     # Warn user about hosts file
