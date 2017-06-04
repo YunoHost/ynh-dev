@@ -157,6 +157,17 @@ elif [ "$1" = "run" ]; then
             }
         done
 
+        # Update Vagrantfile
+        grep "### END AUTOMATIC YNH-DEV ###" ./Vagrantfile &> /dev/null || {
+            pushd ./vagrant &> /dev/null
+            git pull
+            popd &> /dev/null
+            rm ./Vagrantfile
+            ln -s vagrant/Vagrantfile Vagrantfile
+
+        }
+
+        # Adapt vagrantfile
         sed -i "/  ### END AUTOMATIC YNH-DEV ###/ i \\
   config.vm.define \"${VMNAME}\" do |${VMNAME}| \
 \n    ${VMNAME}.vm.box = \"yunohost/jessie-${VERSION}\" \
@@ -173,8 +184,7 @@ VERSION as stable, testing or unstable /!\ "
 
     # Warn user about hosts file
     IP_LINE="\s\s*${VMNAME}.vm.network\s\s*:private_network,\s*ip:\s*\""
-    IP=$(grep "$IP_LINE" Vagrantfile | sed "s/${IP_LINE}//")
-    IP=${IP::-1}
+    IP=$(grep "$IP_LINE" Vagrantfile | sed "s/${IP_LINE}//" | tr -d '"')
     echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
     echo "sudo sh -s 'echo \"$IP $DOMAIN\" >> /etc/hosts'"
     echo ""
