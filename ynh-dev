@@ -149,7 +149,7 @@ elif [ "$1" = "run" ]; then
     vagrant status $VMNAME &> /dev/null || {
 
         # Find an available ip
-        for i in `seq 1 254`;
+        for i in `seq 2 254`;
         do
             grep "${IP_BASE//./\.}$i" Vagrantfile &> /dev/null || {
                 IP="${IP_BASE}$i"
