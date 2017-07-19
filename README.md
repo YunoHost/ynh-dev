@@ -73,7 +73,7 @@ This command create a clone of main git repositories and organize its.
 This command is a helper to run a Vagrant virtual machine in the right place with YunoHost installed (but not postinstalled).
 ```shell
 cd /path/to/dev/env
-./ynh-dev run ynh.local unstable
+./ynh-dev run unstable unstable
 ```
 
 The `run` command takes 2 arguments: domain and YunoHost version.
