@@ -242,6 +242,8 @@ elif [ "$1" = "use-git" ]; then
                 create_sym_link "/vagrant/moulinette/moulinette/utils" "/usr/lib/python2.7/dist-packages/moulinette/utils"
                 create_sym_link "/vagrant/moulinette/moulinette/__init__.py" "/usr/lib/python2.7/dist-packages/moulinette/__init__.py"
                 create_sym_link "/vagrant/moulinette/moulinette/core.py" "/usr/lib/python2.7/dist-packages/moulinette/core.py"
+                create_sym_link "/vagrant/moulinette/moulinette/m18n.py" "/usr/lib/python2.7/dist-packages/moulinette/m18n.py"
+                create_sym_link "/vagrant/moulinette/moulinette/pkg.py" "/usr/lib/python2.7/dist-packages/moulinette/pkg.py"
                 create_sym_link "/vagrant/moulinette/moulinette/actionsmap.py" "/usr/lib/python2.7/dist-packages/moulinette/actionsmap.py"
                 echo "↳ If you add files at the root of this directory /vagrant/moulinette/moulinette/ you should adapt ynh-dev"
                 echo ""
