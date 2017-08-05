@@ -57,34 +57,38 @@ sudo insmod /lib/modules/4.4.33-1-MANJARO/extramodules/vboxnetadp.ko.gz
 
 
 #### Install ynh-dev
+
+Clone the ynh-dev repo :
+
 ```shell
-wget https://github.com/YunoHost/ynh-dev/raw/master/ynh-dev
-chmod u+x ynh-dev
+git clone https://github.com/YunoHost/ynh-dev
+cd ynh-dev
 ```
 
 #### Create the environment
-This command create a clone of main git repositories and organize its.
+
+This command create a clone of all Yunohost's main git repositories in `./`.
+
 ```shell
-./ynh-dev create-env /path/to/dev/env
+./ynh-dev create-env ./
 ```
 
 ### 1.2 Create or run a yunohost vagrant instance
 
 This command is a helper to run a Vagrant virtual machine in the right place with YunoHost installed (but not postinstalled).
+
 ```shell
 cd /path/to/dev/env
-./ynh-dev run unstable unstable
+./ynh-dev run yolo.test unstable
 ```
 
 The `run` command takes 2 arguments: domain and YunoHost version.
 
 After running the container, you'll be automatically logged inside a new yunohost VM or inside the previous suspended VM.
 
-#### Sharing folder between host and virtual machines
+#### Shared folder between host and virtual machines
 
-A shared folder between host and virtual machines could ease your development.
-Once logged into your VM, go to `/vagrant` to enjoy folder sharing, and take
-advantages of the `ynh-dev` script.
+One logged into the VM, you can go to `/vagrant` and find all the files from your dev environnement, including the `ynh-dev` script itself.
 
 ### 1.3 Upgrade, postinstall and use git repositories
 
@@ -194,16 +198,18 @@ It's possible to setup ynh-dev inside an existing instance of YunoHost rather th
 
 ```shell
 sudo apt-get install git
-wget https://github.com/YunoHost/ynh-dev/raw/master/ynh-dev
-chmod u+x ynh-dev
-./ynh-dev create-env /vagrant
+git clone https://github.com/YunoHost/ynh-dev /vagrant/
+cd /vagrant/
 ```
+
 ### 2.2 Upgrade, postinstall and use git repositories
+
 Identical to 1.3, but take care to don't postinstall on a yunohost already postinstalled !
 
 Important, when you use the git repositories, you can't do the reverse operation simply... (To do it you need to wait an update of the concern package)
 
 ### 2.3 Code on the instance directly
+
 Contrary to the first method, you have not a share folder so you need to develop inside the instance. Alternatively, you could explore to setup sshfs or this kind of solution.
 
 ### 2.4 Test
