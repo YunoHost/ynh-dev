@@ -1,52 +1,55 @@
-# ynh-dev, a yunohost dev env
+# ynh-dev - Yunohost dev environnement manager
 
-This script is a Command line tool to manage your local development environement for YunoHost
-With this you can develop on the unstable version of YunoHost quickly.
+ynh-dev is a CLI tool to manage your local development environement for YunoHost. This allow you to develop on the various repository of the YunoHost project.
 
-This tool allow you:
+In particular, it allows :
 
- * to create a directory with a clone of each repository
- * to replace already installed yunohost debian packages by symlinks from those reporistories
- * if needed, to manage yunohost instances on your host machine with vagrant by:
-   * creating yunohost vagrant vm
-   * sharing folder between your host and your yunohost vagrant vm (so you can develop directly on your host)
+ * to create a directory with a clone of each repository of the YunoHost project ;
+ * to replace already installed yunohost debian packages by symlinks to those git clones ;
+ * to manage yunohost instances on your host machine with Vagrant by:
+   * creating a Vagrant VM with a pre-installed Yunohost system ;
+   * sharing the dev environnement your host the VM (so you can develop directly on your host)
    * finding the ip address of your yunohost vagrant vm
 
-There are 2 ways to use this tools:
+yhn-dev can be used :
 
-1. on your host machine (more comfortable)
-2. on an existing yunohost instance (for exemple if you need the vm is exposed on internet: test let's encrypt, test email ...)
+1. on your local machine with VMs (more comfortable)
+2. on a remote machine dedicated to dev (e.g. if you need the VM to be exposed on internet : test let's encrypt, email stack ...)
 
+## Develop on your local machine
 
-## 1. Use this tool with your host machine
 Here is the development flow:
 
-1. [first time] Setup ynh-dev and Setup a copy of each git repository
+1. [first time] Setup ynh-dev and the development environnement
 2. Create or run a yunohost vagrant instance
 3. Upgrade, postinstall and deploy development version from repositories
-4. Code on your host
-5. Test by cli on the instance or test on your host browser
+4. Develop on your host
+5. Test via the CLI or webadmin
 6. Suspend or kill your vm
 
-### 1.1 [first time] Setup ynh-dev and Setup a copy of each git repository
+### 1. [first time] Setup ynh-dev and the development environnement
+
 These operation need to be done on the host machine.
 
 #### Install dependencies
 
-##### Debian, Ubuntu, Mint
-```shell
+- Debian, Ubuntu, Mint
+
+```bash
 sudo apt-get install vagrant virtualbox git
 ```
 
-##### Fedora
-```shell
+- Fedora
+
+```bash
 sudo dnf install vagrant git
 ```
 
-- [Install Virtualbox 5.1.x](http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel)
+[Install Virtualbox 5.1.x](http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel)
 
-##### Archlinux, Manjaro
-```shell
+- Archlinux, Manjaro
+
+```bash
 sudo pacman -S vagrant virtualbox git
 sudo pacman -S linux44-virtualbox-host-modules
 sudo modprobe vboxdrv
@@ -60,7 +63,7 @@ sudo insmod /lib/modules/4.4.33-1-MANJARO/extramodules/vboxnetadp.ko.gz
 
 Clone the ynh-dev repo :
 
-```shell
+```bash
 git clone https://github.com/YunoHost/ynh-dev
 cd ynh-dev
 ```
@@ -69,15 +72,15 @@ cd ynh-dev
 
 This command create a clone of all Yunohost's main git repositories in `./`.
 
-```shell
+```bash
 ./ynh-dev create-env ./
 ```
 
-### 1.2 Create or run a yunohost vagrant instance
+### 2. Create or run a yunohost vagrant instance
 
-This command is a helper to run a Vagrant virtual machine in the right place with YunoHost installed (but not postinstalled).
+This command is a helper to run a Vagrant virtual machine in the right place with YunoHost pre-installed.
 
-```shell
+```bash
 cd /path/to/dev/env
 ./ynh-dev run yolo.test unstable
 ```
@@ -90,9 +93,9 @@ After running the container, you'll be automatically logged inside a new yunohos
 
 One logged into the VM, you can go to `/vagrant` and find all the files from your dev environnement, including the `ynh-dev` script itself.
 
-### 1.3 Upgrade, postinstall and use git repositories
+### 3. Upgrade and configure your dev instance
 
-According to what you want to test or code, you could need to upgrade, to postinstall and to deploy core code in this order or no.
+According to what you intend to develop or test, you might need to upgrade, to postinstall.
 
 For example if you want :
 
@@ -101,90 +104,86 @@ For example if you want :
 * to test the impact of a core code on postinstall => upgrade, deploy your code, postinstall
 
 #### Upgrade
-May be the container is not up to date.
 
-It will update every debian packages, including YunoHost ones.
-```shell
+If the container is not up to date, you can run the following command to update debian packages, including YunoHost ones.
+
+```bash
 /vagrant/ynh-dev upgrade
-```
-
-You could need to update ynh-dev script, to do it:
-```shell
-/vagrant/ynh-dev self-update
-```
-
-#### Postinstall
-
-If it's a new yunohost container, you probably want to run the postinstall now:
-
-```shell
-(sudo) yunohost tools postinstall -d ynh.local
 ```
 
 #### Use your git repositories in place of debian package
 
 When doing `create-env` command, every YunoHost package have been cloned in the
-corresponding path. Use these Git repositories inside the VM (with symlink).
-Your changes will be available immediatly in your VM.
+corresponding path. You can link your VM to use these git clones such that changes you make in the code are directly used in the VM :
 
-    /vagrant/ynh-dev use-git
+```bash
+/vagrant/ynh-dev use-git PACKAGE
+```
 
-***Note***: These changes can't be reverted now.
+PACKAGE should can be ssowat, yunohost, moulinette or yunohost-admin. You might want to run use-git several times depending on what you want to develop precisely.
 
-Alternatively you can use Git only for one packages (ssowat, yunohost,
-moulinette, yunohost-admin)
+***Note***: The `use-git` operation can't be reverted now. DON'T DO THIS IN PRODUCTION !
 
-    /vagrant/ynh-dev use-git PACKAGE_NAME
 
-### 1.4 Code on your host
+#### Postinstall
+
+If you need a properly installed YunoHost to develop and test, you probably want to run the postinstall now:
+
+```bash
+(sudo) yunohost tools postinstall -d yolo.test
+```
+
+### 4. Develop on your host
 At this point, you are able to code on your host machine, with the EDI of your choice.
 
 All change will be available on the container inside the share folder /vagrant.
 
 
-### 1.5 Test by cli on the instance or test on your host browser
-#### Test by cli on the container
-If you have run use-git, all change on core git repositories are automatically deployed on your container, so you can test your code.
+### 5. Test changes via the CLI or the web interface
 
-#### Test on your host browser
-If you want to test on your host browser, you need to know the ip addres.
+#### Tests in CLI
 
-You can get the ip address of your container by running this command inside the container
+If you have run `use-git`, all changes on the local git clones are automatically available in your VM, so you can run any `yunohost foo bar` command.
 
-    /vagrant/ynh-dev ip
+#### Tests the web interface
 
-Next, you just have to write the ip inside your browser.
+You should be able to access the web interface via the IP address on the vagrant container. The IP can be known from inside the container with :
 
-You probably want access by local domain name, to do that you can edit your /etc/hosts file to add a line like this:
+```bash
+/vagrant/ynh-dev ip
+```
 
-IP_ADDRESS LOCAL_DOMAIN
+If you want to access to the interface using the domain name, you shall tweak your /etc/hosts and add a line such as:
 
-### 1.6. Suspend or kill your vm
-When you have finished or if you want to shut down you computer, you should kill or suspend the VM
+```bash
+111.222.333.444 yolo.test
+```
+
+### 6. Suspend or kill your vm
+
+When you're finished or if you want to shut down your computer, you should kill or suspend the VM.
 
 To kill the vm, just do on your host:
 
-```shell
+```bash
 cd /path/to/dev/env
 vagrant destroy unstable
 # or
 ./ynh-dev kill
 ```
 
-To suspend the vm
+To suspend the VM:
 
-```shell
+```bash
 cd /path/to/dev/env
 vagrant suspend unstable
 ```
 
-## 2. Directly on a YunoHost instance
+## Develop on a remote server
 
-Firstly, you need to understand that it is a dev tool, you shouldn't run it on a production environment !
+Firstly, you need to understand that it is a dev tool : you shouldn't run it on a production environment !
 
-This case allow you to use ynh-dev on a vm exposed on the internet.
-
-It could be useful to develop code using external services which need to be able to reach your vm. Let's encrypt is a good example. An other way, is to use the first method with the vpnclient_ynh apps and a VPN with an ipv4 associated.
+This case allows you to use ynh-dev on a vm exposed on the internet. This can be useful when testing features for which the server is required to be reachable from the whole internet (e.g. Let's Encrypt certificate install, or mail-related features). An alterative is to use a VPN (through vpnclient_ynh) with an IPv4.
 
 The development flow is quite similar to the first method:
 
@@ -193,29 +192,33 @@ The development flow is quite similar to the first method:
 3. Code on your host
 4. Test by cli on the instance or test on your host browser
 
-### 2.1. Setup
-It's possible to setup ynh-dev inside an existing instance of YunoHost rather than create vagrant vm with ynh-dev. In this particular case, you need to setup your env inside a /vagrant directory even if you don't use vagrant.
+### 1. Setup
 
-```shell
+It's possible to setup ynh-dev inside an existing instance of YunoHost rather than create vagrant vm with ynh-dev. In this particular case, you need to setup your env inside a `/vagrant/` directory even if you don't use vagrant.
+
+```bash
 sudo apt-get install git
 git clone https://github.com/YunoHost/ynh-dev /vagrant/
 cd /vagrant/
 ```
 
-### 2.2 Upgrade, postinstall and use git repositories
+### 2. Upgrade, postinstall and use git repositories
 
 Identical to 1.3, but take care to don't postinstall on a yunohost already postinstalled !
 
 Important, when you use the git repositories, you can't do the reverse operation simply... (To do it you need to wait an update of the concern package)
 
-### 2.3 Code on the instance directly
+### 3. Code on the instance directly
 
 Contrary to the first method, you have not a share folder so you need to develop inside the instance. Alternatively, you could explore to setup sshfs or this kind of solution.
 
-### 2.4 Test
+### 4. Test
+
 Identical to 1.5, but ynh-dev ip doesn't work. You should prefer this command to find your ip address:
 
-    ip addr
+```bash
+ip addr
+```
 
 Keep in mind, that if you use your /etc/hosts file, let's encrypt or other service couldn't access the VM. So you probably need to set up a correct domain.
 
