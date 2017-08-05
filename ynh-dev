@@ -236,8 +236,8 @@ elif [ "$1" = "use-git" ]; then
                 echo ""
                 ;;
             moulinette)
-                create_sym_link "/vagrant/moulinette/locales" "/usr/share/moulinette/locale"
-                create_sym_link "/vagrant/moulinette/moulinette/authenticators" "/usr/lib/python2.7/dist-packages/moulinette/authenticator"
+                create_sym_link "/vagrant/moulinette/locales" "/usr/share/moulinette/locales"
+                create_sym_link "/vagrant/moulinette/moulinette/authenticators" "/usr/lib/python2.7/dist-packages/moulinette/authenticators"
                 create_sym_link "/vagrant/moulinette/moulinette/interfaces" "/usr/lib/python2.7/dist-packages/moulinette/interfaces"
                 create_sym_link "/vagrant/moulinette/moulinette/utils" "/usr/lib/python2.7/dist-packages/moulinette/utils"
                 create_sym_link "/vagrant/moulinette/moulinette/__init__.py" "/usr/lib/python2.7/dist-packages/moulinette/__init__.py"
