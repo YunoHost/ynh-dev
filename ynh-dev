@@ -328,7 +328,13 @@ elif [ "$1" = "test" ]; then
     VERSION=$2
 
     for i in ${!packages[@]}; do
-        case ${packages[i]} in
+        package=$(echo ${packages[i]} | cut -d/ -f1)
+        selection=$(echo ${packages[i]} | cut -d/ -f2)
+        if [ "$selection" = "yunohost" ]; then
+            selection=""
+        fi
+
+        case $package in
             yunohost)
                 # Pytest and tests dependencies
                 if ! type "pytest" > /dev/null; then
@@ -363,7 +369,7 @@ elif [ "$1" = "test" ]; then
                 cd /vagrant/yunohost/
                 py.test tests
                 cd /vagrant/yunohost/src/yunohost
-                py.test tests
+                py.test tests/$selection
                 ;;
         esac
     done
