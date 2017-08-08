@@ -338,7 +338,7 @@ elif [ "$1" = "test" ]; then
                     apt-get install python-pip
                     pip2 install pytest
                 fi
-                PIP_DEPENDENCIES="pytest-mock requests-mock"
+                PIP_DEPENDENCIES="pytest-mock requests-mock mock"
                 for DEP in $PIP_DEPENDENCIES
                 do
                     if [ -z "$(pip show $DEP)" ]; then
