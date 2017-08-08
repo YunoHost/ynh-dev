@@ -19,7 +19,7 @@ Usage :
             Upgrade the container
         `basename $0` use-git [PACKAGES [PACKAGES ...]]
             Use Git repositories from dev environment path
-        `basename $0` test [PACKAGES [PACKAGES ...]]
+        `basename $0` test [PACKAGES[/TESTFILE[::TEST]] [PACKAGES[/TESTFILE[::TEST]] ...]]
             Deploy, update and run tests for some packages
         `basename $0` self-update
             Update this script (`basename $0`)
