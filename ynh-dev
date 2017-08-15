@@ -129,6 +129,9 @@ elif [ "$1" = "run" ]; then
     elif [ "$VERSION" = "unstable" ]; then
         BOX_NAME="yunohost/jessie-unstable"
         BOX_URL="https://build.yunohost.org/yunohost-jessie-unstable.box"
+    elif [ "$VERSION" = "stretch-unstable" ]; then
+        BOX_NAME="yunohost/stretch-unstable"
+        BOX_URL="https://build.yunohost.org/yunohost-stretch-unstable.box"
     else
         echo "ERROR: Incorrect version '$VERSION'. See '$(basename $0) --help' for usage."
         exit 102
@@ -170,7 +173,7 @@ elif [ "$1" = "run" ]; then
         # Adapt vagrantfile
         sed -i "/  ### END AUTOMATIC YNH-DEV ###/ i \\
   config.vm.define \"${VMNAME}\" do |${VMNAME}| \
-\n    ${VMNAME}.vm.box = \"yunohost/jessie-${VERSION}\" \
+\n    ${VMNAME}.vm.box = \"${BOX_NAME}\" \
 \n    ${VMNAME}.vm.network :private_network, ip: \"${IP}\" \
 \n  end \
 \n" ./Vagrantfile
