@@ -186,7 +186,7 @@ VERSION as stable, testing or unstable /!\ "
     IP_LINE="\s\s*${VMNAME}.vm.network\s\s*:private_network,\s*ip:\s*\""
     IP=$(grep "$IP_LINE" Vagrantfile | sed "s/${IP_LINE}//" | tr -d '"')
     echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
-    echo "sudo sh -s 'echo \"$IP $DOMAIN\" >> /etc/hosts'"
+    echo "sudo bash -c 'echo \"$IP $DOMAIN\" >> /etc/hosts'"
     echo ""
 
     # Log into the VM
