@@ -109,6 +109,10 @@ elif [ "$1" = "create-env" ]; then
 ## Run a vm and give a prompt ##
 #################################
 elif [ "$1" = "run" ]; then
+    if [[ $2 == *"-"* ]]; then
+        echo "ERROR: Vagrant virtual machine ($2) cannot contain any dash"
+        exit 2
+    fi
 
     DOMAIN=$2
     VERSION='stable'
@@ -252,7 +256,7 @@ elif [ "$1" = "use-git" ]; then
                 echo "Using Git repository for yunohost"
 
                 # bin
-                create_sym_link "/vagrant/yunohost/bin/yunohost" "/usr/bin/yunohost" 
+                create_sym_link "/vagrant/yunohost/bin/yunohost" "/usr/bin/yunohost"
                 create_sym_link "/vagrant/yunohost/bin/yunohost-api" "/usr/bin/yunohost-api"
 
                 # data
