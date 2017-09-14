@@ -98,7 +98,7 @@ elif [ "$1" = "create-env" ]; then
 
     # Get YunoHost Vagrantfile
     git clone -b master https://github.com/YunoHost/Vagrantfile vagrant
-    ln -s vagrant/Vagrantfile Vagrantfile
+    cp vagrant/Vagrantfile Vagrantfile
 
     # Get YunoHost dev tools
     git clone -b master https://github.com/YunoHost/ynh-dev ynh-dev-tools
@@ -163,17 +163,17 @@ elif [ "$1" = "run" ]; then
             git pull
             popd &> /dev/null
             rm ./Vagrantfile
-            ln -s vagrant/Vagrantfile Vagrantfile
+            cp vagrant/Vagrantfile Vagrantfile
 
         }
 
         # Adapt vagrantfile
         sed -i "/  ### END AUTOMATIC YNH-DEV ###/ i \\
-  config.vm.define \"${VMNAME}\" do |${VMNAME}| \
-\n    ${VMNAME}.vm.box = \"yunohost/jessie-${VERSION}\" \
-\n    ${VMNAME}.vm.network :private_network, ip: \"${IP}\" \
-\n  end \
-\n" ./Vagrantfile
+  config.vm.define \"${VMNAME}\" do |${VMNAME}| \\
+    ${VMNAME}.vm.box = \"yunohost/jessie-${VERSION}\" \\
+    ${VMNAME}.vm.network :private_network, ip: \"${IP}\" \\
+  end \\
+" ./Vagrantfile
     }
 
     # Run VM
