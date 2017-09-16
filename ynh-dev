@@ -238,7 +238,7 @@ function use_git()
                     sudo apt install nodejs
 
                     cd /ynh-dev/yunohost-admin/src
-                    sudo npm install
+                    sudo npm install --no-bin-links
                     sudo npm install -g bower
                     sudo npm install -g gulp
                 fi
