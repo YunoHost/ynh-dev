@@ -296,7 +296,7 @@ elif [ "$1" = "use-git" ]; then
                     sudo apt-get update --fix-missing
                     sudo apt-get -y install nodejs-legacy npm
                     cd /vagrant/yunohost-admin/src
-                    sudo npm install
+                    sudo npm install --no-bin-links
                     sudo npm install -g bower
                     sudo npm install -g gulp
                 fi
