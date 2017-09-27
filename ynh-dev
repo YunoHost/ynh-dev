@@ -194,7 +194,7 @@ VERSION as stable, testing or unstable /!\ "
     echo ""
 
     # Log into the VM
-    vagrant ssh $VMNAME
+    vagrant ssh $VMNAME -c "sudo -i"
 
 
 #####################
