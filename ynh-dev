@@ -190,7 +190,7 @@ VERSION as stable, testing or unstable /!\ "
     vagrant up $VMNAME --provider virtualbox
 
     # Warn user about hosts file
-    IP_LINE="\s\s*${VMNAME}.vm.network\s\s*:private_network,\s*ip:\s*\""
+    IP_LINE="[[:space:]]*${VMNAME}.vm.network[[:space:]]*:private_network,[[:space:]]*ip:[[:space:]]*\""
     IP=$(grep "$IP_LINE" Vagrantfile | sed "s/${IP_LINE}//" | tr -d '"')
     echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
     echo "sudo bash -c 'echo \"$IP $DOMAIN\" >> /etc/hosts'"
