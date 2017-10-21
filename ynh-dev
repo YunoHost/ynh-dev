@@ -244,14 +244,7 @@ elif [ "$1" = "use-git" ]; then
                 ;;
             moulinette)
                 create_sym_link "/vagrant/moulinette/locales" "/usr/share/moulinette/locales"
-                create_sym_link "/vagrant/moulinette/moulinette/authenticators" "/usr/lib/python2.7/dist-packages/moulinette/authenticators"
-                create_sym_link "/vagrant/moulinette/moulinette/interfaces" "/usr/lib/python2.7/dist-packages/moulinette/interfaces"
-                create_sym_link "/vagrant/moulinette/moulinette/utils" "/usr/lib/python2.7/dist-packages/moulinette/utils"
-                create_sym_link "/vagrant/moulinette/moulinette/__init__.py" "/usr/lib/python2.7/dist-packages/moulinette/__init__.py"
-                create_sym_link "/vagrant/moulinette/moulinette/core.py" "/usr/lib/python2.7/dist-packages/moulinette/core.py"
-                create_sym_link "/vagrant/moulinette/moulinette/actionsmap.py" "/usr/lib/python2.7/dist-packages/moulinette/actionsmap.py"
-                create_sym_link "/vagrant/moulinette/moulinette/cache.py" "/usr/lib/python2.7/dist-packages/moulinette/cache.py"
-                create_sym_link "/vagrant/moulinette/moulinette/globals.py" "/usr/lib/python2.7/dist-packages/moulinette/globals.py"
+                create_sym_link "/vagrant/moulinette/moulinette" "/usr/lib/python2.7/dist-packages/moulinette"
                 echo "↳ If you add files at the root of this directory /vagrant/moulinette/moulinette/ you should adapt ynh-dev"
                 echo ""
                 ;;
