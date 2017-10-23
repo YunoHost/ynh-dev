@@ -274,12 +274,8 @@ elif [ "$1" = "use-git" ]; then
                 # debian
                 create_sym_link "/vagrant/yunohost/debian/conf/pam/mkhomedir" "/usr/share/pam-configs/mkhomedir"
 
-                # lib
-                create_sym_link "/vagrant/yunohost/lib/metronome/modules/ldap.lib.lua" "/usr/lib/metronome/modules/ldap.lib.lua"
-                create_sym_link "/vagrant/yunohost/lib/metronome/modules/mod_auth_ldap2.lua" "/usr/lib/metronome/modules/mod_auth_ldap2.lua"
-                create_sym_link "/vagrant/yunohost/lib/metronome/modules/mod_legacyauth.lua" "/usr/lib/metronome/modules/mod_legacyauth.lua"
-                create_sym_link "/vagrant/yunohost/lib/metronome/modules/mod_storage_ldap.lua" "/usr/lib/metronome/modules/mod_storage_ldap.lua"
-                create_sym_link "/vagrant/yunohost/lib/metronome/modules/vcard.lib.lua" "/usr/lib/metronome/modules/vcard.lib.lua"
+                # Prosody lib module
+                create_sym_link "/vagrant/yunohost/lib/prosody/mod_auth_ldap.lua" "/usr/lib/prosody/modules/mod_auth_ldap.lua"
 
                 # src
                 create_sym_link "/vagrant/yunohost/src/yunohost" "/usr/lib/moulinette/yunohost"
