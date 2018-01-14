@@ -175,12 +175,12 @@ elif [ "$1" = "run" ]; then
         }
 
         # Adapt vagrantfile
-        sed -i "/  ### END AUTOMATIC YNH-DEV ###/ i \\
-  config.vm.define \"${VMNAME}\" do |${VMNAME}| \
+        perl -i -pe "s|  (### END AUTOMATIC YNH-DEV ###)|\
+  config.vm.define \"${VMNAME}\" do \|${VMNAME}\| \
 \n    ${VMNAME}.vm.box = \"${BOX_NAME}\" \
 \n    ${VMNAME}.vm.network :private_network, ip: \"${IP}\" \
 \n  end \
-\n" ./Vagrantfile
+\n  \1|" ./Vagrantfile
     }
 
     # Run VM
@@ -190,7 +190,7 @@ VERSION as stable, testing or unstable /!\ "
     vagrant up $VMNAME --provider virtualbox
 
     # Warn user about hosts file
-    IP_LINE="\s\s*${VMNAME}.vm.network\s\s*:private_network,\s*ip:\s*\""
+    IP_LINE="[[:space:]]*${VMNAME}.vm.network[[:space:]]*:private_network,[[:space:]]*ip:[[:space:]]*\""
     IP=$(grep "$IP_LINE" Vagrantfile | sed "s/${IP_LINE}//" | tr -d '"')
     echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
     echo "sudo bash -c 'echo \"$IP $DOMAIN\" >> /etc/hosts'"
