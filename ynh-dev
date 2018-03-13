@@ -31,8 +31,6 @@ PACKAGES :
     yunohost-admin
 
 VERSION
-    stable
-    testing
     unstable
 EOF
 }
