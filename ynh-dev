@@ -31,8 +31,6 @@ PACKAGES :
     yunohost-admin
 
 VERSION
-    stable
-    testing
     unstable
 EOF
 }
@@ -124,13 +122,7 @@ elif [ "$1" = "run" ]; then
     echo ""
 
     # Get vagrant box info from version
-    if [ "$VERSION" = "stable" ]; then
-        BOX_NAME="yunohost/jessie-stable"
-        BOX_URL="https://build.yunohost.org/yunohost-jessie-stable.box"
-    elif [ "$VERSION" = "testing" ]; then
-        BOX_NAME="yunohost/jessie-testing"
-        BOX_URL="https://build.yunohost.org/yunohost-jessie-testing.box"
-    elif [ "$VERSION" = "unstable" ]; then
+    if [ "$VERSION" = "unstable" ]; then
         BOX_NAME="yunohost/jessie-unstable"
         BOX_URL="https://build.yunohost.org/yunohost-jessie-unstable.box"
     elif [ "$VERSION" = "stretch-unstable" ]; then
