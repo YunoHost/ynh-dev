@@ -88,6 +88,12 @@ The `run` command takes 2 arguments: domain and YunoHost version.
 
 After running the container, you'll be automatically logged inside a new yunohost VM or inside the previous suspended VM.
 
+If you meet an error with `vboxsf` you might need to install the guest addons:
+
+```bash
+vagrant plugin install vagrant-vbguest
+```
+
 #### Shared folder between host and virtual machines
 
 One logged into the VM, you can go to `/vagrant` and find all the files from your dev environnement, including the `ynh-dev` script itself.
