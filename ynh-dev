@@ -232,7 +232,7 @@ elif [ "$1" = "use-git" ]; then
                 echo ""
                 ;;
             moulinette)
-                create_sym_link "/vagrant/moulinette/locales" "/usr/share/moulinette/locales"
+                create_sym_link "/vagrant/moulinette/locales" "/usr/share/moulinette/locale"
                 create_sym_link "/vagrant/moulinette/moulinette" "/usr/lib/python2.7/dist-packages/moulinette"
                 echo ""
                 ;;
