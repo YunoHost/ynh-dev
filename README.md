@@ -1,5 +1,7 @@
 # ynh-dev - Yunohost dev environnement manager
 
+Report issues here: https://github.com/yunohost/issues
+
 ynh-dev is a CLI tool to manage your local development environement for YunoHost. This allow you to develop on the various repository of the YunoHost project.
 
 In particular, it allows :
