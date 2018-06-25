@@ -83,7 +83,7 @@ This command create a clone of all Yunohost's main git repositories in `./`.
 This command is a helper to run a Vagrant virtual machine in the right place with YunoHost pre-installed.
 
 ```bash
-./ynh-dev run yolo.test unstable
+./ynh-dev run yolo.test stretch-unstable
 ```
 
 The `run` command takes 2 arguments: domain and YunoHost version.
