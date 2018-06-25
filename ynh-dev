@@ -283,8 +283,19 @@ elif [ "$1" = "use-git" ]; then
                 which gulp > /dev/null
                 if [ $? -eq 1 ]
                 then
-                    sudo apt-get update --fix-missing
-                    sudo apt-get -y install nodejs-legacy npm
+                    release=$(lsb_release -c | cut -d ":" -f 2 | sed 's/\s*//')
+
+                    if [ $release == "stretch" ]
+                    then
+                        # for watever reason npm is not in stretch anymore
+                        # because why the fuck debian
+                        curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+                        sudo apt install nodejs
+                    else
+                        sudo apt-get update --fix-missing
+                        sudo apt-get -y install nodejs-legacy npm
+                    fi
+
                     cd /vagrant/yunohost-admin/src
                     sudo npm install
                     sudo npm install -g bower
