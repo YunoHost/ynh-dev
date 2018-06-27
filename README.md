@@ -174,7 +174,7 @@ To kill the vm (this will destroy it), just do on your host:
 
 ```bash
 cd /path/to/dev/env
-vagrant destroy unstable
+vagrant destroy stretch-unstable
 # or
 ./ynh-dev kill
 ```
@@ -183,7 +183,7 @@ To suspend the VM:
 
 ```bash
 cd /path/to/dev/env
-vagrant suspend unstable
+vagrant suspend stretch-unstable
 ```
 
 ## Develop on a remote server
