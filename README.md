@@ -186,6 +186,13 @@ cd /path/to/dev/env
 vagrant suspend stretch-unstable
 ```
 
+Alternatively you can shut it down:
+
+```bash
+cd /path/to/dev/env
+vagrant halt stretch-unstable
+```
+
 ## Develop on a remote server
 
 Firstly, you need to understand that it is a dev tool : you shouldn't run it on a production environment !
