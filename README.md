@@ -193,6 +193,28 @@ cd /path/to/dev/env
 vagrant halt stretch-unstable
 ```
 
+## 7. Other common operation
+
+There are several other operations that you might want to perform directly
+using Vagrant. All those operation needs to be done in the environment (where
+the VagrantFile is located).
+
+Show vagrant commands:
+
+    vagrant
+
+See all running boxes:
+
+    vagrant status
+
+Open a terminal on a running box:
+
+    vagrant ssh stretch-unstable
+
+Start a box (only do that after the boxe as already been created by ynh-dev)
+
+    vagrant up stretch-unstable
+
 ## Develop on a remote server
 
 Firstly, you need to understand that it is a dev tool : you shouldn't run it on a production environment !
