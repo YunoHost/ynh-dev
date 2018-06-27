@@ -201,19 +201,63 @@ the VagrantFile is located).
 
 Show vagrant commands:
 
-    vagrant
+```bash
+vagrant
+```
 
 See all running boxes:
 
-    vagrant status
+```bash
+vagrant status
+```
 
 Open a terminal on a running box:
 
-    vagrant ssh stretch-unstable
+```bash
+vagrant ssh stretch-unstable
+```
 
 Start a box (only do that after the boxe as already been created by ynh-dev)
 
-    vagrant up stretch-unstable
+```bash
+vagrant up stretch-unstable
+```
+
+## 8. Box snapshots for easy testing
+
+You might want to play with vagrant snapshots to do saves of you box, test
+things and restore it before the tests to have a clean box. Here how to do that:
+
+
+```bash
+cd /path/to/dev/env
+
+# to make a snapshot
+vagrant snapshot save stretch-unstable some_name_for_the_snapshot
+
+# to restore it
+vagrant snapshot restore stretch-unstable some_name_for_the_snapshot
+```
+
+Alternatively if you don't want to give a name to your snapshot you can do it this way:
+
+```bash
+cd /path/to/dev/env
+
+# to make a snapshot
+vagrant snapshot push stretch-unstable
+
+# to restore it
+vagrant snapshot pop stretch-unstable
+```
+
+And to list all snapshots:
+
+```bash
+vagrant snapshot list stretch-unstable
+```
+
+And there is also the `vagrant snapshot delete` command to remove a snapshot.
 
 ## Develop on a remote server
 
