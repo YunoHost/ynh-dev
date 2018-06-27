@@ -170,7 +170,7 @@ If you want to access to the interface using the domain name, you shall tweak yo
 
 When you're finished or if you want to shut down your computer, you should kill or suspend the VM.
 
-To kill the vm, just do on your host:
+To kill the vm (this will destroy it), just do on your host:
 
 ```bash
 cd /path/to/dev/env
