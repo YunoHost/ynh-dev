@@ -1,5 +1,8 @@
 #!/bin/bash
 
+DEFAULT_VERSION="stretch-unstable"
+DEFAULT_PROVIDER="lxc"
+
 usage() {
     cat <<EOF
 Usage :
@@ -103,9 +106,9 @@ elif [ "$1" = "create-env" ]; then
     cp ynh-dev-tools/ynh-dev ynh-dev
 
 
-#################################
-## Run a vm and give a prompt ##
-#################################
+##########################################
+## Run a vm/container and give a prompt ##
+##########################################
 elif [ "$1" = "run" ]; then
     if [[ $2 == *"-"* ]]; then
         echo "ERROR: Vagrant virtual machine ($2) cannot contain any dash"
@@ -113,30 +116,31 @@ elif [ "$1" = "run" ]; then
     fi
 
     DOMAIN=$2
-    VERSION='stable'
+    VERSION=$DEFAULT_VERSION
     if [ "$#" = "3" ]; then
         VERSION=$3
+        if [ "$VERSION" = "unstable" ]; then
+            VERSION="jessie-unstable"
+        fi
+
+        if [ "$VERSION" = "unstable" ]; then
+            echo "ERROR: Incorrect version '$VERSION'. See '$(basename $0) --help' for usage."
+            exit 102
+        fi
     fi
+    PROVIDER=$DEFAULT_PROVIDER
+
 
     echo "Creating $DOMAIN virtual machine with YunoHost $VERSION version"
     echo ""
 
-    # Get vagrant box info from version
-    if [ "$VERSION" = "unstable" ]; then
-        BOX_NAME="yunohost/jessie-unstable"
-        BOX_URL="https://build.yunohost.org/yunohost-jessie-unstable.box"
-    elif [ "$VERSION" = "stretch-unstable" ]; then
-        BOX_NAME="yunohost/stretch-unstable"
-        BOX_URL="https://build.yunohost.org/yunohost-stretch-unstable.box"
-    else
-        echo "ERROR: Incorrect version '$VERSION'. See '$(basename $0) --help' for usage."
-        exit 102
-    fi
+    BOX_NAME="yunohost/$VERSION"
+    BOX_URL="https://build.yunohost.org/yunohost-$BOX_NAME-$PROVIDER.box"
 
     # Download box if not available
     if ! vagrant box list | grep -qc $BOX_NAME ; then
         echo "Vagrant box '$BOX_NAME' is missing. Trying to download it"
-        vagrant box add $BOX_NAME $BOX_URL --provider virtualbox
+        vagrant box add $BOX_NAME $BOX_URL --provider $PROVIDER
         echo ""
     fi
 
@@ -151,13 +155,13 @@ elif [ "$1" = "run" ]; then
         for i in `seq 2 254`;
         do
             grep "${IP_BASE//./\.}$i" Vagrantfile &> /dev/null || {
-                IP="${IP_BASE}$i"
+                IP="$i"
                 break
             }
         done
 
         # Update Vagrantfile
-        grep "### END AUTOMATIC YNH-DEV ###" ./Vagrantfile &> /dev/null || {
+        grep "### END AUTOMATIC YNH-DEV" ./Vagrantfile &> /dev/null || {
             pushd ./vagrant &> /dev/null
             git pull
             popd &> /dev/null
@@ -167,22 +171,19 @@ elif [ "$1" = "run" ]; then
         }
 
         # Adapt vagrantfile
-        perl -i -pe "s|  (### END AUTOMATIC YNH-DEV ###)|\
-  config.vm.define \"${VMNAME}\" do \|${VMNAME}\| \
-\n    ${VMNAME}.vm.box = \"${BOX_NAME}\" \
-\n    ${VMNAME}.vm.network :private_network, ip: \"${IP}\" \
-\n  end \
-\n  \1|" ./Vagrantfile
+        perl -i -pe "s|   (### END AUTOMATIC YNH-DEV ZONE ###)|\
+   \"${VMNAME}\" => [\"$IP\", \"${VERSION}\"], \
+\n   \1|" ./Vagrantfile
     }
 
     # Run VM
-    vagrant up $VMNAME --provider virtualbox
+    vagrant up $VMNAME --provider $PROVIDER
 
     # Warn user about hosts file
-    IP_LINE="[[:space:]]*${VMNAME}.vm.network[[:space:]]*:private_network,[[:space:]]*ip:[[:space:]]*\""
-    IP=$(grep "$IP_LINE" Vagrantfile | sed "s/${IP_LINE}//" | tr -d '"')
-    echo "/!\ Please add '$IP $DOMAIN' to your /etc/hosts file /!\\"
-    echo "sudo bash -c 'echo \"$IP $DOMAIN\" >> /etc/hosts'"
+    IP_LINE="[[:space:]]*\"${VMNAME}\"[[:space:]]*=>[[:space:]]*\[\"\K.*?(?=\", \"${VERSION}\"\],)"
+    IP=$(grep -Po "$IP_LINE" ./Vagrantfile )
+    echo "/!\ Please add '$IP_BASE$IP $DOMAIN' to your /etc/hosts file /!\\"
+    echo "sudo bash -c 'echo \"$IP_BASE$IP $DOMAIN\" >> /etc/hosts'"
     echo ""
 
     # Log into the VM
