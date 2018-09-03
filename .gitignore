@@ -1,11 +1,3 @@
-# Apps
-*_ynh
-
-# Tools
-vagrant
-ynh-dev-tools
-Vagrantfile
-
 # Sources repositories
 moulinette
 yunohost
