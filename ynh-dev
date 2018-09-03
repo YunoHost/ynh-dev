@@ -8,9 +8,9 @@ function show_usage() {
   ${BLUE}On the host, to manage the LXC${NORMAL}
   ${BLUE}==============================${NORMAL}
 
-  start           (Create and) starts the ynh-dev LXC
-  ssh             SSH into an already started ynh-dev LXC
-  destroy         Destroy the ynh-dev LXC
+  start [NAME]    (Create and) starts a LXC (ynh-dev by default)
+  ssh [NAME]      SSH into an already started LXC (ynh-dev by default)
+  destroy [NAME]  Destroy the ynh-dev LXC (ynh-dev by default)
   rebuild         Rebuild a fresh, up-to-date box
 
   ${BLUE}Inside the dev instance${NORMAL}
@@ -113,31 +113,34 @@ function create_sym_link() {
 
 function start_ynhdev()
 {
-    local BOX_NAME="yunohost/ynh-dev"
+    local NAME=${1:-ynh-dev}
+    local BOX_NAME="yunohost/$NAME"
     local BOX_URL="https://build.yunohost.org/yunohost-$BOX_NAME-lxc.box"
 
     set -eu
     # Download box if not available
-    if ! vagrant box list | grep -qc $BOX_NAME ; then
-        info "Vagrant box '$BOX_NAME' is missing. Trying to download it"
-        vagrant box add $BOX_NAME $BOX_URL
-    fi
+    #if ! vagrant box list | grep -qc $BOX_NAME ; then
+    #    info "Vagrant box '$BOX_NAME' is missing. Trying to download it"
+    #    vagrant box add $BOX_NAME $BOX_URL
+    #fi
 
     # Run VM
-    vagrant up ynh-dev
+    vagrant up $NAME
 
     # Log into the VM
-    ssh_ynhdev
+    ssh_ynhdev $NAME
 }
 
 function ssh_ynhdev()
 {
-    vagrant ssh ynh-dev -c "echo 'You are now inside the LXC !'; cd /ynh-dev; sudo su"
+    local NAME=${1:-ynh-dev}
+    vagrant ssh $NAME -c "echo 'You are now inside the LXC !'; cd /ynh-dev; sudo su"
 }
 
 function destroy_ynhdev()
 {
-    vagrant destroy ynh-dev
+    local NAME=${1:-ynh-dev}
+    vagrant destroy $NAME
 }
 
 function rebuild_ynhdev()
