@@ -8,7 +8,7 @@ set -x
 
 sudo apt-get install vagrant lxc git -y
 
-git clone https://github.com/YunoHost/ynh-dev
+git clone https://github.com/alexAubin/ynh-dev
 cd ./ynh-dev
 git clone https://github.com/YunoHost/moulinette
 git clone https://github.com/YunoHost/yunohost

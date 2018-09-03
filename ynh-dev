@@ -4,32 +4,21 @@ readonly THISSCRIPT=`basename $0`
 
 function show_usage() {
     cat <<EOF
-Usage :
 
-    On the host
-    ===========
+  ${BLUE}On the host, to manage the LXC${NORMAL}
+  ${BLUE}==============================${NORMAL}
 
-    $THISSCRIPT start
-        (Create and) starts the ynh-dev LXC
+  start           (Create and) starts the ynh-dev LXC
+  ssh             SSH into an already started ynh-dev LXC
+  destroy         Destroy the ynh-dev LXC
+  rebuild         Rebuild a fresh, up-to-date box
 
-    $THISSCRIPT ssh
-        SSH into an already started ynh-dev LXC
+  ${BLUE}Inside the dev instance${NORMAL}
+  ${BLUE}=======================${NORMAL}
 
-    $THISSCRIPT destroy
-        Destroy the ynh-dev LXC
-
-    $THISSCRIPT rebuild
-        Rebuild a fresh, up-to-date box
-
-    Inside the vm
-    =============
-
-    $THISSCRIPT ip
-        Give the ip of the guest container
-    $THISSCRIPT use-git [PACKAGES [PACKAGES ...]]
-        Use Git repositories from dev environment path
-    $THISSCRIPT test [PACKAGES [PACKAGES ...]]
-        Deploy, update and run tests for some packages
+  ip              Give the ip of the guest container
+  use-git [PKG]   Use Git repositories from dev environment path
+  test [PKG]      Deploy, update and run tests for some packages
 
 EOF
 }
@@ -38,6 +27,8 @@ function main()
 {
     local ACTION="$1"
     local ARGUMENTS="${@:2}"
+
+    [ -z "$ACTION" ] && show_usage && exit 0
 
     case "${ACTION}" in
 
@@ -122,30 +113,54 @@ function create_sym_link() {
 
 function start_ynhdev()
 {
-    BOX_NAME="yunohost/strech-unstable"
-    BOX_URL="https://build.yunohost.org/yunohost-$BOX_NAME-lxc.box"
+    local BOX_NAME="yunohost/ynh-dev"
+    local BOX_URL="https://build.yunohost.org/yunohost-$BOX_NAME-lxc.box"
 
+    set -eu
     # Download box if not available
     if ! vagrant box list | grep -qc $BOX_NAME ; then
         info "Vagrant box '$BOX_NAME' is missing. Trying to download it"
-        vagrant box add $BOX_NAME $BOX_URL --provider $PROVIDER
+        vagrant box add $BOX_NAME $BOX_URL
     fi
 
     # Run VM
-    vagrant up ynh-dev --provider lxc
+    vagrant up ynh-dev
 
     # Log into the VM
-    vagrant ssh ynh-dev -c "sudo -i"
+    ssh_ynhdev
 }
 
 function ssh_ynhdev()
 {
-    vagrant ssh ynh-dev -c "sudo -i"
+    vagrant ssh ynh-dev -c "echo 'You are now inside the LXC !'; cd /ynh-dev; sudo su"
 }
 
 function destroy_ynhdev()
 {
     vagrant destroy ynh-dev
+}
+
+function rebuild_ynhdev()
+{
+    local BOX="ynh-dev"
+
+    set -x
+    cd prebuild
+
+    # Create box
+    vagrant up $BOX
+
+    # Package box
+    vagrant package $BOX --output /tmp/$BOX.box
+
+    # Destroy current box
+    vagrant destroy $BOX
+
+    set +x
+
+    # User message, and exit
+    info "The Vagrant box was packaged to /tmp/$BOX.box"
+    info "You might want to run : vagrant box add 'yunohost/ynh-dev' /tmp/$BOX.box"
 }
 
 function show_vm_ip()
