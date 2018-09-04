@@ -95,7 +95,7 @@ function critical()
 }
 
 function assert_inside_vm() {
-    [ -d /etc/yunohost ] || critical "There's no YunoHost in there. Are you sure that you are inside the LXC ?"
+    [ -d /etc/yunohost ] || critical "There's no YunoHost in there. Are you sure that you are inside the container ?"
 }
 
 function create_sym_link() {
