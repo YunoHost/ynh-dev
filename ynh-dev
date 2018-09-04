@@ -1,7 +1,5 @@
 #!/bin/bash
 
-readonly THISSCRIPT=`basename $0`
-
 function show_usage() {
     cat <<EOF
 
