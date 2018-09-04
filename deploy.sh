@@ -2,7 +2,7 @@
 
 set -x
 
-git clone https://github.com/alexAubin/ynh-dev
+git clone https://github.com/yunohost/ynh-dev
 cd ./ynh-dev
 git clone https://github.com/YunoHost/moulinette
 git clone https://github.com/YunoHost/yunohost

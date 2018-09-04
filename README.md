@@ -49,7 +49,7 @@ If you run Archlinux, this page should be quite useful to setup LXC : https://gi
 Then, go into your favorite development folder and deploy ynh-dev with : 
 
 ```bash
-curl https://raw.githubusercontent.com/alexAubin/ynh-dev/master/deploy.sh | bash
+curl https://raw.githubusercontent.com/yunohost/ynh-dev/master/deploy.sh | bash
 ```
 
 This will create a new `ynh-dev` folder with everything you need inside. In particular, you shall notice that there are clones or the various git repositories. In the next step, we shall start a LXC and 'link' those folders between the host and the LXC.
@@ -129,7 +129,7 @@ Deploy a `ynh-dev` folder at the root of the filesystem with :
 
 ```
 cd / 
-curl https://raw.githubusercontent.com/alexAubin/ynh-dev/master/deploy.sh | bash
+curl https://raw.githubusercontent.com/yunohost/ynh-dev/master/deploy.sh | bash
 cd /ynh-dev
 ```
 
