@@ -39,10 +39,7 @@ echo "cgroup        /sys/fs/cgroup        cgroup        defaults    0    0" | su
 sudo mount /sys/fs/cgroup
 lxc-checkconfig 
 echo "veth" | sudo tee -a /etc/modules
-wget https://raw.githubusercontent.com/fgrehm/vagrant-lxc/2a5510b34cc59cd3cb8f2dcedc3073852d841101/lib/vagrant-lxc/driver.rb -O ~/.vagrant.d/gems/2.5.1/gems/vagrant-lxc-1.4.2/lib/vagrant-lxc/driver.rb
 ```
-
-(in the last command, you might want to adapt the `gems/2.5.1` folder)
 
 If you run Archlinux, this page should be quite useful to setup LXC : https://github.com/fgrehm/vagrant-lxc/wiki/Usage-on-Arch-Linux-hosts
 
