@@ -35,6 +35,8 @@ These operation need to be done on the host machine.
 
 #### Install dependencies
 
+Please consider using the [latest Vagrant version from their website](https://www.vagrantup.com/downloads.html), distribution versions can include weird bugs that have been fixed upstream. If you still prefer to do that, here are the instructions:
+
 - Debian, Ubuntu, Mint
 
 ```bash
