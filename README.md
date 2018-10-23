@@ -29,6 +29,14 @@ Here is the development flow:
 
 First you need to install the dependencies. ynh-dev essentially requires git, vagrant, and an LXC ecosystem.
 
+Please consider using the [latest Vagrant version from their website](https://www.vagrantup.com/downloads.html), distribution versions can include weird bugs that have been fixed upstream. If you still prefer to do that, here are the instructions:
+
+- Debian, Ubuntu, Mint
+
+```bash
+sudo apt-get install vagrant virtualbox git
+```
+
 The following commands should work on Linux Mint 19 (and possibly on any Debian Stretch?) :
 
 ```bash
