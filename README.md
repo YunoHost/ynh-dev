@@ -129,7 +129,7 @@ corresponding path. You can link your VM to use these git clones such that chang
 /vagrant/ynh-dev use-git PACKAGE
 ```
 
-PACKAGE should can be ssowat, yunohost, moulinette or yunohost-admin. You might want to run use-git several times depending on what you want to develop precisely.
+PACKAGE can be ssowat, yunohost, moulinette or yunohost-admin. You might want to run use-git several times depending on what you want to develop precisely.
 
 ***Note***: The `use-git` operation can't be reverted now. DON'T DO THIS IN PRODUCTION !
 
