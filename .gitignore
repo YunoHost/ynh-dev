@@ -5,6 +5,7 @@
 vagrant
 ynh-dev-tools
 Vagrantfile
+.vagrant
 
 # Sources repositories
 moulinette
