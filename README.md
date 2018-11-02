@@ -90,7 +90,7 @@ For instance, after running
 
 the code of the git clone `'yunohost'` will be directly available inside the container. Which mean that running any `yunohost` command inside the container will use the code from the host... This allows to develop with any tool you want on your host, then test the changes in the container.
 
-The `use-git` action can be used for any package among `yunohost`, `yunohost-admin`, `moulinette` and `ssowat` with similar consequences.
+The `use-git` action can be used for any package among `yunohost`, `yunohost-admin`, `moulinette` and `ssowat` with similar consequences. You might want to run use-git several times depending on what you want to develop precisely.
 
 ***Note***: The `use-git` operation can't be reverted now. DON'T DO THIS IN PRODUCTION !
 
