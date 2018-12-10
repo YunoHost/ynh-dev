@@ -293,7 +293,8 @@ function run_tests()
                 git pull > /dev/null 2>&1
 
                 # Run tests
-                echo "Running tests for YunoHost"
+                info "Running tests for YunoHost ..."
+                [ -e "/etc/yunohost/installed" ] || critical "You should run postinstallation before running tests :s."
                 cd /ynh-dev/yunohost/
                 py.test tests
                 cd /ynh-dev/yunohost/src/yunohost
