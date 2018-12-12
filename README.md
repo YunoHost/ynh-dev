@@ -29,6 +29,14 @@ Here is the development flow:
 
 First you need to install the dependencies. ynh-dev essentially requires git, vagrant, and an LXC ecosystem.
 
+Please consider using the [latest Vagrant version from their website](https://www.vagrantup.com/downloads.html), distribution versions can include weird bugs that have been fixed upstream. If you still prefer to do that, here are the instructions:
+
+- Debian, Ubuntu, Mint
+
+```bash
+sudo apt-get install vagrant virtualbox git
+```
+
 The following commands should work on Linux Mint 19 (and possibly on any Debian Stretch?) :
 
 ```bash
@@ -39,17 +47,14 @@ echo "cgroup        /sys/fs/cgroup        cgroup        defaults    0    0" | su
 sudo mount /sys/fs/cgroup
 lxc-checkconfig 
 echo "veth" | sudo tee -a /etc/modules
-wget https://raw.githubusercontent.com/fgrehm/vagrant-lxc/2a5510b34cc59cd3cb8f2dcedc3073852d841101/lib/vagrant-lxc/driver.rb -O ~/.vagrant.d/gems/2.5.1/gems/vagrant-lxc-1.4.2/lib/vagrant-lxc/driver.rb
 ```
-
-(in the last command, you might want to adapt the `gems/2.5.1` folder)
 
 If you run Archlinux, this page should be quite useful to setup LXC : https://github.com/fgrehm/vagrant-lxc/wiki/Usage-on-Arch-Linux-hosts
 
 Then, go into your favorite development folder and deploy ynh-dev with : 
 
 ```bash
-curl https://raw.githubusercontent.com/alexAubin/ynh-dev/master/deploy.sh | bash
+curl https://raw.githubusercontent.com/yunohost/ynh-dev/master/deploy.sh | bash
 ```
 
 This will create a new `ynh-dev` folder with everything you need inside. In particular, you shall notice that there are clones or the various git repositories. In the next step, we shall start a LXC and 'link' those folders between the host and the LXC.
@@ -85,7 +90,7 @@ For instance, after running
 
 the code of the git clone `'yunohost'` will be directly available inside the container. Which mean that running any `yunohost` command inside the container will use the code from the host... This allows to develop with any tool you want on your host, then test the changes in the container.
 
-The `use-git` action can be used for any package among `yunohost`, `yunohost-admin`, `moulinette` and `ssowat` with similar consequences.
+The `use-git` action can be used for any package among `yunohost`, `yunohost-admin`, `moulinette` and `ssowat` with similar consequences. You might want to run use-git several times depending on what you want to develop precisely.
 
 ***Note***: The `use-git` operation can't be reverted now. DON'T DO THIS IN PRODUCTION !
 
@@ -129,7 +134,7 @@ Deploy a `ynh-dev` folder at the root of the filesystem with :
 
 ```
 cd / 
-curl https://raw.githubusercontent.com/alexAubin/ynh-dev/master/deploy.sh | bash
+curl https://raw.githubusercontent.com/yunohost/ynh-dev/master/deploy.sh | bash
 cd /ynh-dev
 ```
 

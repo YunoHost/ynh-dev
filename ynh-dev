@@ -301,6 +301,7 @@ function run_tests()
 
                 # Run tests
                 echo "Running tests for YunoHost"
+                [ -e "/etc/yunohost/installed" ] || critical "You should run postinstallation before running tests :s."
                 if [[ -z "$TEST_MODULE" ]]
                 then
                     cd /ynh-dev/yunohost/
