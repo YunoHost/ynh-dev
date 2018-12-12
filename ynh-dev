@@ -270,10 +270,17 @@ function run_tests()
     local PACKAGES="$@"
     for PACKAGE in "$PACKAGES";
     do
+        local TEST_MODULE=""
+        if [[ "$PACKAGE" == *"/"* ]]
+        then
+            TEST_MODULE=$(echo "$PACKAGE" | awk -F'/' '{print $2}')
+            PACKAGE=$(echo "$PACKAGE" | awk -F'/' '{print $1}')
+        fi
+
         case $PACKAGE in
             yunohost)
                 # Pytest and tests dependencies
-                if ! type "pytest" > /dev/null; then
+                if ! type "pytest" > /dev/null 2>&1; then
                     info "> Installing pytest ..."
                     apt-get install python-pip -y
                     pip2 install pytest
@@ -294,10 +301,16 @@ function run_tests()
 
                 # Run tests
                 echo "Running tests for YunoHost"
-                cd /ynh-dev/yunohost/
-                py.test tests
-                cd /ynh-dev/yunohost/src/yunohost
-                py.test tests
+                if [[ -z "$TEST_MODULE" ]]
+                then
+                    cd /ynh-dev/yunohost/
+                    py.test tests
+                    cd /ynh-dev/yunohost/src/yunohost
+                    py.test tests
+                else
+                    cd /ynh-dev/yunohost/src/yunohost
+                    py.test tests/test_"$TEST_MODULE".py
+                fi
                 ;;
         esac
     done
