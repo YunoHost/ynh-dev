@@ -17,6 +17,8 @@ function show_usage() {
   ip              Give the ip of the guest container
   use-git [PKG]   Use Git repositories from dev environment path
   test [PKG]      Deploy, update and run tests for some packages
+                  Tests for single modules and functions can ran with
+                  e.g. ./ynh-dev test yunohost/appurl:urlavailable
 
 EOF
 }
@@ -270,12 +272,9 @@ function run_tests()
     local PACKAGES="$@"
     for PACKAGE in "$PACKAGES";
     do
-        local TEST_MODULE=""
-        if [[ "$PACKAGE" == *"/"* ]]
-        then
-            TEST_MODULE=$(echo "$PACKAGE" | awk -F'/' '{print $2}')
-            PACKAGE=$(echo "$PACKAGE" | awk -F'/' '{print $1}')
-        fi
+        TEST_FUNCTION=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $3}')
+        TEST_MODULE=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $2}')
+        PACKAGE=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $1}')
 
         case $PACKAGE in
             yunohost)
@@ -310,7 +309,12 @@ function run_tests()
                     py.test tests
                 else
                     cd /ynh-dev/yunohost/src/yunohost
-                    py.test tests/test_"$TEST_MODULE".py
+                    if [[ -z "$TEST_FUNCTION" ]]
+                    then
+                        py.test tests/test_"$TEST_MODULE".py
+                    else
+                        py.test tests/test_"$TEST_MODULE".py::test_"$TEST_FUNCTION"
+                    fi
                 fi
                 ;;
         esac
