@@ -49,6 +49,8 @@ lxc-checkconfig
 echo "veth" | sudo tee -a /etc/modules
 ```
 
+On Debian Buster, I had to re-patch the driver.rb of vagrant-lxc plugin with [this version](https://raw.githubusercontent.com/fgrehm/vagrant-lxc/2a5510b34cc59cd3cb8f2dcedc3073852d841101/lib/vagrant-lxc/driver.rb) (especially the `roofs_path` function). I also had to install `apparmor` then `systemctl restart apparmor` for `lxc-start` to work.
+
 If you run Archlinux, this page should be quite useful to setup LXC : https://github.com/fgrehm/vagrant-lxc/wiki/Usage-on-Arch-Linux-hosts
 
 Then, go into your favorite development folder and deploy ynh-dev with : 
