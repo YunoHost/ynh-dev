@@ -4,7 +4,7 @@
 BOX="ynh-dev"
 
 # Create box
-vagrant up $BOX
+vagrant up $BOX --provider=lxc
 
 # Package box
 vagrant package $BOX --output /tmp/$BOX.box

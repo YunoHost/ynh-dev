@@ -113,6 +113,10 @@ function create_sym_link() {
 
 function start_ynhdev()
 {
+    [[ $(systemctl is-active lxc-net) == "active" ]] || critical "Service lxc-net should be running ... You probably need to fix your lxc network conf before being able to use lxc's."
+
+    ip a | grep lxcbr0 -q || critical "There is no 'lxcbr0' interface. You probably need to fix your lxc network conf before being able to use lxc's."
+
     local NAME=${1:-ynh-dev}
     local BOX_NAME="yunohost/$NAME"
     local BOX_URL="https://build.yunohost.org/yunohost-$BOX_NAME-lxc.box"
@@ -145,16 +149,20 @@ function destroy_ynhdev()
 
 function rebuild_ynhdev()
 {
+    [[ $(systemctl is-active lxc-net) == "active" ]] || critical "Service lxc-net should be running ... You probably need to fix your lxc network conf before being able to use lxc's."
+
+    ip a | grep lxcbr0 -q || critical "There is no 'lxcbr0' interface. You probably need to fix your lxc network conf before being able to use lxc's."
+
     local BOX="ynh-dev"
 
     set -x
     cd prebuild
 
     # Create box
-    vagrant up $BOX
+    vagrant up $BOX --provider=lxc || critical "Could not create the box ?"
 
     # Package box
-    vagrant package $BOX --output /tmp/$BOX.box
+    vagrant package $BOX --output /tmp/$BOX.box || critical "Could not package package the box ?"
 
     # Destroy current box
     vagrant destroy $BOX
