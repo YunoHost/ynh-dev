@@ -162,6 +162,7 @@ function rebuild_ynhdev()
     vagrant up $BOX --provider=lxc || critical "Could not create the box ?"
 
     # Package box
+    rm -f /tmp/ynh-dev.box
     vagrant package $BOX --output /tmp/$BOX.box || critical "Could not package package the box ?"
 
     # Destroy current box
@@ -171,7 +172,7 @@ function rebuild_ynhdev()
 
     # User message, and exit
     info "The Vagrant box was packaged to /tmp/$BOX.box"
-    info "You might want to run : vagrant box add 'yunohost/ynh-dev' /tmp/$BOX.box"
+    info "You might want to run : vagrant box add 'yunohost/ynh-dev' /tmp/$BOX.box --force"
 }
 
 function show_vm_ip()
