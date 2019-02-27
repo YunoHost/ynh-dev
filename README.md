@@ -87,6 +87,7 @@ When ran on the host, the `./ynh-dev` command allows you to manage YunoHost's de
 First, you might want to start a new LXC with :
 
 ```bash
+cd ynh-dev  # if not already done
 ./ynh-dev start
 ```
 
