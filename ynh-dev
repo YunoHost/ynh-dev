@@ -30,6 +30,8 @@ function main()
 
     [ -z "$ACTION" ] && show_usage && exit 0
 
+    check_lxc_version
+
     case "${ACTION}" in
 
         help|-h|--help)            show_usage     $ARGUMENTS ;;
@@ -110,6 +112,17 @@ function create_sym_link() {
 ##################################################################
 #               Actions                                          #
 ##################################################################
+
+function check_lxc_version()
+{
+    local LXC_VERSION=$(lxc-info --version)
+
+    if [ "${${LXC_VERSION}:0:1}" != 3 ]
+    then
+        echo "ERROR: you need at least version 3 of LXC otherwise the box won't work"
+        exit 1
+    fi
+}
 
 function start_ynhdev()
 {
