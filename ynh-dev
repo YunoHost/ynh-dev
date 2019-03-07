@@ -117,7 +117,7 @@ function check_lxc_version()
 {
     local LXC_VERSION=$(lxc-info --version)
 
-    if [ "${${LXC_VERSION}:0:1}" != 3 ]
+    if [ "${LXC_VERSION:0:1}" != 3 ]
     then
         echo "ERROR: you need at least version 3 of LXC otherwise the box won't work"
         exit 1
