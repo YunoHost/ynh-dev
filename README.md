@@ -31,13 +31,7 @@ First you need to install the dependencies. ynh-dev essentially requires git, va
 
 Please consider using the [latest Vagrant version from their website](https://www.vagrantup.com/downloads.html), distribution versions can include weird bugs that have been fixed upstream. If you still prefer to do that, here are the instructions:
 
-- Debian, Ubuntu, Mint
-
-```bash
-sudo apt-get install vagrant git
-```
-
-The following commands should work on Linux Mint 19 (and possibly on any Debian Stretch?) :
+The following commands should work on **Linux Mint 19** (and possibly on any Debian Stretch?) :
 
 ```bash
 sudo apt update
@@ -45,15 +39,15 @@ sudo apt install git vagrant lxc-templates lxctl lxc cgroup-lite redir bridge-ut
 vagrant plugin install vagrant-lxc
 echo "cgroup        /sys/fs/cgroup        cgroup        defaults    0    0" | sudo tee -a /etc/fstab
 sudo mount /sys/fs/cgroup
-lxc-checkconfig 
+lxc-checkconfig
 echo "veth" | sudo tee -a /etc/modules
 ```
 
-On Debian Buster, I had to re-patch the driver.rb of vagrant-lxc plugin with [this version](https://raw.githubusercontent.com/fgrehm/vagrant-lxc/2a5510b34cc59cd3cb8f2dcedc3073852d841101/lib/vagrant-lxc/driver.rb) (especially the `roofs_path` function). I also had to install `apparmor` then `systemctl restart apparmor` for `lxc-start` to work. Also check instruction on https://feeding.cloud.geek.nz/posts/lxc-setup-on-debian-stretch/
+On **Debian Buster**, I had to re-patch the driver.rb of vagrant-lxc plugin with [this version](https://raw.githubusercontent.com/fgrehm/vagrant-lxc/2a5510b34cc59cd3cb8f2dcedc3073852d841101/lib/vagrant-lxc/driver.rb) (especially the `roofs_path` function). I also had to install `apparmor` then `systemctl restart apparmor` for `lxc-start` to work. Also check instruction on https://feeding.cloud.geek.nz/posts/lxc-setup-on-debian-stretch/
 
-If you run Archlinux, this page should be quite useful to setup LXC : https://github.com/fgrehm/vagrant-lxc/wiki/Usage-on-Arch-Linux-hosts
+If you run **Archlinux**, this page should be quite useful to setup LXC : https://github.com/fgrehm/vagrant-lxc/wiki/Usage-on-Arch-Linux-hosts
 
-Typically `/etc/default/lxc-net` and `/etc/lxc/default.conf` should look like this : 
+On **both Debian and Archlinux**, typically `/etc/default/lxc-net` and `/etc/lxc/default.conf` should look like this :
 
 ```
  > cat /etc/default/lxc-net
@@ -72,7 +66,9 @@ lxc.net.0.flags = up
 lxc.net.0.hwaddr = 00:16:3e:xx:xx:xx
 ```
 
-Then, go into your favorite development folder and deploy ynh-dev with : 
+On **Debian Buster**, for backup stuff to work correctly with apparmor, I also had to add `mount options=(ro, remount, bind, rbind),` to `/etc/apparmor.d/lxc/lxc-default-cgns` and restart the apparmor service.
+
+Then, go into your favorite development folder and deploy ynh-dev with :
 
 ```bash
 curl https://raw.githubusercontent.com/yunohost/ynh-dev/master/deploy.sh | bash
@@ -155,7 +151,7 @@ Depending on what you want to achieve, you might want to run the postinstall rig
 Deploy a `ynh-dev` folder at the root of the filesystem with :
 
 ```
-cd / 
+cd /
 curl https://raw.githubusercontent.com/yunohost/ynh-dev/master/deploy.sh | bash
 cd /ynh-dev
 ```
