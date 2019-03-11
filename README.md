@@ -66,7 +66,7 @@ lxc.net.0.flags = up
 lxc.net.0.hwaddr = 00:16:3e:xx:xx:xx
 ```
 
-On **Debian Buster**, for backup stuff to work correctly with apparmor, I also had to add `mount options=(ro, remount, bind, rbind),` to `/etc/apparmor.d/lxc/lxc-default-cgns` and restart the apparmor service.
+On **Debian Buster**, for backup stuff to work correctly with apparmor, I also had to add `mount options=(ro, remount, bind, rbind),` and `  mount options=(ro, remount, bind, relatime),` to `/etc/apparmor.d/lxc/lxc-default-cgns` and restart the apparmor service.
 
 Then, go into your favorite development folder and deploy ynh-dev with :
 
