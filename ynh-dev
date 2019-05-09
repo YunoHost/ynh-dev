@@ -171,7 +171,7 @@ function rebuild_ynhdev()
     cd prebuild
 
     # Create box
-    vagrant up $BOX --provider=lxc || critical "Could not create the box ?"
+    vagrant up $BOX --provider=lxc --provision || critical "Could not create the box ?"
 
     # Package box
     rm -f /tmp/ynh-dev.box
