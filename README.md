@@ -10,7 +10,7 @@ In particular, it allows :
  * to replace already installed yunohost debian packages by symlinks to those git clones ;
  * to manage yunohost instances on your host machine with Vagrant by:
    * creating a Vagrant VM with a pre-installed Yunohost system ;
-   * sharing the dev environnement your host the VM (so you can develop directly on your host)
+   * sharing the dev environment your host the VM (so you can develop directly on your host)
    * finding the ip address of your yunohost vagrant vm
 
 yhn-dev can be used either :
@@ -21,7 +21,7 @@ yhn-dev can be used either :
 
 Here is the development flow:
 
-1. Setup ynh-dev and the development environnement
+1. Setup ynh-dev and the development environment
 2. Manage YunoHost's dev LXCs
 3. Developping on your host, and testing in the container
 
@@ -137,7 +137,7 @@ Instead of running a LXC locally, you may choose (or need) to develop on a dev V
 Since you do not need to manage LXC, the setup is somewhat "easier" :
 
 1. Setup your VPS and install YunoHost
-2. Setup ynh-dev and the development environnement
+2. Setup ynh-dev and the development environment
 3. Develop and test
 
 ### 1. Setup your VPS and install YunoHost
@@ -146,7 +146,7 @@ Setup a VPS somewhere (e.g. Scaleway, Digital Ocean, ...) and install YunoHost f
 
 Depending on what you want to achieve, you might want to run the postinstall right away - and/or setup a domain with an actually working DNS.
 
-### 2. Setup ynh-dev and the development environnement
+### 2. Setup ynh-dev and the development environment
 
 Deploy a `ynh-dev` folder at the root of the filesystem with :
 
