@@ -112,7 +112,7 @@ function create_sym_link() {
 function start_ynhdev()
 {
     local NAME=${1:-ynh-dev}
-    local BOX_NAME="yunohost/$NAME"
+    local BOX_NAME="yunohost/ynh-dev"
     local BOX_URL="https://build.yunohost.org/yunohost-$BOX_NAME-lxc.box"
 
     set -eu

@@ -8,6 +8,7 @@ NETWORK = "10.0.3."
 
 HOSTS = {
    "ynh-dev" => ["83", "ynh-dev"],
+   "compta" => ["85", "ynh-dev"],
    "ynh-dev-buster" => ["84", "ynh-dev-buster"],
 }
 
