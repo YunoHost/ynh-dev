@@ -52,18 +52,27 @@ your capacities and resources when aiming to setup a development environment.
 Yunohost can be developed on using a combination of the following technologies:
 
   * Git (any version is sufficient)
-  * Virtualbox (>= 6.x)
   * Vagrant (>= 2.x)
   * LXC (>= 3.x)
   * Vagrant-LXC (>= 1.4.x)
+
+LXC is typically lightweight but you may find the initial setup complex
+(in particular network configuration). Alternatively, you may be able
+to setup a local environnement using Virtualbox which is kinda more
+resource-hungry :
+
+  * Virtualbox (>= 6.x)
+  * Vagrant-virtualbox (>= ?.?.?)
 
 Please keep in mind that these versions may not be available on your OS
 distribution and you may be required to install them as binary or from source.
 There are no guarantees of stability on newer major versions.
 
-This local development path will not allow you to easily test your email stack
-or deal with deploying SSL certificates, for example. A remote machine should
-be used for these cases.
+This local development path allows to work without an internet connection,
+but be aware that it will *not* allow you to easily test your email stack
+or deal with deploying SSL certificates, for example, as your machine is
+likely to not be exposed on the internet. A remote machine should be used
+for these cases.
 
 Depending on your needs, this setup can be very convenient.
 
@@ -76,9 +85,10 @@ Yunohost can be deployed as a typical install on a remote VPS. You can then use
 `ynh-dev` to configure a development environment on the server.
 
 This method can potentially be faster than the local development environment
-assuming you have familiarity with working on VPS machines. It is also a good
-option if the required system dependencies (Vagrant, Virtualbox, etc.) are not
-easily available to you on your distribution.
+assuming you have familiarity with working on VPS machines, if you always have
+internet connectivity when working, and if you're okay with paying a fee. It
+is also a good option if the required system dependencies (Vagrant, Virtualbox,
+etc.) are not easily available to you on your distribution.
 
 Please be aware that this method should **not** be used for a end-user facing
 production environment.
