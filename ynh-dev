@@ -17,6 +17,8 @@ function show_usage() {
   ip              Give the ip of the guest container
   use-git [PKG]   Use Git repositories from dev environment path
   test [PKG]      Deploy, update and run tests for some packages
+                  Tests for single modules and functions can ran with
+                  e.g. ./ynh-dev test yunohost/appurl:urlavailable
 
 EOF
 }
@@ -109,8 +111,24 @@ function create_sym_link() {
 #               Actions                                          #
 ##################################################################
 
+function check_lxc_setup()
+{
+    local LXC_VERSION=$(lxc-info --version)
+
+    [[ "${LXC_VERSION:0:1}" == 3 ]] \
+        || critical "You need at least version 3 of LXC otherwise the box won't work"
+
+    [[ $(systemctl is-active lxc-net) == "active" ]] \
+        || critical "Service lxc-net should be running ... You probably need to fix your lxc network conf before being able to use lxc's."
+
+    ip a | grep -q lxcbr0 \
+        || critical "There is no 'lxcbr0' interface. You probably need to fix your lxc network conf before being able to use lxc's."
+}
+
 function start_ynhdev()
 {
+    check_lxc_setup
+
     local NAME=${1:-ynh-dev}
     local BOX_NAME="yunohost/ynh-dev"
     local BOX_URL="https://build.yunohost.org/yunohost-$BOX_NAME-lxc.box"
@@ -131,28 +149,33 @@ function start_ynhdev()
 
 function ssh_ynhdev()
 {
+    check_lxc_setup
     local NAME=${1:-ynh-dev}
     vagrant ssh $NAME -c "echo 'You are now inside the LXC !'; cd /ynh-dev; sudo su"
 }
 
 function destroy_ynhdev()
 {
+    check_lxc_setup
     local NAME=${1:-ynh-dev}
     vagrant destroy $NAME
 }
 
 function rebuild_ynhdev()
 {
+    check_lxc_setup
+
     local BOX="ynh-dev"
 
     set -x
     cd prebuild
 
     # Create box
-    vagrant up $BOX
+    vagrant up $BOX --provider=lxc --provision || critical "Could not create the box ?"
 
     # Package box
-    vagrant package $BOX --output /tmp/$BOX.box
+    rm -f /tmp/ynh-dev.box
+    vagrant package $BOX --output /tmp/$BOX.box || critical "Could not package package the box ?"
 
     # Destroy current box
     vagrant destroy $BOX
@@ -161,7 +184,7 @@ function rebuild_ynhdev()
 
     # User message, and exit
     info "The Vagrant box was packaged to /tmp/$BOX.box"
-    info "You might want to run : vagrant box add 'yunohost/ynh-dev' /tmp/$BOX.box"
+    info "You might want to run : vagrant box add 'yunohost/ynh-dev' /tmp/$BOX.box --force"
 }
 
 function show_vm_ip()
@@ -238,7 +261,7 @@ function use_git()
                     sudo apt install nodejs
 
                     cd /ynh-dev/yunohost-admin/src
-                    sudo npm install
+                    sudo npm install --no-bin-links
                     sudo npm install -g bower
                     sudo npm install -g gulp
                 fi
@@ -270,10 +293,14 @@ function run_tests()
     local PACKAGES="$@"
     for PACKAGE in "$PACKAGES";
     do
+        TEST_FUNCTION=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $3}')
+        TEST_MODULE=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $2}')
+        PACKAGE=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $1}')
+
         case $PACKAGE in
             yunohost)
                 # Pytest and tests dependencies
-                if ! type "pytest" > /dev/null; then
+                if ! type "pytest" > /dev/null 2>&1; then
                     info "> Installing pytest ..."
                     apt-get install python-pip -y
                     pip2 install pytest
@@ -293,12 +320,23 @@ function run_tests()
                 git pull > /dev/null 2>&1
 
                 # Run tests
-                info "Running tests for YunoHost ..."
+                info "Running tests for YunoHost"
                 [ -e "/etc/yunohost/installed" ] || critical "You should run postinstallation before running tests :s."
-                cd /ynh-dev/yunohost/
-                py.test tests
-                cd /ynh-dev/yunohost/src/yunohost
-                py.test tests
+                if [[ -z "$TEST_MODULE" ]]
+                then
+                    cd /ynh-dev/yunohost/
+                    py.test tests
+                    cd /ynh-dev/yunohost/src/yunohost
+                    py.test tests
+                else
+                    cd /ynh-dev/yunohost/src/yunohost
+                    if [[ -z "$TEST_FUNCTION" ]]
+                    then
+                        py.test tests/test_"$TEST_MODULE".py
+                    else
+                        py.test tests/test_"$TEST_MODULE".py::test_"$TEST_FUNCTION"
+                    fi
+                fi
                 ;;
         esac
     done

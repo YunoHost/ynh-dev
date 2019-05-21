@@ -1,8 +1,8 @@
-# ynh-dev - Yunohost dev environnement manager
+# ynh-dev - Yunohost dev environment manager
 
 Report issues here: https://github.com/yunohost/issues
 
-ynh-dev is a CLI tool to manage your local development environement for YunoHost. This allow you to develop on the various repository of the YunoHost project.
+ynh-dev is a CLI tool to manage your local development environment for YunoHost. This allow you to develop on the various repository of the YunoHost project.
 
 In particular, it allows :
 
@@ -25,33 +25,50 @@ Here is the development flow:
 2. Manage YunoHost's dev LXCs
 3. Developping on your host, and testing in the container
 
-### 1. Setup ynh-dev and the development environnement
+### 1. Setup ynh-dev and the development environment
 
 First you need to install the dependencies. ynh-dev essentially requires git, vagrant, and an LXC ecosystem.
 
 Please consider using the [latest Vagrant version from their website](https://www.vagrantup.com/downloads.html), distribution versions can include weird bugs that have been fixed upstream. If you still prefer to do that, here are the instructions:
 
-- Debian, Ubuntu, Mint
+The following commands should work on **Linux Mint 19** (and possibly on any Debian Stretch?) :
 
 ```bash
-sudo apt-get install vagrant virtualbox git
-```
-
-The following commands should work on Linux Mint 19 (and possibly on any Debian Stretch?) :
-
-```bash
-apt update
-apt install git vagrant lxc-templates lxctl lxc cgroup-lite redir bridge-utils libc6 debootstrap
+sudo apt update
+sudo apt install git vagrant lxc-templates lxctl lxc cgroup-lite redir bridge-utils libc6 debootstrap
 vagrant plugin install vagrant-lxc
 echo "cgroup        /sys/fs/cgroup        cgroup        defaults    0    0" | sudo tee -a /etc/fstab
 sudo mount /sys/fs/cgroup
-lxc-checkconfig 
+lxc-checkconfig
 echo "veth" | sudo tee -a /etc/modules
 ```
 
-If you run Archlinux, this page should be quite useful to setup LXC : https://github.com/fgrehm/vagrant-lxc/wiki/Usage-on-Arch-Linux-hosts
+On **Debian Buster**, I had to re-patch the driver.rb of vagrant-lxc plugin with [this version](https://raw.githubusercontent.com/fgrehm/vagrant-lxc/2a5510b34cc59cd3cb8f2dcedc3073852d841101/lib/vagrant-lxc/driver.rb) (especially the `roofs_path` function). I also had to install `apparmor` then `systemctl restart apparmor` for `lxc-start` to work. Also check instruction on https://feeding.cloud.geek.nz/posts/lxc-setup-on-debian-stretch/
 
-Then, go into your favorite development folder and deploy ynh-dev with : 
+If you run **Archlinux**, this page should be quite useful to setup LXC : https://github.com/fgrehm/vagrant-lxc/wiki/Usage-on-Arch-Linux-hosts
+
+On **both Debian and Archlinux**, typically `/etc/default/lxc-net` and `/etc/lxc/default.conf` should look like this :
+
+```
+ > cat /etc/default/lxc-net
+USE_LXC_BRIDGE="true"
+LXC_BRIDGE="lxcbr0"
+LXC_ADDR="10.0.3.1"
+LXC_NETMASK="255.255.255.0"
+LXC_NETWORK="10.0.3.0/24"
+LXC_DHCP_RANGE="10.0.3.2,10.0.3.254"
+LXC_DHCP_MAX="253"
+
+> cat /etc/lxc/default.conf
+lxc.net.0.type = veth
+lxc.net.0.link = lxcbr0
+lxc.net.0.flags = up
+lxc.net.0.hwaddr = 00:16:3e:xx:xx:xx
+```
+
+On **Debian Buster**, for backup stuff to work correctly with apparmor, I also had to add `mount options=(ro, remount, bind, rbind),` and `  mount options=(ro, remount, bind, relatime),` to `/etc/apparmor.d/lxc/lxc-default-cgns` and restart the apparmor service.
+
+Then, go into your favorite development folder and deploy ynh-dev with :
 
 ```bash
 curl https://raw.githubusercontent.com/yunohost/ynh-dev/master/deploy.sh | bash
@@ -66,6 +83,7 @@ When ran on the host, the `./ynh-dev` command allows you to manage YunoHost's de
 First, you might want to start a new LXC with :
 
 ```bash
+cd ynh-dev  # if not already done
 ./ynh-dev start
 ```
 
@@ -133,7 +151,7 @@ Depending on what you want to achieve, you might want to run the postinstall rig
 Deploy a `ynh-dev` folder at the root of the filesystem with :
 
 ```
-cd / 
+cd /
 curl https://raw.githubusercontent.com/yunohost/ynh-dev/master/deploy.sh | bash
 cd /ynh-dev
 ```
@@ -152,4 +170,4 @@ any `yunohost` command will run from the code of the git clone. The `use-git` ac
 
 ## More info
 
-[yunohost.org/dev_fr](https://yunohost.org/dev_fr) (in french) not up-to-date.
+* [yunohost.org/dev](https://yunohost.org/dev) not up-to-date.
