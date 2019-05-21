@@ -170,4 +170,4 @@ any `yunohost` command will run from the code of the git clone. The `use-git` ac
 
 ## More info
 
-[yunohost.org/dev_fr](https://yunohost.org/dev_fr) (in french) not up-to-date.
+* [yunohost.org/dev](https://yunohost.org/dev) not up-to-date.
