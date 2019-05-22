@@ -16,6 +16,7 @@ Please report issues on the following repository:
   * [3. Development and container testing](#3-development-and-container-testing)
   * [4. Testing the web interface](#4-testing-the-web-interface)
   * [Advanced: using snapshots](#advanced-using-snapshots)
+  * [Alternative: Only Virtualbox](#alternative-using-only-virtualbox)
 
 - [Remote Development Environment](#remote-development-environment)
   * [1. Setup your VPS and install YunoHost](#1-setup-your-vps-and-install-yunohost)
@@ -78,6 +79,10 @@ Depending on your needs, this setup can be very convenient.
 
 If choosing this path, please keep reading at the [local development
 environment](#local-development-environment) section.
+
+Please note, there is also a setup guide for a local development path which
+does not require LXC. Please see the [Alternative: Only Virtualbox](#alternative-using-only-virtualbox)
+section for more.
 
 ## Remote Development Path
 
@@ -224,6 +229,13 @@ Note that `./ynh-dev use-git yunohost-admin` has a particular behavior: it start
 Vagrant is not well integrated with LXC snapshots.
 
 However, you may still use `lxc-snapshot` directly to manage snapshots.
+
+## Alternative: Using Only Virtualbox
+
+A Vagrant and Virtualbox (without LXC) guide is provided on another branch of
+this repository. This is a known working setup used by some developers. Please
+see the ["virtualbox" branch](https://github.com/YunoHost/ynh-dev/tree/virtualbox#develop-on-your-local-machine)
+for more.
 
 # Remote Development Environment
 
