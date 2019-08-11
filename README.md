@@ -130,6 +130,7 @@ $ sudo mount /sys/fs/cgroup
 $ lxc-checkconfig
 $ echo "veth" | sudo tee -a /etc/modules
 ```
+If you have install libvirtd, you need to stop it and kill dnsmasq libvirtd process, to avoid conflict with dhcp. If you don't ynh-dev start will fail because the lxc container won't be able to get an ip.
 
 On **Debian Buster**, I had to re-patch the driver.rb of vagrant-lxc plugin with [this version](https://raw.githubusercontent.com/fgrehm/vagrant-lxc/2a5510b34cc59cd3cb8f2dcedc3073852d841101/lib/vagrant-lxc/driver.rb) (especially the `roofs_path` function). I also had to install `apparmor` then `systemctl restart apparmor` for `lxc-start` to work.
 
