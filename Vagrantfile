@@ -9,6 +9,7 @@ NETWORK = "10.0.3."
 HOSTS = {
    "ynh-dev" => ["83", "ynh-dev"],
    "ynh-dev-buster" => ["84", "ynh-dev-buster"],
+   "app" => ["85", "ynh-dev-app"],
 }
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|

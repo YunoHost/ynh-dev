@@ -25,7 +25,7 @@ sudo apt-get -y --force-yes dist-upgrade
 
 # Install YunoHost
 wget https://raw.githubusercontent.com/YunoHost/install_script/stretch/install_yunohost -q -O /tmp/install_yunohost
-sudo bash /tmp/install_yunohost -a -d unstable
+sudo bash /tmp/install_yunohost -a -d $1
 
 # Cleanup
 sudo apt-get clean -y
@@ -34,21 +34,22 @@ SCRIPT
 NETWORK = "10.0.3."
 
 HOSTS = {
-   "ynh-dev" => ["83", "stretch64"],
-   "ynh-dev-buster" => ["84", "testing64"],
+   "ynh-dev" => ["83", "stretch64", "unstable"],
+   "ynh-dev-buster" => ["84", "testing64", "unstable"],
+   "ynh-dev-app" => ["85", "stretch64", "stable"],
 }
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   HOSTS.each do | (name, cfg) |
   
-    ipaddr, box = cfg
+    ipaddr, box, ynh_version = cfg
     
     config.vm.define name do |machine|
       machine.vm.box = "debian/" + box
       machine.vm.provision "shell" do |s|
         s.inline = $script
-        s.args   = ""
+        s.args   = [ynh_version]
       end
       machine.vm.provider "lxc" do |lxc|
         machine.vm.network :private_network, ip: NETWORK + ipaddr, lxc__bridge_name: 'lxcbr0'

@@ -165,7 +165,7 @@ function rebuild_ynhdev()
 {
     check_lxc_setup
 
-    local BOX="ynh-dev"
+    local BOX=${1:-ynh-dev}
 
     set -x
     cd prebuild
@@ -184,7 +184,7 @@ function rebuild_ynhdev()
 
     # User message, and exit
     info "The Vagrant box was packaged to /tmp/$BOX.box"
-    info "You might want to run : vagrant box add 'yunohost/ynh-dev' /tmp/$BOX.box --force"
+    info "You might want to run : vagrant box add 'yunohost/$BOX' /tmp/$BOX.box --force"
 }
 
 function show_vm_ip()
