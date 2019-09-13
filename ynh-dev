@@ -303,7 +303,7 @@ function run_tests()
                 if ! type "pytest" > /dev/null 2>&1; then
                     info "> Installing pytest ..."
                     apt-get install python-pip -y
-                    pip2 install pytest
+                    pip2 install pytest pytest-sugar
                 fi
                 for DEP in "pytest-mock requests-mock mock"
                 do
