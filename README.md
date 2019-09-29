@@ -70,6 +70,7 @@ Clone the ynh-dev repo :
 ```bash
 git clone https://github.com/YunoHost/ynh-dev
 cd ynh-dev
+git checkout virtualbox
 ```
 
 #### Create the environment
