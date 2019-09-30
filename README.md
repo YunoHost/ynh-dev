@@ -40,7 +40,7 @@ Please consider using the [latest Vagrant version from their website](https://ww
 - Debian, Ubuntu, Mint
 
 ```bash
-sudo apt-get install vagrant virtualbox git
+sudo apt-get install vagrant virtualbox git libvirt-dev
 ```
 
 - Fedora
