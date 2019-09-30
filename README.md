@@ -123,7 +123,7 @@ The following commands should work on **Linux Mint 19** (and possibly on any Deb
 
 ```bash
 $ sudo apt update
-$ sudo apt install git vagrant lxc-templates lxctl lxc cgroup-lite redir bridge-utils libc6 debootstrap
+$ sudo apt install git vagrant lxc-templates lxctl lxc cgroup-lite redir bridge-utils libc6 debootstrap libvirt-dev
 $ vagrant plugin install vagrant-lxc
 $ echo "cgroup        /sys/fs/cgroup        cgroup        defaults    0    0" | sudo tee -a /etc/fstab
 $ sudo mount /sys/fs/cgroup
