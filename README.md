@@ -53,14 +53,14 @@ your capacities and resources when aiming to setup a development environment.
 Yunohost can be developed on using a combination of the following technologies:
 
   * Git (any version is sufficient)
-  * Vagrant (>= 2.x)
-  * LXC (>= 3.x)
-  * Vagrant-LXC (>= 1.4.x)
+  * LXD (>= 2.x) (though only tested with 3.x for now)
 
-LXC is typically lightweight but you may find the initial setup complex
-(in particular network configuration). Alternatively, you may be able
-to setup a local environnement using Virtualbox which is kinda more
-resource-hungry :
+As LXC are containers, they are typically lightweight but you may find the
+initial setup complex (in particular network configuration). LXD makes the
+management of LXC much simpler.
+
+Alternatively, you may be able to setup a local environnement using Vagrant and
+Virtualbox which is kinda more resource-hungry because it is fully virtualized.
 
   * Virtualbox (>= 6.x)
   * Vagrant-virtualbox (>= ?.?.?)
@@ -113,58 +113,29 @@ Here is the development flow:
 
 First you need to install the system dependencies.
 
-`ynh-dev` essentially requires Git, Vagrant, and and the LXC ecosystem. Please
+`ynh-dev` essentially requires Git and the LXD/LXC ecosystem. Please
 see the [local development path](#local-development-path) section for some idea
 of the versions required.
 
-Please consider using the [latest Vagrant version from their website](https://www.vagrantup.com/downloads.html), distribution versions can include weird bugs that have been fixed upstream. If you still prefer to do that, here are the instructions:
-
-The following commands should work on **Linux Mint 19** (and possibly on any Debian Stretch?):
+On a Debian-based system (regular Debian, Ubuntu, Mint ...), LXD can be
+installed using `snapd`. On other systems like Archlinux, it's probably that you
+will also be able to install `snapd` using the system package manager (or even
+`lxd` directly).
 
 ```bash
-$ sudo apt update
-$ sudo apt install git vagrant lxc-templates lxctl lxc cgroup-lite redir bridge-utils libc6 debootstrap libvirt-dev
-$ vagrant plugin install vagrant-lxc
-$ echo "cgroup        /sys/fs/cgroup        cgroup        defaults    0    0" | sudo tee -a /etc/fstab
-$ sudo mount /sys/fs/cgroup
-$ lxc-checkconfig
-$ echo "veth" | sudo tee -a /etc/modules
-```
-If you have install libvirtd, you need to stop it and kill dnsmasq libvirtd process, to avoid conflict with dhcp. If you don't ynh-dev start will fail because the lxc container won't be able to get an ip.
+apt install git snapd
+snap install lxd
 
-On **Debian Buster**, I had to re-patch the driver.rb of vagrant-lxc plugin with [this version](https://raw.githubusercontent.com/fgrehm/vagrant-lxc/2a5510b34cc59cd3cb8f2dcedc3073852d841101/lib/vagrant-lxc/driver.rb) (especially the `roofs_path` function). I also had to install `apparmor` then `systemctl restart apparmor` for `lxc-start` to work.
-
-Also check instruction on https://feeding.cloud.geek.nz/posts/lxc-setup-on-debian-stretch/.
-
-If you run **Archlinux**, this page should be quite useful to setup LXC: https://github.com/fgrehm/vagrant-lxc/wiki/Usage-on-Arch-Linux-hosts
-
-On **both Debian and Archlinux**, typically `/etc/default/lxc-net` and `/etc/lxc/default.conf` should look like this :
-
-```
-$ cat /etc/default/lxc-net
-USE_LXC_BRIDGE="true"
-LXC_BRIDGE="lxcbr0"
-LXC_ADDR="10.0.3.1"
-LXC_NETMASK="255.255.255.0"
-LXC_NETWORK="10.0.3.0/24"
-LXC_DHCP_RANGE="10.0.3.2,10.0.3.254"
-LXC_DHCP_MAX="253"
-
-$ cat /etc/lxc/default.conf
-lxc.net.0.type = veth
-lxc.net.0.link = lxcbr0
-lxc.net.0.flags = up
-lxc.net.0.hwaddr = 00:16:3e:xx:xx:xx
+# You need to add /snap/bin to your PATH variable ... maybe add this to your .bashrc!
+PATH=$PATH:/snap/bin
 ```
 
-On **Debian Buster**, for backup stuff to work correctly with apparmor, I also had to add:
+Then you shall initialize LXD which will ask you a bunch of question. Usually
+answering the default (just pressing enter) to all questions is fine.
 
+```bash
+lxd init
 ```
-mount options=(ro, remount, bind, rbind)
-mount options=(ro, remount, bind, relatime)
-```
-
-to `/etc/apparmor.d/lxc/lxc-default-cgns` and restart the apparmor service.
 
 Then, go into your favorite development folder and deploy `ynh-dev` with:
 
@@ -182,18 +153,26 @@ between the host and the LXC.
 
 When ran on the host, the `./ynh-dev` command allows you to manage YunoHost's dev LXCs.
 
-First, you might want to start a new LXC with:
+First, you might want to build the base LXC with:
 
 ```bash
 $ cd ynh-dev  # if not already done
+$ ./ynh-dev rebuild
+# ... This will take some time, grab your favorite beverage ...
+```
+
+This should create a fresh Debian Stretch LXC, install Yunohost inside and save
+the result as `ynh-dev-base` which can then be used to create your actual dev
+LXC. (This base can then be used to recreate a fresh Yunohost LXC if you need to
+destroy your work LXC)
+
+Then start your actual dev LXC using :
+
+```bash
 $ ./ynh-dev start
 ```
 
-This should download an already built LXC from `build.yunohost.org`. If this does not work (or the LXC is outdated), you might want to (re)build a fresh LXC locally with `./ynh-dev rebuild`.
-
-After starting the LXC, you should be automatically SSH'ed inside. If you later disconnect from the LXC, you can go back in with `./ynh-dev ssh`.
-
-Later, you might want to destroy the LXC. You can do so with `./ynh-dev destroy`.
+After starting the LXC, your terminal will automatically be attached to it. If you later disconnect from the LXC, you can go back in with `./ynh-dev attach`. Later, you might want to destroy the LXC. You can do so with `./ynh-dev destroy`.
 
 ## 3. Development and container testing
 
@@ -227,9 +206,7 @@ Note that `./ynh-dev use-git yunohost-admin` has a particular behavior: it start
 
 ## Advanced: using snapshots
 
-Vagrant is not well integrated with LXC snapshots.
-
-However, you may still use `lxc-snapshot` directly to manage snapshots.
+You can check `lxc snapshot --help` to learn how to manage lxc snapshots.
 
 ## Alternative: Using Only Virtualbox
 

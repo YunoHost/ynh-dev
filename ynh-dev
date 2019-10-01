@@ -7,7 +7,7 @@ function show_usage() {
   ${BLUE}==============================${NORMAL}
 
   start [NAME]    (Create and) starts a LXC (ynh-dev by default)
-  ssh [NAME]      SSH into an already started LXC (ynh-dev by default)
+  attach [NAME]   Attach an already started LXC (ynh-dev by default)
   destroy [NAME]  Destroy the ynh-dev LXC (ynh-dev by default)
   rebuild         Rebuild a fresh, up-to-date box
 
@@ -35,7 +35,7 @@ function main()
         help|-h|--help)            show_usage     $ARGUMENTS ;;
 
         start|--start)             start_ynhdev   $ARGUMENTS ;;
-        ssh|--ssh)                 ssh_ynhdev     $ARGUMENTS ;;
+        attach|--attach)           attach_ynhdev  $ARGUMENTS ;;
         destroy|--destroy)         destroy_ynhdev $ARGUMENTS ;;
         rebuild|--rebuild)         rebuild_ynhdev $ARGUMENTS ;;
 
@@ -111,80 +111,66 @@ function create_sym_link() {
 #               Actions                                          #
 ##################################################################
 
-function check_lxc_setup()
+function check_lxd_setup()
 {
-    local LXC_VERSION=$(lxc-info --version)
+    local LXD_VERSION=$(lxd --version)
 
-    [[ "${LXC_VERSION:0:1}" == 3 ]] \
-        || critical "You need at least version 3 of LXC otherwise the box won't work"
+    [[ -n "$LXD_VERSION" ]] \
+        || critical "You need to have LXD install for ynh-dev to be usable from the host machine. From a debian-like system, you can install it with 'apt install snap' then 'snap install lxd'. (Don't forget to add /snap/bin to your \$PATH somehow. Then you can run 'lxd init' (keeping all the default option is usally okay!)"
 
-    [[ $(systemctl is-active lxc-net) == "active" ]] \
-        || critical "Service lxc-net should be running ... You probably need to fix your lxc network conf before being able to use lxc's."
-
-    ip a | grep -q lxcbr0 \
-        || critical "There is no 'lxcbr0' interface. You probably need to fix your lxc network conf before being able to use lxc's."
+    ip a | grep -q lxdbr0 \
+        || critical "There is no 'lxdbr0' interface... Did you ran 'lxd init' ?"
 }
 
 function start_ynhdev()
 {
-    check_lxc_setup
+    check_lxd_setup
 
-    local NAME=${1:-ynh-dev}
-    local BOX_NAME="yunohost/$NAME"
-    local BOX_URL="https://build.yunohost.org/yunohost-$BOX_NAME-lxc.box"
+    local BOX=${1:-ynh-dev}
 
+    sudo lxc info $BOX &>/dev/null && critical "The container already exist. Use 'attach' to enter the LXC, or 'destroy' if you aim to recreate it."
+    sudo lxc image info $BOX-base &>/dev/null || critical "You should first build the base YunoHost LXC using ./ynh-dev rebuild"
     set -eu
-    # Download box if not available
-    #if ! vagrant box list | grep -qc $BOX_NAME ; then
-    #    info "Vagrant box '$BOX_NAME' is missing. Trying to download it"
-    #    vagrant box add $BOX_NAME $BOX_URL
-    #fi
+    set -x
+    sudo lxc launch $BOX-base $BOX
+    sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$PWD"
+    set +x
 
-    # Run VM
-    vagrant up $NAME
-
-    # Log into the VM
-    ssh_ynhdev $NAME
+    attach_ynhdev $BOX
 }
 
-function ssh_ynhdev()
+function attach_ynhdev()
 {
-    check_lxc_setup
-    local NAME=${1:-ynh-dev}
-    vagrant ssh $NAME -c "echo 'You are now inside the LXC !'; cd /ynh-dev; sudo su"
+    check_lxd_setup
+    local BOX=${1:-ynh-dev}
+    sudo lxc start $BOX 2>/dev/null || true
+    sudo lxc exec $BOX -- /bin/bash
 }
 
 function destroy_ynhdev()
 {
-    check_lxc_setup
-    local NAME=${1:-ynh-dev}
-    vagrant destroy $NAME
+    check_lxd_setup
+    local BOX=${1:-ynh-dev}
+    sudo lxc stop $BOX
+    sudo lxc delete $BOX
 }
 
 function rebuild_ynhdev()
 {
-    check_lxc_setup
+    check_lxd_setup
 
-    local BOX="ynh-dev"
+    local BOX=${1:-ynh-dev}
 
     set -x
-    cd prebuild
-
-    # Create box
-    vagrant up $BOX --provider=lxc --provision || critical "Could not create the box ?"
-
-    # Package box
-    rm -f /tmp/ynh-dev.box
-    vagrant package $BOX --output /tmp/$BOX.box || critical "Could not package package the box ?"
-
-    # Destroy current box
-    vagrant destroy $BOX
-
+    sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
+    sudo lxc launch images:debian/stretch/amd64 $BOX-rebuild
+    sudo lxc config set $BOX-rebuild security.privileged true
+    sudo lxc restart $BOX-rebuild
+    sudo lxc exec $BOX-rebuild -- apt install curl -y
+    sudo lxc exec $BOX-rebuild -- /bin/bash -c "curl https://install.yunohost.org | bash -s -- -a -d unstable"
+    sudo lxc stop $BOX-rebuild
+    sudo lxc publish $BOX-rebuild --alias $BOX-base
     set +x
-
-    # User message, and exit
-    info "The Vagrant box was packaged to /tmp/$BOX.box"
-    info "You might want to run : vagrant box add 'yunohost/ynh-dev' /tmp/$BOX.box --force"
 }
 
 function show_vm_ip()
