@@ -109,10 +109,14 @@ Here is the development flow:
 
 First you need to install the system dependencies.
 
-`ynh-dev` essentially requires Git and the LXD/LXC ecosystem.
+`ynh-dev` essentially requires Git and the LXD/LXC ecosystem. Be careful that 
+**LXD can conflict with other installed virtualization technologies such as 
+libvirt or vanilla LXCs**, especially because they all require a daemon based 
+on DNSmasq and therefore require to listen on port 53.
+
 On a Debian-based system (regular Debian, Ubuntu, Mint ...), LXD can be
-installed using `snapd`. On other systems like Archlinux, it's probably that you
-will also be able to install `snapd` using the system package manager (or even
+installed using `snapd`. On other systems like Archlinux, you will probably also
+be able to install `snapd` using the system package manager (or even
 `lxd` directly).
 
 ```bash
