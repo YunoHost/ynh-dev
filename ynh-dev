@@ -147,6 +147,18 @@ function start_ynhdev()
 
 function attach_ynhdev()
 {
+    # We need those link for the yunohost-admin build to work without r/w
+    # permission in the shared folder.
+    #
+    # The target folders (/var/cache/ynh-dev/...) are then created during the
+    # './ynh-dev use-git yunohost-admin'
+    if [[ ! -e ./yunohost-admin/src/dist ]]
+    then
+        ln -s /var/cache/ynh-dev/yunohost-admin/bower_components ./yunohost-admin/src/
+        ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./yunohost-admin/src/
+        ln -s /var/cache/ynh-dev/yunohost-admin/dist ./yunohost-admin/src/
+    fi
+
     check_lxd_setup
     local BOX=${1:-ynh-dev}
     sudo lxc start $BOX 2>/dev/null || true
@@ -240,8 +252,10 @@ function use_git()
                 getent passwd ynhdev > /dev/null
                 if [ $? -eq 2 ]; then
                     useradd ynhdev
-                    chown -R ynhdev: /ynh-dev/yunohost-admin
                 fi
+
+                mkdir -p /var/cache/ynh-dev/yunohost-admin/{bower_components,node_modules,dist}
+                chown -R ynhdev /var/cache/ynh-dev/yunohost-admin/{bower_components,node_modules,dist}
 
                 # Install npm dependencies if needed
                 which gulp > /dev/null
@@ -249,17 +263,17 @@ function use_git()
                 then
                     info "Installing dependencies to develop in yunohost-admin ..."
 
-                    curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-                    sudo apt install nodejs
+                    curl -sL https://deb.nodesource.com/setup_6.x | bash -
+                    apt install nodejs -y
 
-                    cd /ynh-dev/yunohost-admin/src
-                    sudo npm install --no-bin-links
-                    sudo npm install -g bower
-                    sudo npm install -g gulp
+                    npm install -g bower
+                    npm install -g gulp
                 fi
+
                 cd /ynh-dev/yunohost-admin/src
-                sudo su -c "bower install" ynhdev
-                sudo su -c "gulp build --dev" ynhdev
+                npm install --no-bin-links
+                su ynhdev -c "bower install"
+                su ynhdev -c "gulp build --dev"
 
                 create_sym_link "/ynh-dev/yunohost-admin/src" "/usr/share/yunohost/admin"
 
@@ -272,7 +286,7 @@ function use_git()
                 warn "don't need to re-run npm yourself everytime you change   "
                 warn "something !                                              "
                 warn "-------------------------------------------------------- "
-                sudo su -c "gulp watch --dev" ynhdev
+                su ynhdev -c "gulp watch --dev"
 
                 ;;
         esac
