@@ -1,5 +1,7 @@
 #!/bin/bash
 
+lxc="sudo /snap/bin/lxc"
+
 function show_usage() {
     cat <<EOF
 
@@ -128,12 +130,12 @@ function start_ynhdev()
 
     local BOX=${1:-ynh-dev}
 
-    sudo lxc info $BOX &>/dev/null && critical "The container already exist. Use 'attach' to enter the LXC, or 'destroy' if you aim to recreate it."
-    sudo lxc image info $BOX-base &>/dev/null || critical "You should first build the base YunoHost LXC using ./ynh-dev rebuild"
+    $lxc info $BOX &>/dev/null && critical "The container already exist. Use 'attach' to enter the LXC, or 'destroy' if you aim to recreate it."
+    $lxc image info $BOX-base &>/dev/null || critical "You should first build the base YunoHost LXC using ./ynh-dev rebuild"
     set -eu
     set -x
-    sudo lxc launch $BOX-base $BOX
-    sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$PWD"
+    $lxc launch $BOX-base $BOX
+    $lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$PWD"
     set +x
 
     attach_ynhdev $BOX
@@ -143,16 +145,16 @@ function attach_ynhdev()
 {
     check_lxd_setup
     local BOX=${1:-ynh-dev}
-    sudo lxc start $BOX 2>/dev/null || true
-    sudo lxc exec $BOX -- /bin/bash
+    $lxc start $BOX 2>/dev/null || true
+    $lxc exec $BOX -- /bin/bash
 }
 
 function destroy_ynhdev()
 {
     check_lxd_setup
     local BOX=${1:-ynh-dev}
-    sudo lxc stop $BOX
-    sudo lxc delete $BOX
+    $lxc stop $BOX
+    $lxc delete $BOX
 }
 
 function rebuild_ynhdev()
@@ -162,14 +164,14 @@ function rebuild_ynhdev()
     local BOX=${1:-ynh-dev}
 
     set -x
-    sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
-    sudo lxc launch images:debian/stretch/amd64 $BOX-rebuild
-    sudo lxc config set $BOX-rebuild security.privileged true
-    sudo lxc restart $BOX-rebuild
-    sudo lxc exec $BOX-rebuild -- apt install curl -y
-    sudo lxc exec $BOX-rebuild -- /bin/bash -c "curl https://install.yunohost.org | bash -s -- -a -d unstable"
-    sudo lxc stop $BOX-rebuild
-    sudo lxc publish $BOX-rebuild --alias $BOX-base
+    $lxc info $BOX-rebuild >/dev/null && $lxc delete $BOX-rebuild --force
+    $lxc launch images:debian/stretch/amd64 $BOX-rebuild
+    $lxc config set $BOX-rebuild security.privileged true
+    $lxc restart $BOX-rebuild
+    $lxc exec $BOX-rebuild -- apt install curl -y
+    $lxc exec $BOX-rebuild -- /bin/bash -c "curl https://install.yunohost.org | bash -s -- -a -d unstable"
+    $lxc stop $BOX-rebuild
+    $lxc publish $BOX-rebuild --alias $BOX-base
     set +x
 }
 
