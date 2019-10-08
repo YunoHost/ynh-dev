@@ -121,7 +121,7 @@ be able to install `snapd` using the system package manager (or even
 
 ```bash
 apt install git snapd
-snap install lxd
+sudo snap install lxd
 
 # You need to add /snap/bin to your PATH variable ... maybe add this to your .bashrc!
 PATH=$PATH:/snap/bin
@@ -131,7 +131,7 @@ Then you shall initialize LXD which will ask you a bunch of question. Usually
 answering the default (just pressing enter) to all questions is fine.
 
 ```bash
-lxd init
+sudo lxd init
 ```
 
 Then, go into your favorite development folder and deploy `ynh-dev` with:
