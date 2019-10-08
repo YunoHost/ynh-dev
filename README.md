@@ -55,19 +55,9 @@ Yunohost can be developed on using a combination of the following technologies:
   * Git (any version is sufficient)
   * LXD (>= 2.x) (though only tested with 3.x for now)
 
-As LXC are containers, they are typically lightweight but you may find the
-initial setup complex (in particular network configuration). LXD makes the
-management of LXC much simpler.
-
-Alternatively, you may be able to setup a local environnement using Vagrant and
-Virtualbox which is kinda more resource-hungry because it is fully virtualized.
-
-  * Virtualbox (>= 6.x)
-  * Vagrant-virtualbox (>= ?.?.?)
-
-Please keep in mind that these versions may not be available on your OS
-distribution and you may be required to install them as binary or from source.
-There are no guarantees of stability on newer major versions.
+Because LXC are containers, they are typically lightweight and quick to start and stop. 
+But you may find the initial setup complex (in particular network configuration). 
+LXD makes managing an LXC ecosystem much simpler.
 
 This local development path allows to work without an internet connection,
 but be aware that it will *not* allow you to easily test your email stack
@@ -75,14 +65,20 @@ or deal with deploying SSL certificates, for example, as your machine is
 likely to not be exposed on the internet. A remote machine should be used
 for these cases.
 
-Depending on your needs, this setup can be very convenient.
-
 If choosing this path, please keep reading at the [local development
 environment](#local-development-environment) section.
 
-Please note, there is also a setup guide for a local development path which
-does not require LXC. Please see the [Alternative: Only Virtualbox](#alternative-using-only-virtualbox)
-section for more.
+Alternatively, you may be able to setup a local environnement using Vagrant and
+Virtualbox which is kinda more resource-hungry because it is fully virtualized, 
+but might be more familiar and user-friendly if you already know your way around 
+Virtualbox's UI.
+
+  * Virtualbox (>= 6.x)
+  * Vagrant (>= ?.?.?)
+  * Vagrant-virtualbox (>= ?.?.?)
+
+See the [Alternative: Only Virtualbox](#alternative-using-only-virtualbox)
+section for more info.
 
 ## Remote Development Path
 
@@ -92,8 +88,8 @@ Yunohost can be deployed as a typical install on a remote VPS. You can then use
 This method can potentially be faster than the local development environment
 assuming you have familiarity with working on VPS machines, if you always have
 internet connectivity when working, and if you're okay with paying a fee. It
-is also a good option if the required system dependencies (Vagrant, Virtualbox,
-etc.) are not easily available to you on your distribution.
+is also a good option if the required system dependencies (LXD/LXC, Vagrant, 
+Virtualbox, etc.) are not easily available to you on your distribution.
 
 Please be aware that this method should **not** be used for a end-user facing
 production environment.
@@ -113,10 +109,7 @@ Here is the development flow:
 
 First you need to install the system dependencies.
 
-`ynh-dev` essentially requires Git and the LXD/LXC ecosystem. Please
-see the [local development path](#local-development-path) section for some idea
-of the versions required.
-
+`ynh-dev` essentially requires Git and the LXD/LXC ecosystem.
 On a Debian-based system (regular Debian, Ubuntu, Mint ...), LXD can be
 installed using `snapd`. On other systems like Archlinux, it's probably that you
 will also be able to install `snapd` using the system package manager (or even
