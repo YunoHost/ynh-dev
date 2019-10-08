@@ -123,8 +123,11 @@ be able to install `snapd` using the system package manager (or even
 apt install git snapd
 sudo snap install lxd
 
-# You need to add /snap/bin to your PATH variable ... maybe add this to your .bashrc!
-PATH=$PATH:/snap/bin
+# Adding lxc/lxd to /usr/local/bin to make sure we can use them easily even
+# with sudo for which the PATH is defined in /etc/sudoers and probably doesn't
+# include /snap/bin
+sudo ln -s /snap/bin/lxc /usr/local/bin/lxc
+sudo ln -s /snap/bin/lxd /usr/local/bin/lxd
 ```
 
 Then you shall initialize LXD which will ask you a bunch of question. Usually
