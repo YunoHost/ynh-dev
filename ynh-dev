@@ -152,7 +152,7 @@ function attach_ynhdev()
     #
     # The target folders (/var/cache/ynh-dev/...) are then created during the
     # './ynh-dev use-git yunohost-admin'
-    if [[ ! -e ./yunohost-admin/src/dist ]]
+    if [[ ! -L ./yunohost-admin/src/dist ]]
     then
         ln -s /var/cache/ynh-dev/yunohost-admin/bower_components ./yunohost-admin/src/
         ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./yunohost-admin/src/
