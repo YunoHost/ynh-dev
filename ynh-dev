@@ -139,6 +139,7 @@ function start_ynhdev()
     set -eu
     set -x
     sudo lxc launch $BOX-base $BOX
+    sudo lxc config set $BOX security.privileged true
     sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$PWD"
     set +x
 
