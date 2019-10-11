@@ -134,14 +134,19 @@ function start_ynhdev()
 
     local BOX=${1:-ynh-dev}
 
-    sudo lxc info $BOX &>/dev/null && critical "The container already exist. Use 'attach' to enter the LXC, or 'destroy' if you aim to recreate it."
-    sudo lxc image info $BOX-base &>/dev/null || critical "You should first build the base YunoHost LXC using ./ynh-dev rebuild"
-    set -eu
-    set -x
-    sudo lxc launch $BOX-base $BOX
-    sudo lxc config set $BOX security.privileged true
-    sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$PWD"
-    set +x
+    if ! sudo lxc info $BOX &>/dev/null
+    then
+        sudo lxc image info $BOX-base &>/dev/null || critical "You should first build the base YunoHost LXC using ./ynh-dev rebuild"
+        set -eu
+        set -x
+        sudo lxc launch $BOX-base $BOX
+        sudo lxc config set $BOX security.privileged true
+        sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$PWD"
+        set +x
+        info "Now attaching to the container"
+    else
+        info "Attaching to existing container"
+    fi
 
     attach_ynhdev $BOX
 }
