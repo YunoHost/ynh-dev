@@ -102,9 +102,9 @@ function create_sym_link() {
     local DEST=$1
     local LINK=$2
     # Remove current sources if not a symlink
-    [ -L "$LINK" ] || sudo rm -rf $LINK
+    [ -L "$LINK" ] || rm -rf $LINK
     # Symlink from Git repository
-    sudo ln -sfn $DEST $LINK
+    ln -sfn $DEST $LINK
 }
 
 ##################################################################
