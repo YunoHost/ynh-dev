@@ -144,7 +144,7 @@ function start_ynhdev()
         sudo lxc config set $BOX security.privileged true
         if [[ "$DIST" == "buster" ]]
         then
-            sudo lxc config set $BOX-rebuild security.nesting true # Need this for buster because it is using apparmor
+            sudo lxc config set $BOX security.nesting true # Need this for buster because it is using apparmor
         fi
         sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$PWD"
         set +x
