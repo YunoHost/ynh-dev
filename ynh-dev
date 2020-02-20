@@ -200,6 +200,7 @@ function rebuild_ynhdev()
         sudo lxc config set $BOX-rebuild security.nesting true # Need this for buster because it is using apparmor
     fi
     sudo lxc restart $BOX-rebuild
+    sleep 5
     sudo lxc exec $BOX-rebuild -- apt install curl -y
     if [[ "$DIST" == "buster" ]]
     then
