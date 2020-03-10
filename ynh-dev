@@ -114,7 +114,7 @@ function create_sym_link() {
 function check_lxd_setup()
 {
     # Check lxd is installed somehow
-    [[ -e /snap/bin/lxd ]] || which lxd 2>/dev/null \
+    [[ -e /snap/bin/lxd ]] || which lxd &>/dev/null \
         || critical "You need to have LXD installed for ynh-dev to be usable from the host machine. Refer to the README to know how to install it."
 
     # Check that we'll be able to use lxc/lxd using sudo (for which the PATH is defined in /etc/sudoers and probably doesn't include /snap/bin)
