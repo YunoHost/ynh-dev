@@ -6,10 +6,10 @@ function show_usage() {
   ${BLUE}On the host, to manage the LXC${NORMAL}
   ${BLUE}==============================${NORMAL}
 
-  start [DIST]    (Create and) starts a LXC (stretch by default)
-  attach [DIST]   Attach an already started LXC (stretch by default)
-  destroy [DIST]  Destroy the ynh-dev LXC (stretch by default)
-  rebuild         Rebuild a fresh, up-to-date box
+  start [DIST] [NAME]   (Create and) starts a LXC (DIST=stretch and NAME=ynh-dev by default)
+  attach [DIST] [NAME]  Attach an already started LXC (DIST=stretch and NAME=ynh-dev by default)
+  destroy [DIST] [NAME] Destroy the ynh-dev LXC (DIST=stretch and NAME=ynh-dev by default)
+  rebuild [DIST] [NAME] Rebuild a fresh, up-to-date box (DIST=stretch and NAME=ynh-dev by default)
 
   ${BLUE}Inside the dev instance${NORMAL}
   ${BLUE}=======================${NORMAL}
@@ -133,7 +133,7 @@ function start_ynhdev()
     check_lxd_setup
 
     local DIST=${1:-stretch}
-    local BOX=ynh-dev-$DIST
+    local BOX=${2:-ynh-dev}-${DIST}
 
     if ! sudo lxc info $BOX &>/dev/null
     then
@@ -153,7 +153,7 @@ function start_ynhdev()
         info "Attaching to existing container"
     fi
 
-    attach_ynhdev $DIST
+    attach_ynhdev $BOX
 }
 
 function attach_ynhdev()
@@ -171,7 +171,7 @@ function attach_ynhdev()
     fi
 
     check_lxd_setup
-    local BOX=ynh-dev-${1:-stretch}
+    local BOX=${1:-ynh-dev-stretch}
     sudo lxc start $BOX 2>/dev/null || true
     sudo lxc exec $BOX --cwd /ynh-dev -- /bin/bash
 }
@@ -179,7 +179,8 @@ function attach_ynhdev()
 function destroy_ynhdev()
 {
     check_lxd_setup
-    local BOX=ynh-dev-${1:-stretch}
+    local DIST=${1:-stretch}
+    local BOX=${2:-ynh-dev}-${DIST}
     sudo lxc stop $BOX
     sudo lxc delete $BOX
 }
@@ -189,7 +190,7 @@ function rebuild_ynhdev()
     check_lxd_setup
 
     local DIST=${1:-stretch}
-    local BOX=ynh-dev-${DIST}
+    local BOX=${2:-ynh-dev}-${DIST}
 
     set -x
     sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
