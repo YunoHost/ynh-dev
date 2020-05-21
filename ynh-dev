@@ -146,7 +146,7 @@ function start_ynhdev()
         then
             sudo lxc config set $BOX security.nesting true # Need this for buster because it is using apparmor
         fi
-        sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$PWD"
+        sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f $(pwd))"
         set +x
         info "Now attaching to the container"
     else
