@@ -165,7 +165,6 @@ function attach_ynhdev()
     # './ynh-dev use-git yunohost-admin'
     if [[ ! -L ./yunohost-admin/src/dist ]]
     then
-        ln -s /var/cache/ynh-dev/yunohost-admin/bower_components ./yunohost-admin/src/
         ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./yunohost-admin/src/
         ln -s /var/cache/ynh-dev/yunohost-admin/dist ./yunohost-admin/src/
     fi
@@ -287,7 +286,7 @@ function use_git()
                 then
                     info "Installing dependencies to develop in yunohost-admin ..."
 
-                    curl -sL https://deb.nodesource.com/setup_6.x | bash -
+                    curl -sL https://deb.nodesource.com/setup_10.x | bash -
                     apt install nodejs -y
 
                     npm install -g bower
@@ -296,7 +295,6 @@ function use_git()
 
                 cd /ynh-dev/yunohost-admin/src
                 npm install --no-bin-links
-                su ynhdev -c "bower install"
                 su ynhdev -c "gulp build --dev"
 
                 create_sym_link "/ynh-dev/yunohost-admin/src" "/usr/share/yunohost/admin"
