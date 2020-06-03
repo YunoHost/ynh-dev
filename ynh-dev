@@ -295,8 +295,6 @@ function use_git()
 
                 cd /ynh-dev/yunohost-admin/src
                 npm install --no-bin-links
-                su ynhdev -c "gulp build --dev"
-
                 create_sym_link "/ynh-dev/yunohost-admin/src" "/usr/share/yunohost/admin"
 
                 success "Now using Git repository for yunohost-admin"
@@ -308,7 +306,7 @@ function use_git()
                 warn "don't need to re-run npm yourself everytime you change   "
                 warn "something !                                              "
                 warn "-------------------------------------------------------- "
-                su ynhdev -c "gulp watch --dev"
+                su ynhdev -c "gulp --dev"
 
                 ;;
         esac
