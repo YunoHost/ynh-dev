@@ -277,28 +277,38 @@ function use_git()
                     useradd ynhdev
                 fi
 
-                mkdir -p /var/cache/ynh-dev/yunohost-admin/{bower_components,node_modules,dist}
-                chown -R ynhdev /var/cache/ynh-dev/yunohost-admin/{bower_components,node_modules,dist}
+                mkdir -p /var/cache/ynh-dev/yunohost-admin/
+                mkdir -p /var/cache/ynh-dev/yunohost-admin/dist
+                chown -R ynhdev /var/cache/ynh-dev/yunohost-admin/
+                create_sym_link "/ynh-dev/yunohost-admin/src/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
+                create_sym_link "/ynh-dev/yunohost-admin/src/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
+                create_sym_link "/ynh-dev/yunohost-admin/src" "/usr/share/yunohost/admin"
 
-                # Install npm dependencies if needed
-                which gulp > /dev/null
-                if [ $? -eq 1 ]
+                if [ ! -e /ynh-dev/yunohost-admin/src/dist ]
                 then
-                    info "Installing dependencies to develop in yunohost-admin ..."
-
-                    curl -sL https://deb.nodesource.com/setup_10.x | bash -
-                    apt install nodejs -y
-
-                    npm install -g bower
-                    npm install -g gulp
+                    echo "If npm install fails to create the dist and node_modules folder, maybe you need to run the following *in the host!* : "
+                    echo " "
+                    echo "cd /your/dev/env/yunohost-admin/src/"
+                    echo "ln -s /var/cache/ynh-dev/yunohost-admin/dist ./dist"
+                    echo "ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./node_modules"
+                    echo " "
                 fi
 
-                cd /ynh-dev/yunohost-admin/src
-                npm install --no-bin-links
-                create_sym_link "/ynh-dev/yunohost-admin/src" "/usr/share/yunohost/admin"
+                # Install npm dependencies if needed
+                cd /var/cache/ynh-dev/yunohost-admin/
+                if [ ! -e node_modules/gulp/bin/gulp.js ]
+                then
+                    info "Installing dependencies to develop in yunohost-admin ..."
+                    apt install nodejs npm -y
+                    npm install -g npm@latest
+                fi
+
+                npm ci --no-bin-links
 
                 success "Now using Git repository for yunohost-admin"
 
+                cd /ynh-dev/yunohost-admin/src
+                su ynhdev -c "./node_modules/gulp/bin/gulp.js build --dev"
                 warn "-------------------------------------------------------- "
                 warn "Launching gulp ...                                       "
                 warn "NB : This command will keep running and watch for changes"
@@ -306,7 +316,7 @@ function use_git()
                 warn "don't need to re-run npm yourself everytime you change   "
                 warn "something !                                              "
                 warn "-------------------------------------------------------- "
-                su ynhdev -c "gulp --dev"
+                su ynhdev -c "./node_modules/gulp/bin/gulp.js watch --dev"
 
                 ;;
         esac
