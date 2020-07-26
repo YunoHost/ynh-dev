@@ -121,6 +121,7 @@ be able to install `snapd` using the system package manager (or even
 
 ```bash
 apt install git snapd
+sudo snap install core
 sudo snap install lxd
 
 # Adding lxc/lxd to /usr/local/bin to make sure we can use them easily even
