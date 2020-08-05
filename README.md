@@ -167,6 +167,15 @@ the result as `ynh-dev-base` which can then be used to create your actual dev
 LXC. (This base can then be used to recreate a fresh Yunohost LXC if you need to
 destroy your work LXC)
 
+On Archlinux-based distributions (Arch, Manjaro, ...) it was found that it's needed
+that LXC/LXD will throw some error about "newuidmap failed to write mapping / Failed
+to set up id mapping" ... It can be [fixed with the following](https://discuss.linuxcontainers.org/t/solved-arch-linux-containers-only-run-when-security-privileged-true/4006/4) :
+
+```
+$ echo "root:1000000:65536" > /etc/subuid
+$ echo "root:1000000:65536" > /etc/subgid
+```
+
 Then start your actual dev LXC using :
 
 ```bash
