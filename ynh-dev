@@ -6,10 +6,10 @@ function show_usage() {
   ${BLUE}On the host, to manage the LXC${NORMAL}
   ${BLUE}==============================${NORMAL}
 
-  start [NAME]    (Create and) starts a LXC (ynh-dev by default)
-  ssh [NAME]      SSH into an already started LXC (ynh-dev by default)
-  destroy [NAME]  Destroy the ynh-dev LXC (ynh-dev by default)
-  rebuild         Rebuild a fresh, up-to-date box
+  start [DIST] [NAME]   (Create and) starts a LXC (DIST=buster and NAME=ynh-dev by default)
+  attach [DIST] [NAME]  Attach an already started LXC (DIST=buster and NAME=ynh-dev by default)
+  destroy [DIST] [NAME] Destroy the ynh-dev LXC (DIST=buster and NAME=ynh-dev by default)
+  rebuild [DIST] [NAME] Rebuild a fresh, up-to-date box (DIST=buster and NAME=ynh-dev by default)
 
   ${BLUE}Inside the dev instance${NORMAL}
   ${BLUE}=======================${NORMAL}
@@ -35,7 +35,7 @@ function main()
         help|-h|--help)            show_usage     $ARGUMENTS ;;
 
         start|--start)             start_ynhdev   $ARGUMENTS ;;
-        ssh|--ssh)                 ssh_ynhdev     $ARGUMENTS ;;
+        attach|--attach)           attach_ynhdev  $ARGUMENTS ;;
         destroy|--destroy)         destroy_ynhdev $ARGUMENTS ;;
         rebuild|--rebuild)         rebuild_ynhdev $ARGUMENTS ;;
 
@@ -102,89 +102,105 @@ function create_sym_link() {
     local DEST=$1
     local LINK=$2
     # Remove current sources if not a symlink
-    [ -L "$LINK" ] || sudo rm -rf $LINK
+    [ -L "$LINK" ] || rm -rf $LINK
     # Symlink from Git repository
-    sudo ln -sfn $DEST $LINK
+    ln -sfn $DEST $LINK
 }
 
 ##################################################################
 #               Actions                                          #
 ##################################################################
 
-function check_lxc_setup()
+function check_lxd_setup()
 {
-    local LXC_VERSION=$(lxc-info --version)
+    # Check lxd is installed somehow
+    [[ -e /snap/bin/lxd ]] || which lxd &>/dev/null \
+        || critical "You need to have LXD installed for ynh-dev to be usable from the host machine. Refer to the README to know how to install it."
 
-    [[ "${LXC_VERSION:0:1}" == 3 ]] \
-        || critical "You need at least version 3 of LXC otherwise the box won't work"
+    # Check that we'll be able to use lxc/lxd using sudo (for which the PATH is defined in /etc/sudoers and probably doesn't include /snap/bin)
+    if [[ ! -e /usr/bin/lxc ]] && [[ ! -e /usr/bin/lxd ]]
+    then
+        [[ -e /usr/local/bin/lxc ]] && [[ -e /usr/local/bin/lxd ]] \
+            || critical "You might want to add lxc and lxd inside /usr/local/bin so that there's no tricky PATH issue with sudo. If you installed lxd/lxc with snapd, this should do the trick: sudo ln -s /snap/bin/lxc /usr/local/bin/lxc && sudo ln -s /snap/bin/lxd /usr/local/bin/lxd"
+    fi
 
-    [[ $(systemctl is-active lxc-net) == "active" ]] \
-        || critical "Service lxc-net should be running ... You probably need to fix your lxc network conf before being able to use lxc's."
-
-    ip a | grep -q lxcbr0 \
-        || critical "There is no 'lxcbr0' interface. You probably need to fix your lxc network conf before being able to use lxc's."
+    ip a | grep -q lxdbr0 \
+        || critical "There is no 'lxdbr0' interface... Did you ran 'lxd init' ?"
 }
 
 function start_ynhdev()
 {
-    check_lxc_setup
+    check_lxd_setup
 
-    local NAME=${1:-ynh-dev}
-    local BOX_NAME="yunohost/ynh-dev"
-    local BOX_URL="https://build.yunohost.org/yunohost-$BOX_NAME-lxc.box"
+    local DIST=${1:-buster}
+    local BOX=${2:-ynh-dev}-${DIST}
 
-    set -eu
-    # Download box if not available
-    #if ! vagrant box list | grep -qc $BOX_NAME ; then
-    #    info "Vagrant box '$BOX_NAME' is missing. Trying to download it"
-    #    vagrant box add $BOX_NAME $BOX_URL
-    #fi
+    if ! sudo lxc info $BOX &>/dev/null
+    then
+        sudo lxc image info $BOX-base &>/dev/null || critical "You should first build the base YunoHost LXC using ./ynh-dev rebuild"
+        set -eu
+        set -x
+        sudo lxc launch $BOX-base $BOX
+        sudo lxc config set $BOX security.privileged true
+        sudo lxc config set $BOX security.nesting true # Need this for apparmor for some reason
+        sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f $(pwd))"
+        set +x
+        info "Now attaching to the container"
+    else
+        info "Attaching to existing container"
+    fi
 
-    # Run VM
-    vagrant up $NAME
-
-    # Log into the VM
-    ssh_ynhdev $NAME
+    attach_ynhdev $BOX
 }
 
-function ssh_ynhdev()
+function attach_ynhdev()
 {
-    check_lxc_setup
-    local NAME=${1:-ynh-dev}
-    vagrant ssh $NAME -c "echo 'You are now inside the LXC !'; cd /ynh-dev; sudo su"
+    # We need those link for the yunohost-admin build to work without r/w
+    # permission in the shared folder.
+    #
+    # The target folders (/var/cache/ynh-dev/...) are then created during the
+    # './ynh-dev use-git yunohost-admin'
+    if [[ ! -L ./yunohost-admin/src/dist ]]
+    then
+        ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./yunohost-admin/src/
+        ln -s /var/cache/ynh-dev/yunohost-admin/dist ./yunohost-admin/src/
+    fi
+
+    check_lxd_setup
+    local BOX=${1:-ynh-dev-buster}
+    sudo lxc start $BOX 2>/dev/null || true
+    sudo lxc exec $BOX --cwd /ynh-dev -- /bin/bash
 }
 
 function destroy_ynhdev()
 {
-    check_lxc_setup
-    local NAME=${1:-ynh-dev}
-    vagrant destroy $NAME
+    check_lxd_setup
+    local DIST=${1:-buster}
+    local BOX=${2:-ynh-dev}-${DIST}
+    sudo lxc stop $BOX
+    sudo lxc delete $BOX
 }
 
 function rebuild_ynhdev()
 {
-    check_lxc_setup
+    check_lxd_setup
 
-    local BOX="ynh-dev"
+    local DIST=${1:-buster}
+    local BOX=${2:-ynh-dev}-${DIST}
 
     set -x
-    cd prebuild
-
-    # Create box
-    vagrant up $BOX --provider=lxc --provision || critical "Could not create the box ?"
-
-    # Package box
-    rm -f /tmp/ynh-dev.box
-    vagrant package $BOX --output /tmp/$BOX.box || critical "Could not package package the box ?"
-
-    # Destroy current box
-    vagrant destroy $BOX
-
+    sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
+    sudo lxc launch images:debian/$DIST/amd64 $BOX-rebuild
+    sudo lxc config set $BOX-rebuild security.privileged true
+    sudo lxc config set $BOX-rebuild security.nesting true # Need this for apparmor for some reason
+    sudo lxc restart $BOX-rebuild
+    sleep 5
+    sudo lxc exec $BOX-rebuild -- apt install curl -y
+    INSTALL_SCRIPT="https://install.yunohost.org"
+    sudo lxc exec $BOX-rebuild -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d unstable"
+    sudo lxc stop $BOX-rebuild
+    sudo lxc publish $BOX-rebuild --alias $BOX-base
     set +x
-
-    # User message, and exit
-    info "The Vagrant box was packaged to /tmp/$BOX.box"
-    info "You might want to run : vagrant box add 'yunohost/ynh-dev' /tmp/$BOX.box --force"
 }
 
 function show_vm_ip()
@@ -248,31 +264,40 @@ function use_git()
                 getent passwd ynhdev > /dev/null
                 if [ $? -eq 2 ]; then
                     useradd ynhdev
-                    chown -R ynhdev: /ynh-dev/yunohost-admin
+                fi
+
+                mkdir -p /var/cache/ynh-dev/yunohost-admin/
+                mkdir -p /var/cache/ynh-dev/yunohost-admin/dist
+                chown -R ynhdev /var/cache/ynh-dev/yunohost-admin/
+                create_sym_link "/ynh-dev/yunohost-admin/src/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
+                create_sym_link "/ynh-dev/yunohost-admin/src/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
+                create_sym_link "/ynh-dev/yunohost-admin/src" "/usr/share/yunohost/admin"
+
+                if [ ! -e /ynh-dev/yunohost-admin/src/dist ]
+                then
+                    echo "If npm install fails to create the dist and node_modules folder, maybe you need to run the following *in the host!* : "
+                    echo " "
+                    echo "cd /your/dev/env/yunohost-admin/src/"
+                    echo "ln -s /var/cache/ynh-dev/yunohost-admin/dist ./dist"
+                    echo "ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./node_modules"
+                    echo " "
                 fi
 
                 # Install npm dependencies if needed
-                which gulp > /dev/null
-                if [ $? -eq 1 ]
+                cd /var/cache/ynh-dev/yunohost-admin/
+                if [ ! -e node_modules/gulp/bin/gulp.js ]
                 then
                     info "Installing dependencies to develop in yunohost-admin ..."
-
-                    curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-                    sudo apt install nodejs
-
-                    cd /ynh-dev/yunohost-admin/src
-                    sudo npm install --no-bin-links
-                    sudo npm install -g bower
-                    sudo npm install -g gulp
+                    apt install nodejs npm -y
+                    npm install -g npm@latest
                 fi
-                cd /ynh-dev/yunohost-admin/src
-                sudo su -c "bower install" ynhdev
-                sudo su -c "gulp build --dev" ynhdev
 
-                create_sym_link "/ynh-dev/yunohost-admin/src" "/usr/share/yunohost/admin"
+                npm ci --no-bin-links
 
                 success "Now using Git repository for yunohost-admin"
 
+                cd /ynh-dev/yunohost-admin/src
+                su ynhdev -c "./node_modules/gulp/bin/gulp.js build --dev"
                 warn "-------------------------------------------------------- "
                 warn "Launching gulp ...                                       "
                 warn "NB : This command will keep running and watch for changes"
@@ -280,7 +305,7 @@ function use_git()
                 warn "don't need to re-run npm yourself everytime you change   "
                 warn "something !                                              "
                 warn "-------------------------------------------------------- "
-                sudo su -c "gulp watch --dev" ynhdev
+                su ynhdev -c "./node_modules/gulp/bin/gulp.js watch --dev"
 
                 ;;
         esac
@@ -303,7 +328,7 @@ function run_tests()
                 if ! type "pytest" > /dev/null 2>&1; then
                     info "> Installing pytest ..."
                     apt-get install python-pip -y
-                    pip2 install pytest
+                    pip2 install pytest pytest-sugar
                 fi
                 for DEP in "pytest-mock requests-mock mock"
                 do
