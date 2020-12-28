@@ -212,10 +212,16 @@ function show_vm_ip()
 function use_git()
 {
     assert_inside_vm
-    local PACKAGES="$@"
-    for PACKAGE in "$PACKAGES";
+    local PACKAGES=("$@")
+
+    if [ "$PACKAGES" = "" ]
+    then
+        PACKAGES=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
+    fi
+
+    for i in ${!PACKAGES[@]};
     do
-        case $PACKAGE in
+        case ${PACKAGES[i]} in
             ssowat)
                 create_sym_link "/ynh-dev/ssowat" "/usr/share/ssowat"
                 success "Now using Git repository for SSOwat"
@@ -312,7 +318,7 @@ function use_git()
 
                 ;;
             *)
-                error "Invalid package '$PACKAGE': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin'"
+                error "Invalid package '${PACKAGES[i]}': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin' or nothing for all"
                 ;;
         esac
     done
@@ -373,4 +379,4 @@ function run_tests()
     done
 }
 
-main "$@"
+main $@
