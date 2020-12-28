@@ -233,7 +233,7 @@ function use_git()
                 create_sym_link "/ynh-dev/yunohost/bin/yunoprompt" "/usr/bin/yunoprompt"
                 create_sym_link "/ynh-dev/yunohost/bin/yunopaste" "/usr/bin/yunopaste"
                 create_sym_link "/ynh-dev/yunohost/sbin/yunohost-reset-ldap-password" "/usr/sbin/yunohost-reset-ldap-password"
-                
+
                 # data
                 create_sym_link "/ynh-dev/yunohost/data/bash-completion.d/yunohost" "/etc/bash_completion.d/yunohost"
                 create_sym_link "/ynh-dev/yunohost/data/actionsmap/yunohost.yml" "/usr/share/moulinette/actionsmap/yunohost.yml"
