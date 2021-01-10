@@ -17,6 +17,7 @@ Please report issues on the following repository:
   * [4. Testing the web interface](#4-testing-the-web-interface)
   * [Advanced: using snapshots](#advanced-using-snapshots)
   * [Alternative: Only Virtualbox](#alternative-using-only-virtualbox)
+  * [Troubleshooting](#troubleshooting)
 
 - [Remote Development Environment](#remote-development-environment)
   * [1. Setup your VPS and install YunoHost](#1-setup-your-vps-and-install-yunohost)
@@ -224,6 +225,13 @@ A Vagrant and Virtualbox (without LXC) guide is provided on another branch of
 this repository. This is a known working setup used by some developers. Please
 see the ["virtualbox" branch](https://github.com/YunoHost/ynh-dev/tree/virtualbox#develop-on-your-local-machine)
 for more.
+
+## Troubleshooting
+If you experiment network issues with your lxd during rebuild container steps. Probably your container are not able to get a local IP with DHCP.
+
+It could be due to bridge conflict (for example if you have lxc installed too) or dnsmasq port already used.
+
+This [ticket](https://github.com/YunoHost/issues/issues/1664) could help.
 
 # Remote Development Environment
 
