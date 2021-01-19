@@ -166,6 +166,13 @@ function attach_ynhdev()
         ln -s /var/cache/ynh-dev/yunohost-admin/dist ./yunohost-admin/src/
     fi
 
+    # Setup symlinks for future .env and nodes_modules/ for yunohost-admin-vue
+    if [[ ! -L ./yunohost-admin-vue/app/.env ]]
+    then
+        ln -s /var/cache/ynh-dev/yunohost-admin/.env ./yunohost-admin-vue/app
+        ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./yunohost-admin-vue/app/
+    fi
+
     check_lxd_setup
     local BOX=${1:-ynh-dev-buster}
     sudo lxc start $BOX 2>/dev/null || true
@@ -219,7 +226,7 @@ function use_git()
         PACKAGES=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
     fi
 
-    for i in ${!PACKAGES[@]};
+    for i in "${!PACKAGES[@]}";
     do
         case ${PACKAGES[i]} in
             ssowat)
@@ -276,46 +283,76 @@ function use_git()
                 fi
 
                 mkdir -p /var/cache/ynh-dev/yunohost-admin/
-                mkdir -p /var/cache/ynh-dev/yunohost-admin/dist
+                # mkdir -p /var/cache/ynh-dev/yunohost-admin/dist
                 chown -R ynhdev /var/cache/ynh-dev/yunohost-admin/
-                create_sym_link "/ynh-dev/yunohost-admin/src/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
-                create_sym_link "/ynh-dev/yunohost-admin/src/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
-                create_sym_link "/ynh-dev/yunohost-admin/src" "/usr/share/yunohost/admin"
+                create_sym_link "/ynh-dev/yunohost-admin-vue/app/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
+                create_sym_link "/ynh-dev/yunohost-admin-vue/app/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
+                mv "/etc/nginx/conf.d/yunohost_admin.conf.inc" "/etc/nginx/conf.d/yunohost_admin.conf.inc.bkp"
+                trap 'on_exit' INT
+                on_exit()
+                {
+                    mv "/etc/nginx/conf.d/yunohost_admin.conf.inc.bkp" "/etc/nginx/conf.d/yunohost_admin.conf.inc"
+                    systemctl reload nginx
+                }
+                # create_sym_link "/ynh-dev/yunohost-admin-vue/app" "/usr/share/yunohost/admin"
 
-                if [ ! -e /ynh-dev/yunohost-admin/src/dist ]
+                cd /var/cache/ynh-dev/yunohost-admin/
+                # Create .env file with the vm ip
+                # Will be used by webpack-dev-server to proxy api requests.
+                if [[ ! -e .env ]]
                 then
-                    echo "If npm install fails to create the dist and node_modules folder, maybe you need to run the following *in the host!* : "
-                    echo " "
-                    echo "cd /your/dev/env/yunohost-admin/src/"
-                    echo "ln -s /var/cache/ynh-dev/yunohost-admin/dist ./dist"
-                    echo "ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./node_modules"
-                    echo " "
+                    info "Creating .env file"
+                    IP=$(hostname -I | tr ' ' '\n' | grep "\.")
+                    echo "VUE_APP_IP=$IP" > .env
                 fi
 
-                # Install npm dependencies if needed
-                cd /var/cache/ynh-dev/yunohost-admin/
-                if [ ! -e node_modules/gulp/bin/gulp.js ]
+                # Allow port 8080 in config file or else the dev server will stop working after postinstall
+                if [[ ! -e /etc/yunohost/installed ]]
+                then
+                    python2.7 - <<EOF
+import os, yaml
+setting_file = "/etc/yunohost/firewall.yml"
+assert os.path.exists(setting_file), "Firewall yaml file %s does not exists ?" % setting_file
+with open(setting_file) as f:
+    settings = yaml.load(f)
+    if 8080 not in settings["ipv4"]["TCP"]:
+        settings["ipv4"]["TCP"].append(8080)
+        with open(setting_file, "w") as f:
+            yaml.safe_dump(settings, f, default_flow_style=False)
+EOF
+                fi
+
+                # Install npm if needed
+                if [[ ! -e node_modules/@vue/cli-service/bin/vue-cli-service.js ]]
                 then
                     info "Installing dependencies to develop in yunohost-admin ..."
                     apt install nodejs npm -y
                     npm install -g npm@latest
                 fi
 
+                # Install dependencies
                 npm ci --no-bin-links
-
                 success "Now using Git repository for yunohost-admin"
+                cat <<EOF > /etc/nginx/conf.d/yunohost_admin.conf.inc
+location /yunohost/admin {
+    proxy_pass        https://localhost:8080/yunohost/admin;
+    proxy_redirect    off;
+    proxy_set_header  Host \$host;
+    proxy_set_header  X-Real-IP \$remote_addr;
+    proxy_set_header  X-Forwarded-Proto \$scheme;
+    proxy_set_header  X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header  X-Forwarded-Host \$server_name;
+    proxy_set_header  X-Forwarded-Port \$server_port;
 
-                cd /ynh-dev/yunohost-admin/src
-                su ynhdev -c "./node_modules/gulp/bin/gulp.js build --dev"
-                warn "-------------------------------------------------------- "
-                warn "Launching gulp ...                                       "
-                warn "NB : This command will keep running and watch for changes"
-                warn " in the folder /ynh-dev/yunohost-admin/src, such that you"
-                warn "don't need to re-run npm yourself everytime you change   "
-                warn "something !                                              "
-                warn "-------------------------------------------------------- "
-                su ynhdev -c "./node_modules/gulp/bin/gulp.js watch --dev"
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+}
+EOF
 
+                systemctl reload nginx
+                cd /ynh-dev/yunohost-admin-vue/app/
+                npm run serve
                 ;;
             *)
                 error "Invalid package '${PACKAGES[i]}': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin' or nothing for all"
@@ -328,7 +365,7 @@ function run_tests()
 {
     assert_inside_vm
     local PACKAGES="$@"
-    for PACKAGE in "$PACKAGES";
+    for PACKAGE in $PACKAGES;
     do
         TEST_FUNCTION=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $3}')
         TEST_MODULE=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $2}')
@@ -379,4 +416,4 @@ function run_tests()
     done
 }
 
-main $@
+main "$@"
