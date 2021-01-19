@@ -226,7 +226,7 @@ function use_git()
         PACKAGES=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
     fi
 
-    for i in ${!PACKAGES[@]};
+    for i in "${!PACKAGES[@]}";
     do
         case ${PACKAGES[i]} in
             ssowat)
@@ -277,54 +277,6 @@ function use_git()
                 ;;
             yunohost-admin)
 
-                getent passwd ynhdev > /dev/null
-                if [ $? -eq 2 ]; then
-                    useradd ynhdev
-                fi
-
-                mkdir -p /var/cache/ynh-dev/yunohost-admin/
-                mkdir -p /var/cache/ynh-dev/yunohost-admin/dist
-                chown -R ynhdev /var/cache/ynh-dev/yunohost-admin/
-                create_sym_link "/ynh-dev/yunohost-admin/src/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
-                create_sym_link "/ynh-dev/yunohost-admin/src/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
-                create_sym_link "/ynh-dev/yunohost-admin/src" "/usr/share/yunohost/admin"
-
-                if [ ! -e /ynh-dev/yunohost-admin/src/dist ]
-                then
-                    echo "If npm install fails to create the dist and node_modules folder, maybe you need to run the following *in the host!* : "
-                    echo " "
-                    echo "cd /your/dev/env/yunohost-admin/src/"
-                    echo "ln -s /var/cache/ynh-dev/yunohost-admin/dist ./dist"
-                    echo "ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./node_modules"
-                    echo " "
-                fi
-
-                # Install npm dependencies if needed
-                cd /var/cache/ynh-dev/yunohost-admin/
-                if [ ! -e node_modules/gulp/bin/gulp.js ]
-                then
-                    info "Installing dependencies to develop in yunohost-admin ..."
-                    apt install nodejs npm -y
-                    npm install -g npm@latest
-                fi
-
-                npm ci --no-bin-links
-
-                success "Now using Git repository for yunohost-admin"
-
-                cd /ynh-dev/yunohost-admin/src
-                su ynhdev -c "./node_modules/gulp/bin/gulp.js build --dev"
-                warn "-------------------------------------------------------- "
-                warn "Launching gulp ...                                       "
-                warn "NB : This command will keep running and watch for changes"
-                warn " in the folder /ynh-dev/yunohost-admin/src, such that you"
-                warn "don't need to re-run npm yourself everytime you change   "
-                warn "something !                                              "
-                warn "-------------------------------------------------------- "
-                su ynhdev -c "./node_modules/gulp/bin/gulp.js watch --dev"
-
-                ;;
-            yunohost-admin-vue)
                 getent passwd ynhdev > /dev/null
                 if [ $? -eq 2 ]; then
                     useradd ynhdev
@@ -401,6 +353,7 @@ EOF
                 systemctl reload nginx
                 cd /ynh-dev/yunohost-admin-vue/app/
                 npm run serve
+                ;;
             *)
                 error "Invalid package '${PACKAGES[i]}': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin' or nothing for all"
                 ;;
@@ -412,7 +365,7 @@ function run_tests()
 {
     assert_inside_vm
     local PACKAGES="$@"
-    for PACKAGE in "$PACKAGES";
+    for PACKAGE in $PACKAGES;
     do
         TEST_FUNCTION=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $3}')
         TEST_MODULE=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $2}')
@@ -463,4 +416,4 @@ function run_tests()
     done
 }
 
-main $@
+main "$@"
