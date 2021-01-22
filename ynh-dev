@@ -6,10 +6,10 @@ function show_usage() {
   ${BLUE}On the host, to manage the LXC${NORMAL}
   ${BLUE}==============================${NORMAL}
 
-  start [DIST] [NAME]   (Create and) starts a LXC (DIST=buster and NAME=ynh-dev by default)
-  attach [DIST] [NAME]  Attach an already started LXC (DIST=buster and NAME=ynh-dev by default)
-  destroy [DIST] [NAME] Destroy the ynh-dev LXC (DIST=buster and NAME=ynh-dev by default)
-  rebuild [DIST] [NAME] Rebuild a fresh, up-to-date box (DIST=buster and NAME=ynh-dev by default)
+  start [DIST] [NAME] [YNH_BRANCH]   (Create and) starts a LXC (DIST=buster, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  attach [DIST] [NAME] [YNH_BRANCH] Attach an already started LXC (DIST=buster, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  destroy [DIST] [NAME] [YNH_BRANCH] Destroy the ynh-dev LXC (DIST=buster, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  rebuild [DIST] [NAME] [YNH_BRANCH] Rebuild a fresh, up-to-date box (DIST=buster, NAME=ynh-dev and YNH_BRANCH=unstable by default)
 
   ${BLUE}Inside the dev instance${NORMAL}
   ${BLUE}=======================${NORMAL}
@@ -133,30 +133,33 @@ function start_ynhdev()
     check_lxd_setup
 
     local DIST=${1:-buster}
-    local BOX=${2:-ynh-dev}-${DIST}
+    local YNH_BRANCH=${3:-unstable}
+    local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
     if ! sudo lxc info $BOX &>/dev/null
     then
-        sudo lxc image info $BOX-base &>/dev/null || critical "You should first build the base YunoHost LXC using ./ynh-dev rebuild"
-        set -eu
-        set -x
-        sudo lxc launch $BOX-base $BOX
-        sudo lxc config set $BOX security.privileged true
-        sudo lxc config set $BOX security.nesting true # Need this for apparmor for some reason
+        if ! sudo lxc image info $BOX-base &>/dev/null
+        then
+            LXC_BASE="ynh-dev-$DIST-amd64-$YNH_BRANCH-base"
+            sudo lxc launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true || critical "We can't find the image $LXC_BASE in the Yunohost remote. You should first build the base YunoHost LXC using ./ynh-dev rebuild"
+        else
+            sudo lxc launch $BOX-base $BOX -c security.nesting=true -c security.privileged=true
+        fi
         sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f $(pwd))"
-        set +x
         info "Now attaching to the container"
     else
         info "Attaching to existing container"
     fi
 
-    attach_ynhdev $BOX
+    attach_ynhdev "$@"
 }
 
 function attach_ynhdev()
 {
     check_lxd_setup
-    local BOX=${1:-ynh-dev-buster}
+    local DIST=${1:-buster}
+    local YNH_BRANCH=${3:-unstable}
+    local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
     sudo lxc start $BOX 2>/dev/null || true
     sudo lxc exec $BOX --cwd /ynh-dev -- /bin/bash
 }
@@ -165,7 +168,8 @@ function destroy_ynhdev()
 {
     check_lxd_setup
     local DIST=${1:-buster}
-    local BOX=${2:-ynh-dev}-${DIST}
+    local YNH_BRANCH=${3:-unstable}
+    local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
     sudo lxc stop $BOX
     sudo lxc delete $BOX
 }
@@ -175,18 +179,16 @@ function rebuild_ynhdev()
     check_lxd_setup
 
     local DIST=${1:-buster}
-    local BOX=${2:-ynh-dev}-${DIST}
+    local YNH_BRANCH=${3:-unstable}
+    local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
     set -x
     sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
-    sudo lxc launch images:debian/$DIST/amd64 $BOX-rebuild
-    sudo lxc config set $BOX-rebuild security.privileged true
-    sudo lxc config set $BOX-rebuild security.nesting true # Need this for apparmor for some reason
-    sudo lxc restart $BOX-rebuild
+    sudo lxc launch images:debian/$DIST/amd64 $BOX-rebuild  -c security.nesting=true -c security.privileged=true
     sleep 5
     sudo lxc exec $BOX-rebuild -- apt install curl -y
-    INSTALL_SCRIPT="https://install.yunohost.org"
-    sudo lxc exec $BOX-rebuild -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d unstable"
+    INSTALL_SCRIPT="https://install.yunohost.org/$DIST"
+    sudo lxc exec $BOX-rebuild -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d $YNH_BRANCH"
     sudo lxc stop $BOX-rebuild
     sudo lxc publish $BOX-rebuild --alias $BOX-base
     set +x

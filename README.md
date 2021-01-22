@@ -139,6 +139,12 @@ answering the default (just pressing enter) to all questions is fine.
 sudo lxd init
 ```
 
+Pre-built images are centralized on `devbaseimgs.yunohost.org` and we'll download them from there to speed things up:
+
+```bash
+sudo lxc remote add yunohost https://devbaseimgs.yunohost.org --public
+```
+
 Then, go into your favorite development folder and deploy `ynh-dev` with:
 
 ```bash
