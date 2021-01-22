@@ -141,7 +141,8 @@ function start_ynhdev()
         if ! sudo lxc image info $BOX-base &>/dev/null
         then
             LXC_BASE="ynh-dev-$DIST-amd64-$YNH_BRANCH-base"
-            sudo lxc launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true || critical "We can't find the image $LXC_BASE in the Yunohost remote. You should first build the base YunoHost LXC using ./ynh-dev rebuild"
+            sudo lxc launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true \
+            || critical "Failed to launch the container ?"
         else
             sudo lxc launch $BOX-base $BOX -c security.nesting=true -c security.privileged=true
         fi
