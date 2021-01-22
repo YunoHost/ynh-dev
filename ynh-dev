@@ -155,24 +155,6 @@ function start_ynhdev()
 
 function attach_ynhdev()
 {
-    # We need those link for the yunohost-admin build to work without r/w
-    # permission in the shared folder.
-    #
-    # The target folders (/var/cache/ynh-dev/...) are then created during the
-    # './ynh-dev use-git yunohost-admin'
-    if [[ ! -L ./yunohost-admin/src/dist ]]
-    then
-        ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./yunohost-admin/src/
-        ln -s /var/cache/ynh-dev/yunohost-admin/dist ./yunohost-admin/src/
-    fi
-
-    # Setup symlinks for future .env and nodes_modules/ for yunohost-admin-vue
-    if [[ ! -L ./yunohost-admin-vue/app/.env ]]
-    then
-        ln -s /var/cache/ynh-dev/yunohost-admin/.env ./yunohost-admin-vue/app
-        ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./yunohost-admin-vue/app/
-    fi
-
     check_lxd_setup
     local BOX=${1:-ynh-dev-buster}
     sudo lxc start $BOX 2>/dev/null || true
@@ -277,24 +259,19 @@ function use_git()
                 ;;
             yunohost-admin)
 
-                getent passwd ynhdev > /dev/null
-                if [ $? -eq 2 ]; then
-                    useradd ynhdev
-                fi
-
+                rm -r /var/cache/ynh-dev/yunohost-admin
                 mkdir -p /var/cache/ynh-dev/yunohost-admin/
-                # mkdir -p /var/cache/ynh-dev/yunohost-admin/dist
-                chown -R ynhdev /var/cache/ynh-dev/yunohost-admin/
-                create_sym_link "/ynh-dev/yunohost-admin-vue/app/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
-                create_sym_link "/ynh-dev/yunohost-admin-vue/app/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
+                create_sym_link "/ynh-dev/yunohost-admin/app/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
+                create_sym_link "/var/cache/ynh-dev/yunohost-admin/node_modules" "/ynh-dev/yunohost-admin/app/node_modules"
+                create_sym_link "/ynh-dev/yunohost-admin/app/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
+                create_sym_link "/ynh-dev/yunohost-admin/app/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
                 mv "/etc/nginx/conf.d/yunohost_admin.conf.inc" "/etc/nginx/conf.d/yunohost_admin.conf.inc.bkp"
-                trap 'on_exit' INT
+                trap 'on_exit' exit
                 on_exit()
                 {
                     mv "/etc/nginx/conf.d/yunohost_admin.conf.inc.bkp" "/etc/nginx/conf.d/yunohost_admin.conf.inc"
                     systemctl reload nginx
                 }
-                # create_sym_link "/ynh-dev/yunohost-admin-vue/app" "/usr/share/yunohost/admin"
 
                 cd /var/cache/ynh-dev/yunohost-admin/
                 # Create .env file with the vm ip
@@ -351,7 +328,7 @@ location /yunohost/admin {
 EOF
 
                 systemctl reload nginx
-                cd /ynh-dev/yunohost-admin-vue/app/
+                cd /ynh-dev/yunohost-admin/app/
                 npm run serve
                 ;;
             *)
