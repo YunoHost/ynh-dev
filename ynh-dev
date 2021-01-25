@@ -220,7 +220,7 @@ function use_git()
                 ;;
             moulinette)
                 create_sym_link "/ynh-dev/moulinette/locales" "/usr/share/moulinette/locale"
-                create_sym_link "/ynh-dev/moulinette/moulinette" "/usr/lib/python2.7/dist-packages/moulinette"
+                create_sym_link "/ynh-dev/moulinette/moulinette" "/usr/lib/python3/dist-packages/moulinette"
                 success "Now using Git repository for Moulinette"
                 ;;
             yunohost)
@@ -289,7 +289,7 @@ function use_git()
                 # Allow port 8080 in config file or else the dev server will stop working after postinstall
                 if [[ ! -e /etc/yunohost/installed ]]
                 then
-                    python2.7 - <<EOF
+                    python3 - <<EOF
 import os, yaml
 setting_file = "/etc/yunohost/firewall.yml"
 assert os.path.exists(setting_file), "Firewall yaml file %s does not exists ?" % setting_file
