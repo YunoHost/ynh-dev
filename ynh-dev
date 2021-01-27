@@ -356,14 +356,14 @@ function run_tests()
                 # Pytest and tests dependencies
                 if ! type "pytest" > /dev/null 2>&1; then
                     info "> Installing pytest ..."
-                    apt-get install python-pip -y
-                    pip2 install pytest pytest-sugar
+                    apt-get install python3-pip -y
+                    pip3 install pytest pytest-sugar
                 fi
                 for DEP in "pytest-mock requests-mock mock"
                 do
-                    if [ -z "$(pip show $DEP)" ]; then
-                        info "Installing $DEP with pip"
-                        pip2 install $DEP
+                    if [ -z "$(pip3 show $DEP)" ]; then
+                        info "Installing $DEP with pip3"
+                        pip3 install $DEP
                     fi
                 done
 
