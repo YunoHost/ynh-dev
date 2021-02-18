@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function show_usage() {
     cat <<EOF
@@ -118,7 +118,7 @@ function check_lxd_setup()
         || critical "You need to have LXD installed for ynh-dev to be usable from the host machine. Refer to the README to know how to install it."
 
     # Check that we'll be able to use lxc/lxd using sudo (for which the PATH is defined in /etc/sudoers and probably doesn't include /snap/bin)
-    if [[ ! -e /usr/bin/lxc ]] && [[ ! -e /usr/bin/lxd ]]
+    if [[ ! -e /usr/bin/lxc ]] && [[ ! -e /usr/bin/lxd ]] && [[ -e /snap ]]
     then
         [[ -e /usr/local/bin/lxc ]] && [[ -e /usr/local/bin/lxd ]] \
             || critical "You might want to add lxc and lxd inside /usr/local/bin so that there's no tricky PATH issue with sudo. If you installed lxd/lxc with snapd, this should do the trick: sudo ln -s /snap/bin/lxc /usr/local/bin/lxc && sudo ln -s /snap/bin/lxd /usr/local/bin/lxd"
