@@ -124,8 +124,8 @@ function check_lxd_setup()
             || critical "You might want to add lxc and lxd inside /usr/local/bin so that there's no tricky PATH issue with sudo. If you installed lxd/lxc with snapd, this should do the trick: sudo ln -s /snap/bin/lxc /usr/local/bin/lxc && sudo ln -s /snap/bin/lxd /usr/local/bin/lxd"
     fi
 
-    ip a | grep -q lxdbr0 \
-        || critical "There is no 'lxdbr0' interface... Did you ran 'lxd init' ?"
+    ip a | grep -q lx[cd]br0 \
+        || critical "There is no 'lxcbr0' or 'lxdbr0' interface... Did you ran 'lxd init' ?"
 }
 
 function start_ynhdev()
@@ -212,10 +212,16 @@ function show_vm_ip()
 function use_git()
 {
     assert_inside_vm
-    local PACKAGES="$@"
-    for PACKAGE in "$PACKAGES";
+    local PACKAGES=("$@")
+
+    if [ "$PACKAGES" = "" ]
+    then
+        PACKAGES=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
+    fi
+
+    for i in ${!PACKAGES[@]};
     do
-        case $PACKAGE in
+        case ${PACKAGES[i]} in
             ssowat)
                 create_sym_link "/ynh-dev/ssowat" "/usr/share/ssowat"
                 success "Now using Git repository for SSOwat"
@@ -230,6 +236,9 @@ function use_git()
                 # bin
                 create_sym_link "/ynh-dev/yunohost/bin/yunohost" "/usr/bin/yunohost"
                 create_sym_link "/ynh-dev/yunohost/bin/yunohost-api" "/usr/bin/yunohost-api"
+                create_sym_link "/ynh-dev/yunohost/bin/yunoprompt" "/usr/bin/yunoprompt"
+                create_sym_link "/ynh-dev/yunohost/bin/yunopaste" "/usr/bin/yunopaste"
+                create_sym_link "/ynh-dev/yunohost/sbin/yunohost-reset-ldap-password" "/usr/sbin/yunohost-reset-ldap-password"
 
                 # data
                 create_sym_link "/ynh-dev/yunohost/data/bash-completion.d/yunohost" "/etc/bash_completion.d/yunohost"
@@ -308,6 +317,9 @@ function use_git()
                 su ynhdev -c "./node_modules/gulp/bin/gulp.js watch --dev"
 
                 ;;
+            *)
+                error "Invalid package '${PACKAGES[i]}': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin' or nothing for all"
+                ;;
         esac
     done
 }
@@ -367,4 +379,4 @@ function run_tests()
     done
 }
 
-main "$@"
+main $@
