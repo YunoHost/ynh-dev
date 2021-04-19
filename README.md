@@ -145,6 +145,16 @@ Pre-built images are centralized on `devbaseimgs.yunohost.org` and we'll downloa
 sudo lxc remote add yunohost https://devbaseimgs.yunohost.org --public
 ```
 
+On Archlinux-based distributions (Arch, Manjaro, ...) it was found that it's needed
+that LXC/LXD will throw some error about "newuidmap failed to write mapping / Failed
+to set up id mapping" ... It can be [fixed with the following](https://discuss.linuxcontainers.org/t/solved-arch-linux-containers-only-run-when-security-privileged-true/4006/4) :
+
+```
+# N.B.: this is ONLY for Arch-based distros
+$ echo "root:1000000:65536" > /etc/subuid
+$ echo "root:1000000:65536" > /etc/subgid
+```
+
 Then, go into your favorite development folder and deploy `ynh-dev` with:
 
 ```bash
@@ -161,33 +171,14 @@ between the host and the LXC.
 
 When ran on the host, the `./ynh-dev` command allows you to manage YunoHost's dev LXCs.
 
-First, you might want to build the base LXC with:
+Start your actual dev LXC using :
 
 ```bash
 $ cd ynh-dev  # if not already done
-$ ./ynh-dev rebuild
-# ... This will take some time, grab your favorite beverage ...
-```
-
-This should create a fresh Debian Stretch LXC, install Yunohost inside and save
-the result as `ynh-dev-base` which can then be used to create your actual dev
-LXC. (This base can then be used to recreate a fresh Yunohost LXC if you need to
-destroy your work LXC)
-
-On Archlinux-based distributions (Arch, Manjaro, ...) it was found that it's needed
-that LXC/LXD will throw some error about "newuidmap failed to write mapping / Failed
-to set up id mapping" ... It can be [fixed with the following](https://discuss.linuxcontainers.org/t/solved-arch-linux-containers-only-run-when-security-privileged-true/4006/4) :
-
-```
-$ echo "root:1000000:65536" > /etc/subuid
-$ echo "root:1000000:65536" > /etc/subgid
-```
-
-Then start your actual dev LXC using :
-
-```bash
 $ ./ynh-dev start
 ```
+
+This should automatically download from `devbaseimgs.yunohost.org` a pre-build ynh-dev LXC image running Yunohost unstable, and create a fresh container from it.
 
 After starting the LXC, your terminal will automatically be attached to it. If you later disconnect from the LXC, you can go back in with `./ynh-dev attach`. Later, you might want to destroy the LXC. You can do so with `./ynh-dev destroy`.
 
