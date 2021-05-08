@@ -17,6 +17,7 @@ Please report issues on the following repository:
   * [4. Testing the web interface](#4-testing-the-web-interface)
   * [Advanced: using snapshots](#advanced-using-snapshots)
   * [Alternative: Only Virtualbox](#alternative-using-only-virtualbox)
+  * [Troubleshooting](#troubleshooting)
 
 - [Remote Development Environment](#remote-development-environment)
   * [1. Setup your VPS and install YunoHost](#1-setup-your-vps-and-install-yunohost)
@@ -138,6 +139,22 @@ answering the default (just pressing enter) to all questions is fine.
 sudo lxd init
 ```
 
+Pre-built images are centralized on `devbaseimgs.yunohost.org` and we'll download them from there to speed things up:
+
+```bash
+sudo lxc remote add yunohost https://devbaseimgs.yunohost.org --public
+```
+
+On Archlinux-based distributions (Arch, Manjaro, ...) it was found that it's needed
+that LXC/LXD will throw some error about "newuidmap failed to write mapping / Failed
+to set up id mapping" ... It can be [fixed with the following](https://discuss.linuxcontainers.org/t/solved-arch-linux-containers-only-run-when-security-privileged-true/4006/4) :
+
+```
+# N.B.: this is ONLY for Arch-based distros
+$ echo "root:1000000:65536" > /etc/subuid
+$ echo "root:1000000:65536" > /etc/subgid
+```
+
 Then, go into your favorite development folder and deploy `ynh-dev` with:
 
 ```bash
@@ -154,33 +171,14 @@ between the host and the LXC.
 
 When ran on the host, the `./ynh-dev` command allows you to manage YunoHost's dev LXCs.
 
-First, you might want to build the base LXC with:
+Start your actual dev LXC using :
 
 ```bash
 $ cd ynh-dev  # if not already done
-$ ./ynh-dev rebuild
-# ... This will take some time, grab your favorite beverage ...
-```
-
-This should create a fresh Debian Stretch LXC, install Yunohost inside and save
-the result as `ynh-dev-base` which can then be used to create your actual dev
-LXC. (This base can then be used to recreate a fresh Yunohost LXC if you need to
-destroy your work LXC)
-
-On Archlinux-based distributions (Arch, Manjaro, ...) it was found that it's needed
-that LXC/LXD will throw some error about "newuidmap failed to write mapping / Failed
-to set up id mapping" ... It can be [fixed with the following](https://discuss.linuxcontainers.org/t/solved-arch-linux-containers-only-run-when-security-privileged-true/4006/4) :
-
-```
-$ echo "root:1000000:65536" > /etc/subuid
-$ echo "root:1000000:65536" > /etc/subgid
-```
-
-Then start your actual dev LXC using :
-
-```bash
 $ ./ynh-dev start
 ```
+
+This should automatically download from `devbaseimgs.yunohost.org` a pre-build ynh-dev LXC image running Yunohost unstable, and create a fresh container from it.
 
 After starting the LXC, your terminal will automatically be attached to it. If you later disconnect from the LXC, you can go back in with `./ynh-dev attach`. Later, you might want to destroy the LXC. You can do so with `./ynh-dev destroy`.
 
@@ -224,6 +222,13 @@ A Vagrant and Virtualbox (without LXC) guide is provided on another branch of
 this repository. This is a known working setup used by some developers. Please
 see the ["virtualbox" branch](https://github.com/YunoHost/ynh-dev/tree/virtualbox#develop-on-your-local-machine)
 for more.
+
+## Troubleshooting
+If you experiment network issues with your lxd during rebuild container steps. Probably your container are not able to get a local IP with DHCP.
+
+It could be due to bridge conflict (for example if you have lxc installed too) or dnsmasq port already used.
+
+This [ticket](https://github.com/YunoHost/issues/issues/1664) could help.
 
 # Remote Development Environment
 

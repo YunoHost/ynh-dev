@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function show_usage() {
     cat <<EOF
@@ -6,10 +6,10 @@ function show_usage() {
   ${BLUE}On the host, to manage the LXC${NORMAL}
   ${BLUE}==============================${NORMAL}
 
-  start [DIST] [NAME]   (Create and) starts a LXC (DIST=buster and NAME=ynh-dev by default)
-  attach [DIST] [NAME]  Attach an already started LXC (DIST=buster and NAME=ynh-dev by default)
-  destroy [DIST] [NAME] Destroy the ynh-dev LXC (DIST=buster and NAME=ynh-dev by default)
-  rebuild [DIST] [NAME] Rebuild a fresh, up-to-date box (DIST=buster and NAME=ynh-dev by default)
+  start [DIST] [NAME] [YNH_BRANCH]   (Create and) starts a LXC (DIST=buster, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  attach [DIST] [NAME] [YNH_BRANCH] Attach an already started LXC (DIST=buster, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  destroy [DIST] [NAME] [YNH_BRANCH] Destroy the ynh-dev LXC (DIST=buster, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  rebuild [DIST] [NAME] [YNH_BRANCH] Rebuild a fresh, up-to-date box (DIST=buster, NAME=ynh-dev and YNH_BRANCH=unstable by default)
 
   ${BLUE}Inside the dev instance${NORMAL}
   ${BLUE}=======================${NORMAL}
@@ -118,7 +118,7 @@ function check_lxd_setup()
         || critical "You need to have LXD installed for ynh-dev to be usable from the host machine. Refer to the README to know how to install it."
 
     # Check that we'll be able to use lxc/lxd using sudo (for which the PATH is defined in /etc/sudoers and probably doesn't include /snap/bin)
-    if [[ ! -e /usr/bin/lxc ]] && [[ ! -e /usr/bin/lxd ]]
+    if [[ ! -e /usr/bin/lxc ]] && [[ ! -e /usr/bin/lxd ]] && [[ -e /snap ]]
     then
         [[ -e /usr/local/bin/lxc ]] && [[ -e /usr/local/bin/lxd ]] \
             || critical "You might want to add lxc and lxd inside /usr/local/bin so that there's no tricky PATH issue with sudo. If you installed lxd/lxc with snapd, this should do the trick: sudo ln -s /snap/bin/lxc /usr/local/bin/lxc && sudo ln -s /snap/bin/lxd /usr/local/bin/lxd"
@@ -133,41 +133,34 @@ function start_ynhdev()
     check_lxd_setup
 
     local DIST=${1:-buster}
-    local BOX=${2:-ynh-dev}-${DIST}
+    local YNH_BRANCH=${3:-unstable}
+    local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
     if ! sudo lxc info $BOX &>/dev/null
     then
-        sudo lxc image info $BOX-base &>/dev/null || critical "You should first build the base YunoHost LXC using ./ynh-dev rebuild"
-        set -eu
-        set -x
-        sudo lxc launch $BOX-base $BOX
-        sudo lxc config set $BOX security.privileged true
-        sudo lxc config set $BOX security.nesting true # Need this for apparmor for some reason
+        if ! sudo lxc image info $BOX-base &>/dev/null
+        then
+            LXC_BASE="ynh-dev-$DIST-amd64-$YNH_BRANCH-base"
+            sudo lxc launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true \
+            || critical "Failed to launch the container ?"
+        else
+            sudo lxc launch $BOX-base $BOX -c security.nesting=true -c security.privileged=true
+        fi
         sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f $(pwd))"
-        set +x
         info "Now attaching to the container"
     else
         info "Attaching to existing container"
     fi
 
-    attach_ynhdev $BOX
+    attach_ynhdev "$@"
 }
 
 function attach_ynhdev()
 {
-    # We need those link for the yunohost-admin build to work without r/w
-    # permission in the shared folder.
-    #
-    # The target folders (/var/cache/ynh-dev/...) are then created during the
-    # './ynh-dev use-git yunohost-admin'
-    if [[ ! -L ./yunohost-admin/src/dist ]]
-    then
-        ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./yunohost-admin/src/
-        ln -s /var/cache/ynh-dev/yunohost-admin/dist ./yunohost-admin/src/
-    fi
-
     check_lxd_setup
-    local BOX=${1:-ynh-dev-buster}
+    local DIST=${1:-buster}
+    local YNH_BRANCH=${3:-unstable}
+    local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
     sudo lxc start $BOX 2>/dev/null || true
     sudo lxc exec $BOX --cwd /ynh-dev -- /bin/bash
 }
@@ -176,7 +169,8 @@ function destroy_ynhdev()
 {
     check_lxd_setup
     local DIST=${1:-buster}
-    local BOX=${2:-ynh-dev}-${DIST}
+    local YNH_BRANCH=${3:-unstable}
+    local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
     sudo lxc stop $BOX
     sudo lxc delete $BOX
 }
@@ -186,18 +180,16 @@ function rebuild_ynhdev()
     check_lxd_setup
 
     local DIST=${1:-buster}
-    local BOX=${2:-ynh-dev}-${DIST}
+    local YNH_BRANCH=${3:-unstable}
+    local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
     set -x
     sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
-    sudo lxc launch images:debian/$DIST/amd64 $BOX-rebuild
-    sudo lxc config set $BOX-rebuild security.privileged true
-    sudo lxc config set $BOX-rebuild security.nesting true # Need this for apparmor for some reason
-    sudo lxc restart $BOX-rebuild
+    sudo lxc launch images:debian/$DIST/amd64 $BOX-rebuild  -c security.nesting=true -c security.privileged=true
     sleep 5
     sudo lxc exec $BOX-rebuild -- apt install curl -y
-    INSTALL_SCRIPT="https://install.yunohost.org"
-    sudo lxc exec $BOX-rebuild -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d unstable"
+    INSTALL_SCRIPT="https://install.yunohost.org/$DIST"
+    sudo lxc exec $BOX-rebuild -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d $YNH_BRANCH"
     sudo lxc stop $BOX-rebuild
     sudo lxc publish $BOX-rebuild --alias $BOX-base
     set +x
@@ -219,7 +211,7 @@ function use_git()
         PACKAGES=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
     fi
 
-    for i in ${!PACKAGES[@]};
+    for i in "${!PACKAGES[@]}";
     do
         case ${PACKAGES[i]} in
             ssowat)
@@ -228,7 +220,7 @@ function use_git()
                 ;;
             moulinette)
                 create_sym_link "/ynh-dev/moulinette/locales" "/usr/share/moulinette/locale"
-                create_sym_link "/ynh-dev/moulinette/moulinette" "/usr/lib/python2.7/dist-packages/moulinette"
+                create_sym_link "/ynh-dev/moulinette/moulinette" "/usr/lib/python3/dist-packages/moulinette"
                 success "Now using Git repository for Moulinette"
                 ;;
             yunohost)
@@ -241,6 +233,7 @@ function use_git()
                 create_sym_link "/ynh-dev/yunohost/sbin/yunohost-reset-ldap-password" "/usr/sbin/yunohost-reset-ldap-password"
 
                 # data
+                python3 "/ynh-dev/yunohost/data/actionsmap/yunohost_completion.py"
                 create_sym_link "/ynh-dev/yunohost/data/bash-completion.d/yunohost" "/etc/bash_completion.d/yunohost"
                 create_sym_link "/ynh-dev/yunohost/data/actionsmap/yunohost.yml" "/usr/share/moulinette/actionsmap/yunohost.yml"
                 create_sym_link "/ynh-dev/yunohost/data/hooks" "/usr/share/yunohost/hooks"
@@ -248,9 +241,6 @@ function use_git()
                 create_sym_link "/ynh-dev/yunohost/data/helpers" "/usr/share/yunohost/helpers"
                 create_sym_link "/ynh-dev/yunohost/data/helpers.d" "/usr/share/yunohost/helpers.d"
                 create_sym_link "/ynh-dev/yunohost/data/other" "/usr/share/yunohost/yunohost-config/moulinette"
-
-                # debian
-                create_sym_link "/ynh-dev/yunohost/debian/conf/pam/mkhomedir" "/usr/share/pam-configs/mkhomedir"
 
                 # lib
                 create_sym_link "/ynh-dev/yunohost/lib/metronome/modules/ldap.lib.lua" "/usr/lib/metronome/modules/ldap.lib.lua"
@@ -270,52 +260,80 @@ function use_git()
                 ;;
             yunohost-admin)
 
-                getent passwd ynhdev > /dev/null
-                if [ $? -eq 2 ]; then
-                    useradd ynhdev
-                fi
-
+                rm -r /var/cache/ynh-dev/yunohost-admin
                 mkdir -p /var/cache/ynh-dev/yunohost-admin/
-                mkdir -p /var/cache/ynh-dev/yunohost-admin/dist
-                chown -R ynhdev /var/cache/ynh-dev/yunohost-admin/
-                create_sym_link "/ynh-dev/yunohost-admin/src/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
-                create_sym_link "/ynh-dev/yunohost-admin/src/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
-                create_sym_link "/ynh-dev/yunohost-admin/src" "/usr/share/yunohost/admin"
+                create_sym_link "/ynh-dev/yunohost-admin/app/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
+                create_sym_link "/var/cache/ynh-dev/yunohost-admin/node_modules" "/ynh-dev/yunohost-admin/app/node_modules"
+                create_sym_link "/ynh-dev/yunohost-admin/app/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
+                create_sym_link "/ynh-dev/yunohost-admin/app/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
+                mv "/etc/nginx/conf.d/yunohost_admin.conf.inc" "/etc/nginx/conf.d/yunohost_admin.conf.inc.bkp"
+                trap 'on_exit' exit
+                on_exit()
+                {
+                    mv "/etc/nginx/conf.d/yunohost_admin.conf.inc.bkp" "/etc/nginx/conf.d/yunohost_admin.conf.inc"
+                    systemctl reload nginx
+                }
 
-                if [ ! -e /ynh-dev/yunohost-admin/src/dist ]
+                cd /var/cache/ynh-dev/yunohost-admin/
+                # Create .env file with the vm ip
+                # Will be used by webpack-dev-server to proxy api requests.
+                if [[ ! -e .env ]]
                 then
-                    echo "If npm install fails to create the dist and node_modules folder, maybe you need to run the following *in the host!* : "
-                    echo " "
-                    echo "cd /your/dev/env/yunohost-admin/src/"
-                    echo "ln -s /var/cache/ynh-dev/yunohost-admin/dist ./dist"
-                    echo "ln -s /var/cache/ynh-dev/yunohost-admin/node_modules ./node_modules"
-                    echo " "
+                    info "Creating .env file"
+                    IP=$(hostname -I | tr ' ' '\n' | grep "\.")
+                    echo "VUE_APP_IP=$IP" > .env
                 fi
 
-                # Install npm dependencies if needed
-                cd /var/cache/ynh-dev/yunohost-admin/
-                if [ ! -e node_modules/gulp/bin/gulp.js ]
+                # Allow port 8080 in config file or else the dev server will stop working after postinstall
+                if [[ ! -e /etc/yunohost/installed ]]
+                then
+                    python3 - <<EOF
+import os, yaml
+setting_file = "/etc/yunohost/firewall.yml"
+assert os.path.exists(setting_file), "Firewall yaml file %s does not exists ?" % setting_file
+with open(setting_file) as f:
+    settings = yaml.load(f)
+    if 8080 not in settings["ipv4"]["TCP"]:
+        settings["ipv4"]["TCP"].append(8080)
+        with open(setting_file, "w") as f:
+            yaml.safe_dump(settings, f, default_flow_style=False)
+EOF
+                fi
+
+                # Install npm if needed
+                if [[ ! -e node_modules/@vue/cli-service/bin/vue-cli-service.js ]]
                 then
                     info "Installing dependencies to develop in yunohost-admin ..."
                     apt install nodejs npm -y
                     npm install -g npm@latest
                 fi
 
+                # Install dependencies
                 npm ci --no-bin-links
-
                 success "Now using Git repository for yunohost-admin"
+                cat <<EOF > /etc/nginx/conf.d/yunohost_admin.conf.inc
+location /yunohost/admin {
+    proxy_pass        https://localhost:8080/yunohost/admin;
+    proxy_redirect    off;
+    proxy_set_header  Host \$host;
+    proxy_set_header  X-Real-IP \$remote_addr;
+    proxy_set_header  X-Forwarded-Proto \$scheme;
+    proxy_set_header  X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header  X-Forwarded-Host \$server_name;
+    proxy_set_header  X-Forwarded-Port \$server_port;
 
-                cd /ynh-dev/yunohost-admin/src
-                su ynhdev -c "./node_modules/gulp/bin/gulp.js build --dev"
-                warn "-------------------------------------------------------- "
-                warn "Launching gulp ...                                       "
-                warn "NB : This command will keep running and watch for changes"
-                warn " in the folder /ynh-dev/yunohost-admin/src, such that you"
-                warn "don't need to re-run npm yourself everytime you change   "
-                warn "something !                                              "
-                warn "-------------------------------------------------------- "
-                su ynhdev -c "./node_modules/gulp/bin/gulp.js watch --dev"
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+}
+EOF
 
+                systemctl reload nginx
+                cd /ynh-dev/yunohost-admin/app/
+                npm run serve
+                ;;
+            *)
+                error "Invalid package '${PACKAGES[i]}': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin' or nothing for all"
                 ;;
             *)
                 error "Invalid package '${PACKAGES[i]}': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin' or nothing for all"
@@ -328,7 +346,7 @@ function run_tests()
 {
     assert_inside_vm
     local PACKAGES="$@"
-    for PACKAGE in "$PACKAGES";
+    for PACKAGE in $PACKAGES;
     do
         TEST_FUNCTION=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $3}')
         TEST_MODULE=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $2}')
@@ -339,14 +357,14 @@ function run_tests()
                 # Pytest and tests dependencies
                 if ! type "pytest" > /dev/null 2>&1; then
                     info "> Installing pytest ..."
-                    apt-get install python-pip -y
-                    pip2 install pytest pytest-sugar
+                    apt-get install python3-pip -y
+                    pip3 install pytest pytest-sugar
                 fi
                 for DEP in "pytest-mock requests-mock mock"
                 do
-                    if [ -z "$(pip show $DEP)" ]; then
-                        info "Installing $DEP with pip"
-                        pip2 install $DEP
+                    if [ -z "$(pip3 show $DEP)" ]; then
+                        info "Installing $DEP with pip3"
+                        pip3 install $DEP
                     fi
                 done
 
