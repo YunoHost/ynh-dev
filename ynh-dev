@@ -313,7 +313,7 @@ EOF
                 success "Now using Git repository for yunohost-admin"
                 cat <<EOF > /etc/nginx/conf.d/yunohost_admin.conf.inc
 location /yunohost/admin {
-    proxy_pass        https://localhost:8080/yunohost/admin;
+    proxy_pass        http://localhost:8080/yunohost/admin;
     proxy_redirect    off;
     proxy_set_header  Host \$host;
     proxy_set_header  X-Real-IP \$remote_addr;
