@@ -305,7 +305,7 @@ EOF
                 then
                     info "Installing dependencies to develop in yunohost-admin ..."
                     apt install nodejs npm -y
-                    npm install -g npm@latest
+                    npm install -g npm@6
                 fi
 
                 # Install dependencies
