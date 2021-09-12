@@ -304,6 +304,16 @@ EOF
                 if [[ ! -e node_modules/@vue/cli-service/bin/vue-cli-service.js ]]
                 then
                     info "Installing dependencies to develop in yunohost-admin ..."
+                    DISTRO="$(lsb_release -s -c)"
+                    if [ "$DISTRO" == "buster" ]; then
+                        KEYRING=/usr/share/keyrings/nodesource.gpg
+                        curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | sudo tee "$KEYRING" >/dev/null
+                        gpg --no-default-keyring --keyring "$KEYRING" --list-keys
+                        VERSION=node_8.x
+                        KEYRING=/usr/share/keyrings/nodesource.gpg
+                        echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+                    fi
+                    apt-get update
                     apt install nodejs npm -y
                     npm install -g npm@latest
                 fi
@@ -313,7 +323,21 @@ EOF
                 success "Now using Git repository for yunohost-admin"
                 cat <<EOF > /etc/nginx/conf.d/yunohost_admin.conf.inc
 location /yunohost/admin {
-    proxy_pass        https://localhost:8080/yunohost/admin;
+    proxy_pass        http://localhost:8080/yunohost/admin;
+    proxy_redirect    off;
+    proxy_set_header  Host \$host;
+    proxy_set_header  X-Real-IP \$remote_addr;
+    proxy_set_header  X-Forwarded-Proto \$scheme;
+    proxy_set_header  X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header  X-Forwarded-Host \$server_name;
+    proxy_set_header  X-Forwarded-Port \$server_port;
+
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+}
+location /sockjs-node {
+    proxy_pass        http://localhost:8080/sockjs-node;
     proxy_redirect    off;
     proxy_set_header  Host \$host;
     proxy_set_header  X-Real-IP \$remote_addr;
