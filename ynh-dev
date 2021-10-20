@@ -349,6 +349,28 @@ location /sockjs-node {
 }
 EOF
 
+
+    # If ssowat's conf persistent ~empty, allow ourselves to add the rule for /sockjs-node for hot-reload
+    if [ ! -e /etc/ssowat/conf.json.persistent ] || [ -z "$(cat /etc/ssowat/conf.json.persistent | tr -d '{} \n')" ]
+    then
+        cat <<EOF >/etc/ssowat/conf.json.persistent
+{
+    "permissions": {
+        "webadminhotreload": {
+            "auth_header": false,
+            "label": "Core permissions - skipped",
+            "public": true,
+            "show_tile": false,
+            "uris": [
+                "re:^[^/]*/sockjs-node",
+            ],
+            "users": []
+        }
+    }
+}
+EOF
+    fi
+
                 systemctl reload nginx
                 cd /ynh-dev/yunohost-admin/app/
                 npm run serve
