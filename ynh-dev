@@ -260,7 +260,7 @@ function use_git()
                 ;;
             yunohost-admin)
 
-                rm -r /var/cache/ynh-dev/yunohost-admin
+                #rm -r /var/cache/ynh-dev/yunohost-admin
                 mkdir -p /var/cache/ynh-dev/yunohost-admin/
                 create_sym_link "/ynh-dev/yunohost-admin/app/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
                 create_sym_link "/var/cache/ynh-dev/yunohost-admin/node_modules" "/ynh-dev/yunohost-admin/app/node_modules"
@@ -298,7 +298,7 @@ EOF
                 fi
 
                 # Install npm if needed
-                if [[ ! -e node_modules/@vue/cli-service/bin/vue-cli-service.js ]]
+                if [[ ! -e "/var/cache/ynh-dev/yunohost-admin/node_modules/vue" ]]
                 then
                     info "Installing dependencies to develop in yunohost-admin ..."
                     DISTRO="$(lsb_release -s -c)"
@@ -315,9 +315,17 @@ EOF
                     npm install -g npm@6
                 fi
 
-                # Install dependencies
-                npm ci --no-bin-links
-                success "Now using Git repository for yunohost-admin"
+                # Install dependencies with npm install (or rather npm ci)
+                if [[ -e "/var/cache/ynh-dev/yunohost-admin/node_modules/vue" ]];
+                then
+                    info "NB: skipping npm ci because vue is already installed. If you want to upgrade/refresh npm dependencies, you should run 'npm ci' manually, or delete /var/cache/ynh-dev/yunohot-admin/node_modules."
+                else
+                    info "Installing npm dependencies ... (this may take a while)"
+                    npm ci --no-bin-links
+                fi
+
+                info "Tweaking nginx and ssowat for yunohost admin dev..."
+
                 cat <<EOF > /etc/nginx/conf.d/yunohost_admin.conf.inc
 location /yunohost/admin {
     proxy_pass        http://localhost:8080/yunohost/admin;
@@ -373,6 +381,7 @@ EOF
 
                 systemctl reload nginx
                 cd /ynh-dev/yunohost-admin/app/
+                info "Now running 'npm run serve'"
                 npm run serve
                 ;;
             *)
