@@ -275,14 +275,11 @@ function use_git()
                 }
 
                 cd /var/cache/ynh-dev/yunohost-admin/
+
                 # Create .env file with the vm ip
                 # Will be used by webpack-dev-server to proxy api requests.
-                if [[ ! -e .env ]]
-                then
-                    info "Creating .env file"
-                    IP=$(hostname -I | tr ' ' '\n' | grep "\.")
-                    echo "VUE_APP_IP=$IP" > .env
-                fi
+                IP=$(hostname -I | tr ' ' '\n' | grep "\.")
+                echo "VUE_APP_IP=$IP" > .env
 
                 # Allow port 8080 in config file or else the dev server will stop working after postinstall
                 if [[ ! -e /etc/yunohost/installed ]]
