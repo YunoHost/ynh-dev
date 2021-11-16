@@ -224,8 +224,7 @@ function use_git()
                     echo "$current_ssowatconf" >> $ssowat_conf_file
                 fi
                 if [ ! -d "/ynh-dev/ZeroBraneStudio" ]; then
-                    info "If you want to debug ssowat, you can clone https://github.com/pkulchenko/ZeroBraneStudio into the ynh-dev directory of your host,"
-                    info "open it, and open a file at the root of the ssowat project in ynh-dev directory, click on \"Project -> Project Directory -> Set From Current File\"."
+                     info "If you want to debug ssowat, you can clone https://github.com/pkulchenko/ZeroBraneStudio (There is a bug on the master branch, please use the tag 1.90 for now) into the ynh-dev directory of your host,"                    info "open it, and open a file at the root of the ssowat project in ynh-dev directory, click on \"Project -> Project Directory -> Set From Current File\"."
                     info "You can start the remote debugger with \"Project -> Start Debugger Server\"."
                     info "Add the line \"require(\"mobdebug\").start('THE_IP_OF_YOUR_HOST_IN_THE_CONTAINER_NETWORK')\" at the top of the file access.lua and reload nginx in your container with \"systemctl reload nginx\"."
                     info "After that you should be able to debug ssowat \o/. The debugger should pause the first time it reaches the line \"require(\"mobdebug\").start('...')\", but you can add breakpoints where needed."
