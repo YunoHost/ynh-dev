@@ -225,35 +225,50 @@ function use_git()
                 ;;
             yunohost)
 
-                # bin
-                create_sym_link "/ynh-dev/yunohost/bin/yunohost" "/usr/bin/yunohost"
-                create_sym_link "/ynh-dev/yunohost/bin/yunohost-api" "/usr/bin/yunohost-api"
-                create_sym_link "/ynh-dev/yunohost/bin/yunoprompt" "/usr/bin/yunoprompt"
-                create_sym_link "/ynh-dev/yunohost/bin/yunopaste" "/usr/bin/yunopaste"
-                create_sym_link "/ynh-dev/yunohost/sbin/yunohost-reset-ldap-password" "/usr/sbin/yunohost-reset-ldap-password"
+                for FILE in $(ls /ynh-dev/yunohost/bin/)
+                do
+                    create_sym_link "/ynh-dev/yunohost/bin/$FILE" "/usr/bin/$FILE"
+                done
 
-                # data
-                python3 "/ynh-dev/yunohost/data/actionsmap/yunohost_completion.py"
-                create_sym_link "/ynh-dev/yunohost/data/bash-completion.d/yunohost" "/etc/bash_completion.d/yunohost"
-                create_sym_link "/ynh-dev/yunohost/data/actionsmap/yunohost.yml" "/usr/share/moulinette/actionsmap/yunohost.yml"
-                create_sym_link "/ynh-dev/yunohost/data/hooks" "/usr/share/yunohost/hooks"
-                create_sym_link "/ynh-dev/yunohost/data/templates" "/usr/share/yunohost/templates"
-                create_sym_link "/ynh-dev/yunohost/data/helpers" "/usr/share/yunohost/helpers"
-                create_sym_link "/ynh-dev/yunohost/data/helpers.d" "/usr/share/yunohost/helpers.d"
-                create_sym_link "/ynh-dev/yunohost/data/other" "/usr/share/yunohost/yunohost-config/moulinette"
+                if [[ $(lsb_release -sc) == "bullseye" ]]
+                then
+                    for FILE in $(ls /ynh-dev/yunohost/conf/metronome/modules/)
+                    do
+                        create_sym_link "/ynh-dev/yunohost/conf/metronome/modules/$FILE" "/usr/lib/metronome/modules/$FILE"
+                    done
+                    for FILE in $(ls /ynh-dev/yunohost/share/)
+                    do
+                        create_sym_link "/ynh-dev/yunohost/share/$FILE" "/usr/share/yunohost/$FILE"
+                    done
+                    create_sym_link "/ynh-dev/yunohost/hooks" "/usr/share/yunohost/hooks"
+                    create_sym_link "/ynh-dev/yunohost/helpers" "/usr/share/yunohost/helpers.d"
+                    create_sym_link "/ynh-dev/yunohost/conf" "/usr/share/yunohost/conf"
+                    create_sym_link "/ynh-dev/yunohost/locales" "/usr/share/yunohost/locales"
+                    create_sym_link "/ynh-dev/yunohost/src" "/usr/lib/python3/dist-packages/yunohost"
+                else
+                    # data
+                    python3 "/ynh-dev/yunohost/data/actionsmap/yunohost_completion.py"
+                    create_sym_link "/ynh-dev/yunohost/data/bash-completion.d/yunohost" "/etc/bash_completion.d/yunohost"
+                    create_sym_link "/ynh-dev/yunohost/data/actionsmap/yunohost.yml" "/usr/share/moulinette/actionsmap/yunohost.yml"
+                    create_sym_link "/ynh-dev/yunohost/data/hooks" "/usr/share/yunohost/hooks"
+                    create_sym_link "/ynh-dev/yunohost/data/templates" "/usr/share/yunohost/templates"
+                    create_sym_link "/ynh-dev/yunohost/data/helpers" "/usr/share/yunohost/helpers"
+                    create_sym_link "/ynh-dev/yunohost/data/helpers.d" "/usr/share/yunohost/helpers.d"
+                    create_sym_link "/ynh-dev/yunohost/data/other" "/usr/share/yunohost/yunohost-config/moulinette"
 
-                # lib
-                create_sym_link "/ynh-dev/yunohost/lib/metronome/modules/ldap.lib.lua" "/usr/lib/metronome/modules/ldap.lib.lua"
-                create_sym_link "/ynh-dev/yunohost/lib/metronome/modules/mod_auth_ldap2.lua" "/usr/lib/metronome/modules/mod_auth_ldap2.lua"
-                create_sym_link "/ynh-dev/yunohost/lib/metronome/modules/mod_legacyauth.lua" "/usr/lib/metronome/modules/mod_legacyauth.lua"
-                create_sym_link "/ynh-dev/yunohost/lib/metronome/modules/mod_storage_ldap.lua" "/usr/lib/metronome/modules/mod_storage_ldap.lua"
-                create_sym_link "/ynh-dev/yunohost/lib/metronome/modules/vcard.lib.lua" "/usr/lib/metronome/modules/vcard.lib.lua"
+                    # lib
+                    create_sym_link "/ynh-dev/yunohost/lib/metronome/modules/ldap.lib.lua" "/usr/lib/metronome/modules/ldap.lib.lua"
+                    create_sym_link "/ynh-dev/yunohost/lib/metronome/modules/mod_auth_ldap2.lua" "/usr/lib/metronome/modules/mod_auth_ldap2.lua"
+                    create_sym_link "/ynh-dev/yunohost/lib/metronome/modules/mod_legacyauth.lua" "/usr/lib/metronome/modules/mod_legacyauth.lua"
+                    create_sym_link "/ynh-dev/yunohost/lib/metronome/modules/mod_storage_ldap.lua" "/usr/lib/metronome/modules/mod_storage_ldap.lua"
+                    create_sym_link "/ynh-dev/yunohost/lib/metronome/modules/vcard.lib.lua" "/usr/lib/metronome/modules/vcard.lib.lua"
 
-                # src
-                create_sym_link "/ynh-dev/yunohost/src/yunohost" "/usr/lib/moulinette/yunohost"
+                    # src
+                    create_sym_link "/ynh-dev/yunohost/src/yunohost" "/usr/lib/moulinette/yunohost"
 
-                # locales
-                create_sym_link "/ynh-dev/yunohost/locales" "/usr/lib/moulinette/yunohost/locales"
+                    # locales
+                    create_sym_link "/ynh-dev/yunohost/locales" "/usr/lib/moulinette/yunohost/locales"
+                fi
 
                 success "Now using Git repository for YunoHost"
 
