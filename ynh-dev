@@ -245,6 +245,9 @@ function use_git()
                     create_sym_link "/ynh-dev/yunohost/conf" "/usr/share/yunohost/conf"
                     create_sym_link "/ynh-dev/yunohost/locales" "/usr/share/yunohost/locales"
                     create_sym_link "/ynh-dev/yunohost/src" "/usr/lib/python3/dist-packages/yunohost"
+
+                    python3 "/ynh-dev/yunohost/doc/generate_bash_completion.py"
+                    create_sym_link "/ynh-dev/yunohost/doc/bash-completion.sh" "/etc/bash_completion.d/yunohost"
                 else
                     # data
                     python3 "/ynh-dev/yunohost/data/actionsmap/yunohost_completion.py"
