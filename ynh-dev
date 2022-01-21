@@ -455,7 +455,7 @@ function run_tests()
                 done
 
                 # Apps for test
-                cd /ynh-dev/yunohost/src/yunohost/tests
+                cd /ynh-dev/yunohost/src/tests
                 [ -d "apps" ] || git clone https://github.com/YunoHost/test_apps ./apps
                 cd apps
                 git pull > /dev/null 2>&1
@@ -467,10 +467,10 @@ function run_tests()
                 then
                     cd /ynh-dev/yunohost/
                     py.test tests
-                    cd /ynh-dev/yunohost/src/yunohost
+                    cd /ynh-dev/yunohost/src
                     py.test tests
                 else
-                    cd /ynh-dev/yunohost/src/yunohost
+                    cd /ynh-dev/yunohost/src
                     if [[ -z "$TEST_FUNCTION" ]]
                     then
                         py.test tests/test_"$TEST_MODULE".py
