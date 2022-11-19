@@ -1,19 +1,21 @@
 #!/usr/bin/python3
 
+import sys
 import os
 import json
 import toml
-import shutil
+import yaml
 import time
-import subprocess
 from collections import OrderedDict
 
+CATALOG_LIST_PATH = "/etc/yunohost/apps_catalog.yml"
+assert os.path.exists(CATALOG_LIST_PATH), f"Catalog list yaml file '{CATALOG_LIST_PATH} does not exists"
 
 now = time.time()
 my_env = os.environ.copy()
 my_env["GIT_TERMINAL_PROMPT"] = "0"
 
-DEFAULT_APPS_FOLDER = "/ynh-dev/custom-apps/"
+DEFAULT_APPS_FOLDER = "/ynh-dev/custom-catalog/"
 DEFAULT_APP_BRANCH = "master"
 
 
@@ -27,13 +29,15 @@ def build(folder=DEFAULT_APPS_FOLDER):
         app_list = json.load(f)
 
     apps = {}
+    fail = False
 
     for app, infos in app_list.items():
         app = app.lower()
         try:
             app_dict = build_app_dict(app, infos, folder)
         except Exception as e:
-            print(f"Processing {app} failed: {str(e)}")
+            print(f"[\033[1m\033[31mFAIL\033[00m] Processing {app} failed: {str(e)}")
+            fail = True
             continue
 
         apps[app_dict["id"]] = app_dict
@@ -54,6 +58,8 @@ def build(folder=DEFAULT_APPS_FOLDER):
     with open(output_file, "w") as f:
         f.write(json.dumps(data, sort_keys=True, indent=2))
 
+    if fail:
+        sys.exit(1)
 
 def build_app_dict(app, infos, folder):
     app_folder = os.path.join(folder, app + "_ynh")
@@ -93,6 +99,22 @@ def build_app_dict(app, infos, folder):
         ),
     }
 
+def reset():
+    with open(CATALOG_LIST_PATH, "w") as f:
+        catalog_list = [{"id": "default", "url": "https://app.yunohost.org/default/"}]
+        yaml.safe_dump(catalog_list, f, default_flow_style=False)
 
-if __name__ == "__main__":
-    build()
+
+def add():
+    with open(CATALOG_LIST_PATH) as f:
+        catalog_list = yaml.load(f, Loader=yaml.FullLoader)
+        ids = [catalog["id"] for catalog in catalog_list]
+        if "custom" not in ids:
+            catalog_list.append({"id": "custom", "url": None})
+            with open(CATALOG_LIST_PATH, "w") as f:
+                yaml.safe_dump(catalog_list, f, default_flow_style=False)
+
+def override():
+    with open(CATALOG_LIST_PATH, "w") as f:
+        catalog_list = [{"id": "custom", "url": None}]
+        yaml.safe_dump(catalog_list, f, default_flow_style=False)

@@ -1,0 +1,15 @@
+{
+    "0testapp": {
+        "antifeatures": [
+            "non-free-assets"
+        ],
+        "branch": "master",
+        "category": "games",
+        "level": 8,
+        "potential_alternative_to": [
+            "Google Agenda",
+            "Microsoft Outlook"
+        ],
+        "state": "working"
+    }
+}
