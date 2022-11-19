@@ -43,6 +43,8 @@ function main()
         use-git|--use-git)         use_git        $ARGUMENTS ;;
         test|--test)               run_tests      $ARGUMENTS ;;
 
+        catalog|--catalog)         catalog        $ARGUMENTS ;;
+
         *)              critical "Unknown action ${ACTION}." ;;
     esac
 }
@@ -481,6 +483,43 @@ function run_tests()
                 ;;
         esac
     done
+}
+
+function catalog()
+{
+    assert_inside_vm
+    local ACTION="$1"
+    local CUSTOM_APPS_FOLDER=${2:-"/ynh-dev/custom-apps"}
+    local CUSTOM_CAT_PATH="${CUSTOM_APPS_FOLDER}/catalog.json"
+    local CACHE_FOLDER="/var/cache/yunohost/repo"
+
+    cd /ynh-dev/custom-catalog/
+
+    case "${ACTION}" in
+        build)
+            info "Rebuilding custom app catalog"
+            python3 -c "from catalog_builder import build; build(folder='${CUSTOM_APPS_FOLDER}')" && success "Successfully build custom catalog list in '${CUSTOM_CAT_PATH}'"
+            ;;
+        add)
+            info "Injecting custom catalog in YunoHost catalog list"
+            create_sym_link "${CUSTOM_CAT_PATH}" "${CACHE_FOLDER}/custom.json"
+            python3 -c "from catalog_list import add; add()" && success "Custom catalog '${CUSTOM_CAT_PATH}' added to catalog list"
+            ;;
+        override)
+            info "Overriding default catalog by custom one"
+            create_sym_link "${CUSTOM_CAT_PATH}" "${CACHE_FOLDER}/custom.json"
+            python3 -c "from catalog_list import override; override()" && success "Default catalog is now overrided by '$CUSTOM_CAT_PATH'"
+            ;;
+        reset)
+            info "Reseting to YunoHost default catalog list"
+            [ -e "$CACHE_FOLDER/custom.json" ] && rm "$CACHE_FOLDER/custom.json"
+            python3 -c "from catalog_list import reset; reset()" || exit 1
+            success "Returned to default"
+            ;;
+        *)
+            critical "Unknown catalog action '${ACTION}'."
+            ;;
+    esac
 }
 
 main $@
