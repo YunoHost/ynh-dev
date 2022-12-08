@@ -300,19 +300,11 @@ function use_git()
                 ;;
             yunohost-admin)
 
-                #rm -r /var/cache/ynh-dev/yunohost-admin
                 mkdir -p /var/cache/ynh-dev/yunohost-admin/
                 create_sym_link "/ynh-dev/yunohost-admin/app/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
                 create_sym_link "/var/cache/ynh-dev/yunohost-admin/node_modules" "/ynh-dev/yunohost-admin/app/node_modules"
                 create_sym_link "/ynh-dev/yunohost-admin/app/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
                 create_sym_link "/ynh-dev/yunohost-admin/app/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
-                mv "/etc/nginx/conf.d/yunohost_admin.conf.inc" "/etc/nginx/conf.d/yunohost_admin.conf.inc.bkp"
-                trap 'on_exit' exit
-                on_exit()
-                {
-                    mv "/etc/nginx/conf.d/yunohost_admin.conf.inc.bkp" "/etc/nginx/conf.d/yunohost_admin.conf.inc"
-                    systemctl reload nginx
-                }
 
                 cd /var/cache/ynh-dev/yunohost-admin/
 
@@ -364,62 +356,6 @@ EOF
                     npm ci --no-bin-links
                 fi
 
-                info "Tweaking nginx and ssowat for yunohost admin dev..."
-
-                cat <<EOF > /etc/nginx/conf.d/yunohost_admin.conf.inc
-location /yunohost/admin {
-    proxy_pass        http://localhost:8080/yunohost/admin;
-    proxy_redirect    off;
-    proxy_set_header  Host \$host;
-    proxy_set_header  X-Real-IP \$remote_addr;
-    proxy_set_header  X-Forwarded-Proto \$scheme;
-    proxy_set_header  X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_set_header  X-Forwarded-Host \$server_name;
-    proxy_set_header  X-Forwarded-Port \$server_port;
-
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade \$http_upgrade;
-    proxy_set_header Connection "upgrade";
-}
-location /sockjs-node {
-    proxy_pass        http://localhost:8080/sockjs-node;
-    proxy_redirect    off;
-    proxy_set_header  Host \$host;
-    proxy_set_header  X-Real-IP \$remote_addr;
-    proxy_set_header  X-Forwarded-Proto \$scheme;
-    proxy_set_header  X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_set_header  X-Forwarded-Host \$server_name;
-    proxy_set_header  X-Forwarded-Port \$server_port;
-
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade \$http_upgrade;
-    proxy_set_header Connection "upgrade";
-}
-EOF
-
-
-    # If ssowat's conf persistent ~empty, allow ourselves to add the rule for /sockjs-node for hot-reload
-    if [ ! -e /etc/ssowat/conf.json.persistent ] || [ -z "$(cat /etc/ssowat/conf.json.persistent | tr -d '{} \n')" ]
-    then
-        cat <<EOF >/etc/ssowat/conf.json.persistent
-{
-    "permissions": {
-        "webadminhotreload": {
-            "auth_header": false,
-            "label": "Core permissions - skipped",
-            "public": true,
-            "show_tile": false,
-            "uris": [
-                "re:^[^/]*/sockjs-node",
-            ],
-            "users": []
-        }
-    }
-}
-EOF
-    fi
-
-                systemctl reload nginx
                 cd /ynh-dev/yunohost-admin/app/
                 info "Now running 'npm run serve'"
                 npm run serve
