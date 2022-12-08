@@ -308,10 +308,10 @@ function use_git()
 
                 cd /var/cache/ynh-dev/yunohost-admin/
 
-                # Create .env file with the vm ip
-                # Will be used by webpack-dev-server to proxy api requests.
+                # Inject container ip in .env file
+                # Used by vite to expose itself on network and proxy api requests.
                 IP=$(hostname -I | tr ' ' '\n' | grep "\.")
-                echo "VUE_APP_IP=$IP" > .env
+                echo "VITE_IP=$IP" > .env
 
                 # Allow port 8080 in config file or else the dev server will stop working after postinstall
                 if [[ ! -e /etc/yunohost/installed ]]
@@ -357,8 +357,8 @@ EOF
                 fi
 
                 cd /ynh-dev/yunohost-admin/app/
-                info "Now running 'npm run serve'"
-                npm run serve
+                info "Now running 'npm run dev'"
+                npm run dev
                 ;;
             *)
                 error "Invalid package '${PACKAGES[i]}': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin' or nothing for all"
