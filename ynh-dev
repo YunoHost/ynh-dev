@@ -353,6 +353,22 @@ EOF
                 info "Now running 'npm run dev'"
                 npm run dev
                 ;;
+            yunohost-admin-build)
+
+              if [[ ! -e "/usr/share/yunohost/admin-bkp" ]]
+              then
+                info "Backuping base yunohost-admin sources"
+                mv /usr/share/yunohost/admin /usr/share/yunohost/admin-bkp
+              fi
+
+              cd /ynh-dev/yunohost-admin/app
+              npm run build
+
+              create_sym_link "/ynh-dev/yunohost-admin/app/dist" "/usr/share/yunohost/admin"
+
+              IP=$(hostname -I | tr ' ' '\n' | grep "\.")
+              success "App builded and available at https://$IP/yunohost/admin"
+            ;;
             *)
                 error "Invalid package '${PACKAGES[i]}': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin' or nothing for all"
                 ;;
