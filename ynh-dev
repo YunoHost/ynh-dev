@@ -334,8 +334,7 @@ EOF
                 then
                   info "Installing node v14..."
                   curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
-                  apt install nodejs
-                  apt autoremove
+                  apt install nodejs -y
                   # to return to nodejs debian version
                   # apt purge nodejs && rm -r /etc/apt/sources.list.d/nodesource.list && apt install nodejs
                 fi
