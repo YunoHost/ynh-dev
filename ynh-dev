@@ -19,11 +19,13 @@ function show_usage() {
   test [PKG]      Deploy, update and run tests for some packages
                   Tests for single modules and functions can ran with
                   e.g. ./ynh-dev test yunohost/appurl:urlavailable
-  catalog 
+  catalog
       build       Rebuild the custom catalog
       add         Add the custom catalog in Yunohost catalog list
       override    Override default catalog with the custom catalog
       reset       Reset the catalog list to Yunohost's default
+
+  rebuild-api-doc   Rebuild the API swagger doc
 EOF
 }
 
@@ -48,6 +50,8 @@ function main()
         test|--test)               run_tests      $ARGUMENTS ;;
 
         catalog|--catalog)         catalog        $ARGUMENTS ;;
+
+        rebuild-api-doc|--rebuild-api-doc)   rebuild_api_doc   $ARGUMENTS ;;
 
         *)              critical "Unknown action ${ACTION}." ;;
     esac
@@ -525,5 +529,27 @@ function catalog()
             ;;
     esac
 }
+
+function rebuild_api_doc()
+{
+    test -d yunohost || critical "Expected to find a 'yunohost' folder ?"
+
+    cd yunohost/doc
+
+    if ! test -d swagger
+    then
+        # Download swagger ui
+        info "Downloading swagger UI"
+        curl -L https://github.com/swagger-api/swagger-ui/archive/refs/tags/v4.15.5.tar.gz | tar -xvz swagger-ui-4.15.5/dist/;
+        mv swagger-ui-4.15.5/dist/ swagger
+        rmdir swagger-ui-4.15.5
+    fi
+
+    info "Rebuild swagger json/js according to actionsmap"
+    python3 generate_api_doc.py
+    success "You should now open yunohost/doc/api.html using your favorite browser"
+}
+
+
 
 main $@
