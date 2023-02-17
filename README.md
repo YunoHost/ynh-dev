@@ -182,9 +182,13 @@ This should automatically download from `devbaseimgs.yunohost.org` a pre-build y
 
 After starting the LXC, your terminal will automatically be attached to it. If you later disconnect from the LXC, you can go back in with `./ynh-dev attach`. Later, you might want to destroy the LXC. You can do so with `./ynh-dev destroy`.
 
+If you container **doesn't have an ip address nor access to internet**, this is likely because you either have a conflict with another virtualization system or that a program running on the host is using the port 53 and therefore prevent LXD's dnsmasq to run correctly (as stated before in the setup section.)
+
 ## 3. Development and container testing
 
 After SSH-ing inside the container, you should notice that the *directory* `/ynh-dev` is a shared folder with your host. In particular, it contains the various git clones `yunohost`, `yunohost-admin` and so on - as well as the `./ynh-dev` script itself.
+
+**Most of the time, the first thing you'll want to do is to start by running `yunohost tools postinstall` as the first command** (except if you are working on something that happens before the postinstall).
 
 Inside the container, `./ynh-dev` can be used to link the git clones living in the host to the code being ran inside the container.
 
