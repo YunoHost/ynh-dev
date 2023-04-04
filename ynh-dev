@@ -304,26 +304,18 @@ function use_git()
                 ;;
             yunohost-admin)
 
-                #rm -r /var/cache/ynh-dev/yunohost-admin
                 mkdir -p /var/cache/ynh-dev/yunohost-admin/
                 create_sym_link "/ynh-dev/yunohost-admin/app/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
                 create_sym_link "/var/cache/ynh-dev/yunohost-admin/node_modules" "/ynh-dev/yunohost-admin/app/node_modules"
                 create_sym_link "/ynh-dev/yunohost-admin/app/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
                 create_sym_link "/ynh-dev/yunohost-admin/app/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
-                mv "/etc/nginx/conf.d/yunohost_admin.conf.inc" "/etc/nginx/conf.d/yunohost_admin.conf.inc.bkp"
-                trap 'on_exit' exit
-                on_exit()
-                {
-                    mv "/etc/nginx/conf.d/yunohost_admin.conf.inc.bkp" "/etc/nginx/conf.d/yunohost_admin.conf.inc"
-                    systemctl reload nginx
-                }
 
                 cd /var/cache/ynh-dev/yunohost-admin/
 
-                # Create .env file with the vm ip
-                # Will be used by webpack-dev-server to proxy api requests.
+                # Inject container ip in .env file
+                # Used by vite to expose itself on network and proxy api requests.
                 IP=$(hostname -I | tr ' ' '\n' | grep "\.")
-                echo "VUE_APP_IP=$IP" > .env
+                echo "VITE_IP=$IP" > .env
 
                 # Allow port 8080 in config file or else the dev server will stop working after postinstall
                 if [[ ! -e /etc/yunohost/installed ]]
@@ -341,22 +333,22 @@ with open(setting_file) as f:
 EOF
                 fi
 
-                # Install npm if needed
-                if [[ ! -e "/var/cache/ynh-dev/yunohost-admin/node_modules/vue" ]]
+                # Vite require node v14 to parse modern syntax
+                if [[ ! $(node -v) == v14* ]]
                 then
-                    info "Installing dependencies to develop in yunohost-admin ..."
                     DISTRO="$(lsb_release -s -c)"
                     if [ "$DISTRO" == "buster" ]; then
+                        info "Installing node v14..."
                         KEYRING=/usr/share/keyrings/nodesource.gpg
                         curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | sudo tee "$KEYRING" >/dev/null
                         gpg --no-default-keyring --keyring "$KEYRING" --list-keys
-                        VERSION=node_8.x
-                        KEYRING=/usr/share/keyrings/nodesource.gpg
+                        VERSION=node_14.x
                         echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee /etc/apt/sources.list.d/nodesource.list
                     fi
                     apt-get update
-                    apt install nodejs npm -y
-                    npm install -g npm@6
+                    apt install nodejs -y
+                    # to return to nodejs debian version
+                    # apt purge nodejs && rm -r /etc/apt/sources.list.d/nodesource.list && apt install nodejs
                 fi
 
                 # Install dependencies with npm install (or rather npm ci)
@@ -368,68 +360,24 @@ EOF
                     npm ci --no-bin-links
                 fi
 
-                info "Tweaking nginx and ssowat for yunohost admin dev..."
-
-                cat <<EOF > /etc/nginx/conf.d/yunohost_admin.conf.inc
-location /yunohost/admin {
-    proxy_pass        http://localhost:8080/yunohost/admin;
-    proxy_redirect    off;
-    proxy_set_header  Host \$host;
-    proxy_set_header  X-Real-IP \$remote_addr;
-    proxy_set_header  X-Forwarded-Proto \$scheme;
-    proxy_set_header  X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_set_header  X-Forwarded-Host \$server_name;
-    proxy_set_header  X-Forwarded-Port \$server_port;
-
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade \$http_upgrade;
-    proxy_set_header Connection "upgrade";
-}
-location /sockjs-node {
-    proxy_pass        http://localhost:8080/sockjs-node;
-    proxy_redirect    off;
-    proxy_set_header  Host \$host;
-    proxy_set_header  X-Real-IP \$remote_addr;
-    proxy_set_header  X-Forwarded-Proto \$scheme;
-    proxy_set_header  X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_set_header  X-Forwarded-Host \$server_name;
-    proxy_set_header  X-Forwarded-Port \$server_port;
-
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade \$http_upgrade;
-    proxy_set_header Connection "upgrade";
-}
-EOF
-
-
-    # If ssowat's conf persistent ~empty, allow ourselves to add the rule for /sockjs-node for hot-reload
-    if [ ! -e /etc/ssowat/conf.json.persistent ] || [ -z "$(cat /etc/ssowat/conf.json.persistent | tr -d '{} \n')" ]
-    then
-        cat <<EOF >/etc/ssowat/conf.json.persistent
-{
-    "permissions": {
-        "webadminhotreload": {
-            "auth_header": false,
-            "label": "Core permissions - skipped",
-            "public": true,
-            "show_tile": false,
-            "uris": [
-                "re:^[^/]*/sockjs-node",
-            ],
-            "users": []
-        }
-    }
-}
-EOF
-    fi
-
-                systemctl reload nginx
                 cd /ynh-dev/yunohost-admin/app/
-                info "Now running 'npm run serve'"
-                npm run serve
+                info "Now running 'npm run dev'"
+                npm run dev
                 ;;
-            *)
-                error "Invalid package '${PACKAGES[i]}': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin' or nothing for all"
+            yunohost-admin-build)
+                if [[ ! -e "/usr/share/yunohost/admin-bkp" ]]
+                then
+                    info "Backuping base yunohost-admin sources"
+                    mv /usr/share/yunohost/admin /usr/share/yunohost/admin-bkp
+                fi
+
+                cd /ynh-dev/yunohost-admin/app
+                npm run build
+
+                create_sym_link "/ynh-dev/yunohost-admin/app/dist" "/usr/share/yunohost/admin"
+
+                IP=$(hostname -I | tr ' ' '\n' | grep "\.")
+                success "App builded and available at https://$IP/yunohost/admin"
                 ;;
             *)
                 error "Invalid package '${PACKAGES[i]}': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin' or nothing for all"
