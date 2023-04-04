@@ -332,11 +332,19 @@ EOF
                 # Vite require node v14 to parse modern syntax
                 if [[ ! $(node -v) == v14* ]]
                 then
-                  info "Installing node v14..."
-                  curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
-                  apt install nodejs -y
-                  # to return to nodejs debian version
-                  # apt purge nodejs && rm -r /etc/apt/sources.list.d/nodesource.list && apt install nodejs
+                    DISTRO="$(lsb_release -s -c)"
+                    if [ "$DISTRO" == "buster" ]; then
+                        info "Installing node v14..."
+                        KEYRING=/usr/share/keyrings/nodesource.gpg
+                        curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | sudo tee "$KEYRING" >/dev/null
+                        gpg --no-default-keyring --keyring "$KEYRING" --list-keys
+                        VERSION=node_14.x
+                        echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+                    fi
+                    apt-get update
+                    apt install nodejs -y
+                    # to return to nodejs debian version
+                    # apt purge nodejs && rm -r /etc/apt/sources.list.d/nodesource.list && apt install nodejs
                 fi
 
                 # Install dependencies with npm install (or rather npm ci)
