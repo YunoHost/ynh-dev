@@ -6,10 +6,10 @@ function show_usage() {
   ${BLUE}On the host, to manage the LXC${NORMAL}
   ${BLUE}==============================${NORMAL}
 
-  start [DIST] [NAME] [YNH_BRANCH]   (Create and) starts a LXC (DIST=bullseye, NAME=ynh-dev and YNH_BRANCH=unstable by default)
-  attach [DIST] [NAME] [YNH_BRANCH] Attach an already started LXC (DIST=bullseye, NAME=ynh-dev and YNH_BRANCH=unstable by default)
-  destroy [DIST] [NAME] [YNH_BRANCH] Destroy the ynh-dev LXC (DIST=bullseye, NAME=ynh-dev and YNH_BRANCH=unstable by default)
-  rebuild [DIST] [NAME] [YNH_BRANCH] Rebuild a fresh, up-to-date box (DIST=bullseye, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  start [DIST] [NAME] [YNH_BRANCH]   (Create and) starts a LXC (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  attach [DIST] [NAME] [YNH_BRANCH] Attach an already started LXC (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  destroy [DIST] [NAME] [YNH_BRANCH] Destroy the ynh-dev LXC (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  rebuild [DIST] [NAME] [YNH_BRANCH] Rebuild a fresh, up-to-date box (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
 
   ${BLUE}Inside the dev instance${NORMAL}
   ${BLUE}=======================${NORMAL}
@@ -170,7 +170,7 @@ function start_ynhdev()
 {
     check_lxd_setup
 
-    local DIST=${1:-bullseye}
+    local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
@@ -196,7 +196,7 @@ function start_ynhdev()
 function attach_ynhdev()
 {
     check_lxd_setup
-    local DIST=${1:-bullseye}
+    local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
     sudo lxc start $BOX 2>/dev/null || true
@@ -206,7 +206,7 @@ function attach_ynhdev()
 function destroy_ynhdev()
 {
     check_lxd_setup
-    local DIST=${1:-bullseye}
+    local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
     sudo lxc stop $BOX
@@ -217,7 +217,7 @@ function rebuild_ynhdev()
 {
     check_lxd_setup
 
-    local DIST=${1:-bullseye}
+    local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
