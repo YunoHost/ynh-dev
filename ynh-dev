@@ -108,6 +108,10 @@ function assert_inside_vm() {
     [ -d /etc/yunohost ] || critical "There's no YunoHost in there. Are you sure that you are inside the container ?"
 }
 
+function assert_yunohost_is_installed() {
+    [ -e /etc/yunohost/installed ] || critical "YunoHost is not yet properly installed. Rerun this after post-install."
+}
+
 function create_sym_link() {
     local DEST=$1
     local LINK=$2
@@ -115,6 +119,30 @@ function create_sym_link() {
     [ -L "$LINK" ] || rm -rf $LINK
     # Symlink from Git repository
     ln -sfn $DEST $LINK
+}
+
+function prepare_cache_and_deps() {
+    local DEV_PATH="$1"
+    local CACHE_PATH="$2"
+
+    mkdir -p "$CACHE_PATH"
+    # create_sym_link "$DEV_PATH/.env" "$CACHE_PATH/.env"
+    create_sym_link "$CACHE_PATH/node_modules" "$DEV_PATH/node_modules"
+    create_sym_link "$DEV_PATH/package.json" "$CACHE_PATH/package.json"
+    create_sym_link "$DEV_PATH/yarn.lock" "$CACHE_PATH/yarn.lock"
+
+    # install yarn if not already
+    if [[ $(dpkg-query -W -f='${Status}' yarn 2>/dev/null | grep -c "ok installed") -eq 0 ]];
+    then
+        info "Installing yarn…"
+        apt install yarn
+    fi
+
+    pushd "$CACHE_PATH"
+    # Install dependencies with yarn forced to lock file versions (equivalent to `npm ci`)
+    info "Installing dependencies ... (this may take a while)"
+    yarn install --frozen-lockfile
+    popd
 }
 
 ##################################################################
@@ -352,6 +380,59 @@ EOF
 
                 IP=$(hostname -I | tr ' ' '\n' | grep "\.")
                 success "App builded and available at https://$IP/yunohost/admin"
+                ;;
+            yunohost-portal)
+                assert_yunohost_is_installed
+                # open firewall port 3000 (dev server) and 24678 (dev server websocket)
+                yunohost firewall allow TCP 3000 -4 --no-reload
+                yunohost firewall allow TCP 24678 -4
+
+                local DEV_PATH="/ynh-dev/yunohost-portal"
+                local CACHE_PATH="/var/cache/ynh-dev/yunohost-portal"
+
+                if [[ ! -e "$DEV_PATH/.env" ]];
+                then
+                    local IP=$(hostname -I | tr ' ' '\n' | grep "\.")
+                    local MAIN_DOMAIN=$(yunohost domain main-domain | cut -d " " -f2)
+
+                    critical "There's no 'yunohost-portal/.env' file.
+
+Based on your current main domain (but you can use any domain added on your YunoHost instance) the file should look like:
+NUXT_PUBLIC_API_IP=\"$MAIN_DOMAIN\"
+
+If not already, add your instance's IP into '/etc/yunohost/.portal-api-allowed-cors-origins' to avoid CORS issues and make sure to add a redirection in your host's '/etc/hosts' which, based on your instance ip and main domain, would be:
+$IP $MAIN_DOMAIN"
+                fi
+
+                prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH"
+
+                cd "$DEV_PATH"
+                info "Now running dev server"
+                yarn run dev
+                ;;
+            yunohost-portal-build)
+                assert_yunohost_is_installed
+
+                local DEV_PATH="/ynh-dev/yunohost-portal"
+                local CACHE_PATH="/var/cache/ynh-dev/yunohost-portal"
+                local SOURCE_PATH="/usr/share/yunohost/portal"
+
+                if [[ ! -e "$SOURCE_PATH-bkp" ]]
+                then
+                    info "Backuping system yunohost-portal sources…"
+                    mv "$SOURCE_PATH" "$SOURCE_PATH-bkp"
+                fi
+
+                prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH"
+
+                cd "$DEV_PATH"
+                yarn generate
+
+                create_sym_link "$DEV_PATH/.output/public" "$SOURCE_PATH"
+
+                local IP=$(hostname -I | tr ' ' '\n' | grep "\.")
+                local MAIN_DOMAIN=$(yunohost domain main-domain | cut -d " " -f2)
+                success "App builded and available at http://$MAIN_DOMAIN/yunohost/sso or http://$IP/yunohost/sso"
                 ;;
             *)
                 error "Invalid package '${PACKAGES[i]}': correct arguments are 'yunohost', 'ssowat', 'moulinette', 'yunohost-admin' or nothing for all"
