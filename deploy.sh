@@ -8,6 +8,7 @@ git clone https://github.com/YunoHost/moulinette
 git clone https://github.com/YunoHost/yunohost
 git clone https://github.com/YunoHost/yunohost-admin
 git clone https://github.com/YunoHost/SSOwat ssowat
+git clone https://github.com/YunoHost/yunohost-portal
 
 mkdir -p apps
 
