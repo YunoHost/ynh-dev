@@ -225,19 +225,19 @@ function rebuild_ynhdev()
 
     set -x
     sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
-    if [[ ${ARCH} eq "armhf" ]]
+    if [[ ${ARCH} -eq "armhf" ]] ;
+    then
         sudo apt install debootstrap -y
         sudo mkdir -p ~/lxc-images/debian-$DIST
         sudo debootstrap $DIST ~/lxc-images/debian-$DIST
         sudo tar -cvzf rootfs.tar.gz -C ~/lxc-images/debian-$DIST
         sudo cat << EOF > ~/lxc-images/debian-$DIST/metadata.yaml
-architecture: "armhf"
 creation_date: $(date +%s)
 properties:
-architecture: "armhf"
-description: "Debian ($DIST)"
+architecture: "$ARCH"
+description: "Yunohost Debian ($DIST)"
 os: "debian"
-release: "bullseye"
+release: "$DIST"
 EOF
         sudo tar -cvzf ~/lxc-images/debian-$DIST/metadata.tar.gz ~/lxc-images/debian-$DIST/metadata.yaml
         sudo lxc image import ~/lxc-images/debian-$DIST/metadata.tar.gz ~/lxc-images/debian-$DIST/rootfs.tar.gz --alias $BOX-rebuild
