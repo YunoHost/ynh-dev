@@ -226,22 +226,22 @@ function rebuild_ynhdev()
     set -x
     sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
     if [[ ${ARCH} eq "armhf" ]]
-        apt install debootstrap
-        mkdir ~/lxc-images/debian-bullseye
-        debootstrap bullseye ~/lxc-images/debian-bullseye
-        tar -cvzf rootfs.tar.gz -C ~/lxc-images/debian-bullseye
-        cat << EOF > ~/lxc-images/debian-bullseye/metadata.yaml
+        sudo apt install debootstrap
+        sudo mkdir -p ~/lxc-images/debian-$DIST
+        sudo debootstrap $DIST ~/lxc-images/debian-$DIST
+        sudo tar -cvzf rootfs.tar.gz -C ~/lxc-images/debian-$DIST
+        sudo cat << EOF > ~/lxc-images/debian-$DIST/metadata.yaml
 architecture: "armhf"
-creation_date: ${date +%s}
+creation_date: $(date +%s)
 properties:
 architecture: "armhf"
-description: "Debian Oldstable (bullseye)"
+description: "Debian ($DIST)"
 os: "debian"
 release: "bullseye"
 EOF
-        tar -cvzf ~/lxc-images/debian-bullseye/metadata.tar.gz ~/lxc-images/debian-bullseye/metadata.yaml
-        lxc image import metadata.tar.gz rootfs.tar.gz --alias $BOX-base
-        lxc launch $BOX-base ynh
+        sudo tar -cvzf ~/lxc-images/debian-$DIST/metadata.tar.gz ~/lxc-images/debian-$DIST/metadata.yaml
+        sudo lxc image import ~/lxc-images/debian-$DIST/metadata.tar.gz ~/lxc-images/debian-$DIST/rootfs.tar.gz --alias $BOX-rebuild
+        sudo lxc launch $BOX-rebuild $BOX-rebuild -c security.nesting=true -c security.privileged=true
     else
         sudo lxc launch images:debian/$DIST/$ARCH $BOX-rebuild  -c security.nesting=true -c security.privileged=true
     fi
