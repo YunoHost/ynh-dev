@@ -173,12 +173,13 @@ function start_ynhdev()
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
+    local ARCH=$(dpkg --print-architecture)
 
     if ! sudo lxc info $BOX &>/dev/null
     then
         if ! sudo lxc image info $BOX-base &>/dev/null
         then
-            LXC_BASE="ynh-dev-$DIST-amd64-$YNH_BRANCH-base"
+            LXC_BASE="ynh-dev-$DIST-$ARCH-$YNH_BRANCH-base"
             sudo lxc launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true \
             || critical "Failed to launch the container ?"
         else
@@ -220,10 +221,30 @@ function rebuild_ynhdev()
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
+    local ARCH=$(dpkg --print-architecture)
 
     set -x
     sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
-    sudo lxc launch images:debian/$DIST/amd64 $BOX-rebuild  -c security.nesting=true -c security.privileged=true
+    if [[ ${ARCH} eq "armhf" ]]
+        apt install debootstrap
+        mkdir ~/lxc-images/debian-bullseye
+        debootstrap bullseye ~/lxc-images/debian-bullseye
+        tar -cvzf rootfs.tar.gz -C ~/lxc-images/debian-bullseye
+        cat << EOF > ~/lxc-images/debian-bullseye/metadata.yaml
+architecture: "armhf"
+creation_date: ${date +%s}
+properties:
+architecture: "armhf"
+description: "Debian Oldstable (bullseye)"
+os: "debian"
+release: "bullseye"
+EOF
+        tar -cvzf ~/lxc-images/debian-bullseye/metadata.tar.gz ~/lxc-images/debian-bullseye/metadata.yaml
+        lxc image import metadata.tar.gz rootfs.tar.gz --alias $BOX-base
+        lxc launch $BOX-base ynh
+    else
+        sudo lxc launch images:debian/$DIST/$ARCH $BOX-rebuild  -c security.nesting=true -c security.privileged=true
+    fi
     sleep 5
     sudo lxc exec $BOX-rebuild -- apt install curl -y
     INSTALL_SCRIPT="https://install.yunohost.org/$DIST"
