@@ -439,13 +439,13 @@ function run_tests()
                 if ! type "pytest" > /dev/null 2>&1; then
                     info "> Installing pytest ..."
                     apt-get install python3-pip -y
-                    pip3 install pytest pytest-sugar
+                    pip3 install pytest pytest-sugar --break-system-packages
                 fi
                 for DEP in "pytest-mock requests-mock mock"
                 do
                     if [ -z "$(pip3 show $DEP)" ]; then
                         info "Installing $DEP with pip3"
-                        pip3 install $DEP
+                        pip3 install $DEP --break-system-packages
                     fi
                 done
 
