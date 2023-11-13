@@ -239,7 +239,7 @@ description: "Yunohost Debian ($DIST)"
 os: "debian"
 release: "$DIST"
 EOF
-        sudo tar -cvzf ~/lxc-images/debian-$DIST/metadata.tar.gz ~/lxc-images/debian-$DIST/metadata.yaml
+        sudo tar -cvzf ~/lxc-images/debian-$DIST/metadata.tar.gz -C ~/lxc-images/debian-$DIST/ metadata.yaml
         sudo lxc image import ~/lxc-images/debian-$DIST/metadata.tar.gz ~/lxc-images/debian-$DIST/rootfs.tar.gz --alias $BOX-rebuild
         sudo lxc launch $BOX-rebuild $BOX-rebuild -c security.nesting=true -c security.privileged=true
     else
