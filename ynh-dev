@@ -135,7 +135,7 @@ function prepare_cache_and_deps() {
     if [[ $(dpkg-query -W -f='${Status}' yarn 2>/dev/null | grep -c "ok installed") -eq 0 ]];
     then
         info "Installing yarn…"
-        apt install yarnpkg
+        apt install yarn
     fi
 
     pushd "$CACHE_PATH"
