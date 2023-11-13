@@ -230,7 +230,7 @@ function rebuild_ynhdev()
         sudo apt install debootstrap -y
         sudo mkdir -p ~/lxc-images/debian-$DIST/img
         sudo debootstrap $DIST ~/lxc-images/debian-$DIST/img
-        sudo tar -cvzf ~/lxc-images/debian-$DIST/rootfs.tar.gz -C ~/lxc-images/debian-$DIST/img
+        sudo tar -czf ~/lxc-images/debian-$DIST/rootfs.tar.gz -C ~/lxc-images/debian-$DIST/img
         sudo cat << EOF > ~/lxc-images/debian-$DIST/metadata.yaml
 creation_date: $(date +%s)
 properties:
@@ -239,11 +239,18 @@ description: "Yunohost Debian ($DIST)"
 os: "debian"
 release: "$DIST"
 EOF
-        sudo tar -cvzf ~/lxc-images/debian-$DIST/metadata.tar.gz -C ~/lxc-images/debian-$DIST/ metadata.yaml
+        sudo tar -czf ~/lxc-images/debian-$DIST/metadata.tar.gz -C ~/lxc-images/debian-$DIST/ metadata.yaml
         sudo lxc image import ~/lxc-images/debian-$DIST/metadata.tar.gz ~/lxc-images/debian-$DIST/rootfs.tar.gz --alias $BOX-rebuild
         sudo lxc launch $BOX-rebuild $BOX-rebuild -c security.nesting=true -c security.privileged=true
+        sudo lxc exec $BOX-rebuild -- dhclient
+        sudo lxc exec $BOX-rebuild -- cat << EOF > /etc/network/interfaces.d/eth0
+auto eth0
+iface eth0 inet dhcp
+allow-hotplug eth0
+EOF
+
     else
-        sudo lxc launch images:debian/$DIST/$ARCH $BOX-rebuild  -c security.nesting=true -c security.privileged=true
+        sudo lxc launch images:debian/$DIST/$ARCH $BOX-rebuild -c security.nesting=true -c security.privileged=true
     fi
     sleep 5
     sudo lxc exec $BOX-rebuild -- apt install curl -y
