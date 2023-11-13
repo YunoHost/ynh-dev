@@ -228,9 +228,9 @@ function rebuild_ynhdev()
     if [[ ${ARCH} -eq "armhf" ]] ;
     then
         sudo apt install debootstrap -y
-        sudo mkdir -p ~/lxc-images/debian-$DIST
-        sudo debootstrap $DIST ~/lxc-images/debian-$DIST
-        sudo tar -cvzf rootfs.tar.gz -C ~/lxc-images/debian-$DIST
+        sudo mkdir -p ~/lxc-images/debian-$DIST/img
+        sudo debootstrap $DIST ~/lxc-images/debian-$DIST/img
+        sudo tar -cvzf ~/lxc-images/debian-$DIST/rootfs.tar.gz -C ~/lxc-images/debian-$DIST/img
         sudo cat << EOF > ~/lxc-images/debian-$DIST/metadata.yaml
 creation_date: $(date +%s)
 properties:
