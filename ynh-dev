@@ -418,7 +418,7 @@ $IP $MAIN_DOMAIN"
 
                 cd "$DEV_PATH"
                 info "Now running dev server"
-                yarn run dev
+                yarn dev --host
                 ;;
             yunohost-portal-build)
                 assert_yunohost_is_installed
