@@ -135,7 +135,7 @@ function prepare_cache_and_deps() {
     if [[ $(dpkg-query -W -f='${Status}' yarn 2>/dev/null | grep -c "ok installed") -eq 0 ]];
     then
         info "Installing yarn…"
-        apt install yarn
+        apt install yarnpkg
     fi
 
     pushd "$CACHE_PATH"
@@ -390,7 +390,7 @@ $IP $MAIN_DOMAIN"
 
                 cd "$DEV_PATH"
                 info "Now running dev server"
-                yarn run dev
+                yarn dev --host
                 ;;
             yunohost-portal-build)
                 assert_yunohost_is_installed
