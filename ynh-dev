@@ -243,12 +243,11 @@ EOF
         sudo lxc image import ~/lxc-images/debian-$DIST/metadata.tar.gz ~/lxc-images/debian-$DIST/rootfs.tar.gz --alias $BOX-rebuild
         sudo lxc launch $BOX-rebuild $BOX-rebuild -c security.nesting=true -c security.privileged=true
         sudo lxc exec $BOX-rebuild -- dhclient
-        sudo lxc exec $BOX-rebuild -- cat << EOF > /etc/network/interfaces.d/eth0
+        sudo lxc exec $BOX-rebuild -- bash -c "cat << EOF > /etc/network/interfaces.d/eth0
 auto eth0
 iface eth0 inet dhcp
 allow-hotplug eth0
-EOF
-
+EOF"
     else
         sudo lxc launch images:debian/$DIST/$ARCH $BOX-rebuild -c security.nesting=true -c security.privileged=true
     fi
