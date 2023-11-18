@@ -230,7 +230,7 @@ function rebuild_ynhdev()
         sudo apt install debootstrap -y
         sudo mkdir -p ~/lxc-images/debian-$DIST/img
         sudo debootstrap $DIST ~/lxc-images/debian-$DIST/img
-        sudo tar -czf ~/lxc-images/debian-$DIST/rootfs.tar.gz -C ~/lxc-images/debian-$DIST/img
+        sudo tar -czf ~/lxc-images/debian-$DIST/rootfs.tar.gz -C ~/lxc-images/debian-$DIST/img .
         sudo cat << EOF > ~/lxc-images/debian-$DIST/metadata.yaml
 creation_date: $(date +%s)
 properties:
