@@ -19,6 +19,7 @@ function show_usage() {
   test [PKG]      Deploy, update and run tests for some packages
                   Tests for single modules and functions can ran with
                   e.g. ./ynh-dev test yunohost/appurl:urlavailable
+  dev             Watch python files and restart yunohost-api and yunohost-portal-api when changes occur
   catalog
       build       Rebuild the custom catalog
       add         Add the custom catalog in Yunohost catalog list
@@ -47,6 +48,7 @@ function main()
 
         ip|--ip)                   show_vm_ip     $ARGUMENTS ;;
         use-git|--use-git)         use_git        $ARGUMENTS ;;
+        dev|--dev)                 dev            $ARGUMENTS ;;
         test|--test)               run_tests      $ARGUMENTS ;;
 
         catalog|--catalog)         catalog        $ARGUMENTS ;;
@@ -421,6 +423,27 @@ $IP $MAIN_DOMAIN"
                 ;;
         esac
     done
+}
+
+function dev()
+{
+    assert_inside_vm
+
+    which inotifywait &>/dev/null || critical "You should first run: apt install inotify-tools"
+
+    info "Now monitoring for changes in python files, restarting yunohost-api and yunohost-portal-api when changes occur!"
+
+    journalctl --no-pager --no-hostname -u yunohost-api -u yunohost-portal-api -n 0 -f &
+    JOURNALCTL_PID=$!
+
+    trap "kill $JOURNALCTL_PID; exit" SIGINT
+
+    while ! inotifywait -q -e modify /usr/lib/python3/dist-packages/{moulinette,yunohost}/{*.py,*/*.py}
+    do
+        info "Restarting services"
+        systemctl restart yunohost-api yunohost-portal-api
+    done
+
 }
 
 function run_tests()
