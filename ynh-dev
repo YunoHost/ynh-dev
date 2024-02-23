@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2155,SC2164,SC2034
 
 function show_usage() {
     cat <<EOF
@@ -21,10 +22,10 @@ function show_usage() {
                   e.g. ./ynh-dev test yunohost/appurl:urlavailable
   dev             Watch python files and restart yunohost-api and yunohost-portal-api when changes occur
   catalog
-      build       Rebuild the custom catalog
-      add         Add the custom catalog in Yunohost catalog list
-      override    Override default catalog with the custom catalog
-      reset       Reset the catalog list to Yunohost's default
+    .. build       Rebuild the custom catalog
+    .. add         Add the custom catalog in Yunohost catalog list
+    .. override    Override default catalog with the custom catalog
+    .. reset       Reset the catalog list to Yunohost's default
 
   rebuild-api-doc   Rebuild the API swagger doc
 EOF
@@ -33,27 +34,27 @@ EOF
 function main()
 {
     local ACTION="$1"
-    local ARGUMENTS="${@:2}"
+    local ARGUMENTS=("${@:2}")
 
     [ -z "$ACTION" ] && show_usage && exit 0
 
     case "${ACTION}" in
 
-        help|-h|--help)            show_usage     $ARGUMENTS ;;
+        help|-h|--help)            show_usage     "${ARGUMENTS[@]}" ;;
 
-        start|--start)             start_ynhdev   $ARGUMENTS ;;
-        attach|--attach)           attach_ynhdev  $ARGUMENTS ;;
-        destroy|--destroy)         destroy_ynhdev $ARGUMENTS ;;
-        rebuild|--rebuild)         rebuild_ynhdev $ARGUMENTS ;;
+        start|--start)             start_ynhdev   "${ARGUMENTS[@]}" ;;
+        attach|--attach)           attach_ynhdev  "${ARGUMENTS[@]}" ;;
+        destroy|--destroy)         destroy_ynhdev "${ARGUMENTS[@]}" ;;
+        rebuild|--rebuild)         rebuild_ynhdev "${ARGUMENTS[@]}" ;;
 
-        ip|--ip)                   show_vm_ip     $ARGUMENTS ;;
-        use-git|--use-git)         use_git        $ARGUMENTS ;;
-        dev|--dev)                 dev            $ARGUMENTS ;;
-        test|--test)               run_tests      $ARGUMENTS ;;
+        ip|--ip)                   show_vm_ip     "${ARGUMENTS[@]}" ;;
+        use-git|--use-git)         use_git        "${ARGUMENTS[@]}" ;;
+        dev|--dev)                 dev            "${ARGUMENTS[@]}" ;;
+        test|--test)               run_tests      "${ARGUMENTS[@]}" ;;
 
-        catalog|--catalog)         catalog        $ARGUMENTS ;;
+        catalog|--catalog)         catalog        "${ARGUMENTS[@]}" ;;
 
-        rebuild-api-doc|--rebuild-api-doc)   rebuild_api_doc   $ARGUMENTS ;;
+        rebuild-api-doc|--rebuild-api-doc)   rebuild_api_doc   "${ARGUMENTS[@]}" ;;
 
         *)              critical "Unknown action ${ACTION}." ;;
     esac
@@ -118,9 +119,9 @@ function create_sym_link() {
     local DEST=$1
     local LINK=$2
     # Remove current sources if not a symlink
-    [ -L "$LINK" ] || rm -rf $LINK
+    [ -L "$LINK" ] || rm -rf "$LINK"
     # Symlink from Git repository
-    ln -sfn $DEST $LINK
+    ln -sfn "$DEST" "$LINK"
 }
 
 function prepare_cache_and_deps() {
@@ -140,11 +141,11 @@ function prepare_cache_and_deps() {
         apt install yarn
     fi
 
-    pushd "$CACHE_PATH"
+    pushd "$CACHE_PATH" || critical "Could not pushd $CACHE_PATH"
     # Install dependencies with yarn forced to lock file versions (equivalent to `npm ci`)
     info "Installing dependencies ... (this may take a while)"
     yarn install --frozen-lockfile
-    popd
+    popd || critical
 }
 
 ##################################################################
@@ -158,13 +159,13 @@ function check_lxd_setup()
         || critical "You need to have LXD installed for ynh-dev to be usable from the host machine. Refer to the README to know how to install it."
 
     # Check that we'll be able to use lxc/lxd using sudo (for which the PATH is defined in /etc/sudoers and probably doesn't include /snap/bin)
-    if [[ ! -e /usr/bin/lxc ]] && [[ ! -e /usr/bin/lxd ]] && [[ -e /snap ]]
-    then
-        [[ -e /usr/local/bin/lxc ]] && [[ -e /usr/local/bin/lxd ]] \
-            || critical "You might want to add lxc and lxd inside /usr/local/bin so that there's no tricky PATH issue with sudo. If you installed lxd/lxc with snapd, this should do the trick: sudo ln -s /snap/bin/lxc /usr/local/bin/lxc && sudo ln -s /snap/bin/lxd /usr/local/bin/lxd"
+    if [[ ! -e /usr/bin/lxc ]] && [[ ! -e /usr/bin/lxd ]] && [[ -e /snap ]]; then
+        if [[ -e /usr/local/bin/lxc ]] && [[ -e /usr/local/bin/lxd ]]; then
+            critical "You might want to add lxc and lxd inside /usr/local/bin so that there's no tricky PATH issue with sudo. If you installed lxd/lxc with snapd, this should do the trick: sudo ln -s /snap/bin/lxc /usr/local/bin/lxc && sudo ln -s /snap/bin/lxd /usr/local/bin/lxd"
+        fi
     fi
 
-    ip a | grep -q lx[cd]br0 \
+    ip a | grep -q 'lx[cd]br0' \
         || critical "There is no 'lxcbr0' or 'lxdbr0' interface... Did you ran 'lxd init' ?"
 }
 
@@ -176,17 +177,17 @@ function start_ynhdev()
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
-    if ! sudo lxc info $BOX &>/dev/null
+    if ! sudo lxc info "$BOX" &>/dev/null
     then
-        if ! sudo lxc image info $BOX-base &>/dev/null
+        if ! sudo lxc image info "$BOX-base" &>/dev/null
         then
             LXC_BASE="ynh-dev-$DIST-amd64-$YNH_BRANCH-base"
-            sudo lxc launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true \
+            sudo lxc launch "yunohost:$LXC_BASE" "$BOX" -c security.nesting=true -c security.privileged=true \
             || critical "Failed to launch the container ?"
         else
-            sudo lxc launch $BOX-base $BOX -c security.nesting=true -c security.privileged=true
+            sudo lxc launch "$BOX-base" "$BOX" -c security.nesting=true -c security.privileged=true
         fi
-        sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f $(pwd))"
+        sudo lxc config device add "$BOX" ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f "$(pwd)")"
         info "Now attaching to the container"
     else
         info "Attaching to existing container"
@@ -201,8 +202,8 @@ function attach_ynhdev()
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
-    sudo lxc start $BOX 2>/dev/null || true
-    sudo lxc exec $BOX --cwd /ynh-dev -- /bin/bash
+    sudo lxc start "$BOX" 2>/dev/null || true
+    sudo lxc exec "$BOX" --cwd /ynh-dev -- /bin/bash
 }
 
 function destroy_ynhdev()
@@ -211,8 +212,8 @@ function destroy_ynhdev()
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
-    sudo lxc stop $BOX
-    sudo lxc delete $BOX
+    sudo lxc stop "$BOX"
+    sudo lxc delete "$BOX"
 }
 
 function rebuild_ynhdev()
@@ -224,14 +225,14 @@ function rebuild_ynhdev()
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
     set -x
-    sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
-    sudo lxc launch images:debian/$DIST/amd64 $BOX-rebuild  -c security.nesting=true -c security.privileged=true
+    sudo lxc info "$BOX-rebuild" >/dev/null && sudo lxc delete "$BOX-rebuild" --force
+    sudo lxc launch "images:debian/$DIST/amd64" "$BOX-rebuild"  -c security.nesting=true -c security.privileged=true
     sleep 5
-    sudo lxc exec $BOX-rebuild -- apt install curl -y
+    sudo lxc exec "$BOX-rebuild" -- apt install curl -y
     INSTALL_SCRIPT="https://install.yunohost.org/$DIST"
-    sudo lxc exec $BOX-rebuild -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d $YNH_BRANCH"
-    sudo lxc stop $BOX-rebuild
-    sudo lxc publish $BOX-rebuild --alias $BOX-base
+    sudo lxc exec "$BOX-rebuild" -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d $YNH_BRANCH"
+    sudo lxc stop "$BOX-rebuild"
+    sudo lxc publish "$BOX-rebuild" --alias "$BOX-base"
     set +x
 }
 
@@ -246,8 +247,7 @@ function use_git()
     assert_inside_vm
     local PACKAGES=("$@")
 
-    if [ "$PACKAGES" = "" ]
-    then
+    if [[ "${#PACKAGES[@]}" == 0 ]]; then
         PACKAGES=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
     fi
 
@@ -281,17 +281,13 @@ function use_git()
                 ;;
             yunohost)
 
-                for FILE in $(ls /ynh-dev/yunohost/bin/)
-                do
+                for FILE in /ynh-dev/yunohost/bin/*; do
                     create_sym_link "/ynh-dev/yunohost/bin/$FILE" "/usr/bin/$FILE"
                 done
-
-                for FILE in $(ls /ynh-dev/yunohost/conf/metronome/modules/)
-                do
+                for FILE in /ynh-dev/yunohost/conf/metronome/modules/*; do
                     create_sym_link "/ynh-dev/yunohost/conf/metronome/modules/$FILE" "/usr/lib/metronome/modules/$FILE"
                 done
-                for FILE in $(ls /ynh-dev/yunohost/share/)
-                do
+                for FILE in /ynh-dev/yunohost/share/*; do
                     create_sym_link "/ynh-dev/yunohost/share/$FILE" "/usr/share/yunohost/$FILE"
                 done
                 create_sym_link "/ynh-dev/yunohost/hooks" "/usr/share/yunohost/hooks"
@@ -436,6 +432,7 @@ function dev()
     journalctl --no-pager --no-hostname -u yunohost-api -u yunohost-portal-api -n 0 -f &
     JOURNALCTL_PID=$!
 
+    # shellcheck disable=SC2064
     trap "kill $JOURNALCTL_PID; exit" SIGINT
 
     while ! inotifywait -q -e modify /usr/lib/python3/dist-packages/{moulinette,yunohost}/{*.py,*/*.py}
@@ -449,9 +446,8 @@ function dev()
 function run_tests()
 {
     assert_inside_vm
-    local PACKAGES="$@"
-    for PACKAGE in $PACKAGES;
-    do
+    local PACKAGES=("$@")
+    for PACKAGE in "${PACKAGES[@]}"; do
         TEST_FUNCTION=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $3}')
         TEST_MODULE=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $2}')
         PACKAGE=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $1}')
@@ -464,11 +460,10 @@ function run_tests()
                     apt-get install python3-pip -y
                     pip3 install pytest pytest-sugar --break-system-packages
                 fi
-                for DEP in "pytest-mock requests-mock mock"
-                do
-                    if [ -z "$(pip3 show $DEP)" ]; then
+                for DEP in pytest-mock requests-mock mock; do
+                    if [ -z "$(pip3 show "$DEP")" ]; then
                         info "Installing $DEP with pip3"
-                        pip3 install $DEP --break-system-packages
+                        pip3 install "$DEP" --break-system-packages
                     fi
                 done
 
@@ -560,4 +555,4 @@ function rebuild_api_doc()
 
 
 
-main $@
+main "$@"
