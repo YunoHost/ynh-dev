@@ -133,17 +133,41 @@ function prepare_cache_and_deps() {
     create_sym_link "$DEV_PATH/package.json" "$CACHE_PATH/package.json"
     create_sym_link "$DEV_PATH/yarn.lock" "$CACHE_PATH/yarn.lock"
 
+    # Vite require node v14 to parse modern syntax
+    local DISTRO="$(lsb_release -s -c)"
+    local YARN=$([ "$DISTRO" == "bullseye" ] && echo "yarnpkg" || echo "yarn")
+
+    if [ "$DISTRO" == "bullseye" ]
+    then
+        if [[ ! $(node -v) == v14* ]]
+        then
+            info "Installing node v14..."
+            KEYRING=/usr/share/keyrings/nodesource.gpg
+            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | sudo tee "$KEYRING" >/dev/null
+            gpg --no-default-keyring --keyring "$KEYRING" --list-keys
+            VERSION=node_14.x
+            echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+
+            apt update
+            apt install nodejs -y
+            # to return to nodejs debian version
+            # apt purge nodejs && rm -r /etc/apt/sources.list.d/nodesource.list && apt install nodejs
+            export NODE_PATH=/usr/lib/nodejs:/usr/share/nodejs
+        fi
+    fi
+
     # install yarn if not already
-    if [[ $(dpkg-query -W -f='${Status}' yarn 2>/dev/null | grep -c "ok installed") -eq 0 ]];
+    if [[ $(dpkg-query -W -f='${Status}' "$YARN" 2>/dev/null | grep -c "ok installed") -eq 0 ]];
     then
         info "Installing yarn…"
-        apt install yarn
+        apt update
+        apt install "$YARN"
     fi
 
     pushd "$CACHE_PATH"
     # Install dependencies with yarn forced to lock file versions (equivalent to `npm ci`)
     info "Installing dependencies ... (this may take a while)"
-    yarn install --frozen-lockfile
+    "$YARN" install --frozen-lockfile
     popd
 }
 
@@ -308,13 +332,13 @@ function use_git()
                 ;;
             yunohost-admin)
 
-                mkdir -p /var/cache/ynh-dev/yunohost-admin/
-                create_sym_link "/ynh-dev/yunohost-admin/app/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
-                create_sym_link "/var/cache/ynh-dev/yunohost-admin/node_modules" "/ynh-dev/yunohost-admin/app/node_modules"
-                create_sym_link "/ynh-dev/yunohost-admin/app/package.json" "/var/cache/ynh-dev/yunohost-admin/package.json"
-                create_sym_link "/ynh-dev/yunohost-admin/app/package-lock.json" "/var/cache/ynh-dev/yunohost-admin/package-lock.json"
+                local DEV_PATH="/ynh-dev/yunohost-admin/app"
+                local CACHE_PATH="/var/cache/ynh-dev/yunohost-admin"
 
-                cd /var/cache/ynh-dev/yunohost-admin/
+                create_sym_link "/ynh-dev/yunohost-admin/app/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
+                prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH"
+
+                cd "$CACHE_PATH"
 
                 # Inject container ip in .env file
                 # Used by vite to expose itself on network and proxy api requests.
@@ -337,18 +361,12 @@ with open(setting_file) as f:
 EOF
                 fi
 
-                # Install dependencies with npm install (or rather npm ci)
-                if [[ -e "/var/cache/ynh-dev/yunohost-admin/node_modules/vue" ]];
-                then
-                    info "NB: skipping npm ci because vue is already installed. If you want to upgrade/refresh npm dependencies, you should run 'npm ci' manually, or delete /var/cache/ynh-dev/yunohot-admin/node_modules."
-                else
-                    info "Installing npm dependencies ... (this may take a while)"
-                    npm ci --no-bin-links
-                fi
+                local DISTRO="$(lsb_release -s -c)"
+                local YARN=$([ "$DISTRO" == "bullseye" ] && echo "yarnpkg" || echo "yarn")
 
-                cd /ynh-dev/yunohost-admin/app/
-                info "Now running 'npm run dev'"
-                npm run dev
+                cd "$DEV_PATH"
+                info "Now running dev server"
+                "$YARN" dev --host
                 ;;
             yunohost-admin-build)
                 if [[ ! -e "/usr/share/yunohost/admin-bkp" ]]
@@ -357,8 +375,11 @@ EOF
                     mv /usr/share/yunohost/admin /usr/share/yunohost/admin-bkp
                 fi
 
+                local DISTRO="$(lsb_release -s -c)"
+                local YARN=$([ "$DISTRO" == "bullseye" ] && echo "yarnpkg" || echo "yarn")
+
                 cd /ynh-dev/yunohost-admin/app
-                npm run build
+                "$YARN" build
 
                 create_sym_link "/ynh-dev/yunohost-admin/app/dist" "/usr/share/yunohost/admin"
 
