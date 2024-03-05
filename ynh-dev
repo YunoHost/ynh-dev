@@ -11,8 +11,6 @@ function show_usage() {
   destroy [DIST] [NAME] [YNH_BRANCH] Destroy the ynh-dev box (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
   rebuild [DIST] [NAME] [YNH_BRANCH] Rebuild a fresh, up-to-date box (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
 
-  Pass YNHDEV_BACKEND=incus to use incus instead of lxd.
-
   ${BLUE}Inside the dev instance${NORMAL}
   ${BLUE}=======================${NORMAL}
 
@@ -153,23 +151,6 @@ function prepare_cache_and_deps() {
 #               Actions                                          #
 ##################################################################
 
-function check_lxd_setup()
-{
-    # Check lxd is installed somehow
-    [[ -e /snap/bin/lxd ]] || which lxd &>/dev/null \
-        || critical "You need to have LXD installed for ynh-dev to be usable from the host machine. Refer to the README to know how to install it."
-
-    # Check that we'll be able to use lxc/lxd using sudo (for which the PATH is defined in /etc/sudoers and probably doesn't include /snap/bin)
-    if [[ ! -e /usr/bin/lxc ]] && [[ ! -e /usr/bin/lxd ]] && [[ -e /snap ]]
-    then
-        [[ -e /usr/local/bin/lxc ]] && [[ -e /usr/local/bin/lxd ]] \
-            || critical "You might want to add lxc and lxd inside /usr/local/bin so that there's no tricky PATH issue with sudo. If you installed lxd/lxc with snapd, this should do the trick: sudo ln -s /snap/bin/lxc /usr/local/bin/lxc && sudo ln -s /snap/bin/lxd /usr/local/bin/lxd"
-    fi
-
-    ip a | grep -q lx[cd]br0 \
-        || critical "There is no 'lxcbr0' or 'lxdbr0' interface... Did you ran 'lxd init' ?"
-}
-
 function check_incus_setup()
 {
     # Check incus is installed somehow
@@ -194,43 +175,25 @@ function set_incus_remote()
     fi
 }
 
-function check_setup()
-{
-    if [[ "${YNHDEV_BACKEND:-}" == "incus" ]]; then
-        check_incus_setup
-    else
-        check_lxd_setup
-    fi
-}
-
-function backend()
-{
-    if [[ "${YNHDEV_BACKEND:-}" == "incus" ]]; then
-        incus "$@"
-    else
-        sudo lxc "$@"
-    fi
-}
-
 function start_ynhdev()
 {
-    check_setup
+    check_incus_setup
 
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
-    if ! backend info $BOX &>/dev/null
+    if ! incus info $BOX &>/dev/null
     then
-        if ! backend image info $BOX-base &>/dev/null
+        if ! incus image info $BOX-base &>/dev/null
         then
             LXC_BASE="ynh-dev-$DIST-amd64-$YNH_BRANCH-base"
-            backend launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true \
+            incus launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true \
             || critical "Failed to launch the container ?"
         else
-            backend launch $BOX-base $BOX -c security.nesting=true -c security.privileged=true
+            incus launch $BOX-base $BOX -c security.nesting=true -c security.privileged=true
         fi
-        backend config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f $(pwd))"
+        incus config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f $(pwd))"
         info "Now attaching to the container"
     else
         info "Attaching to existing container"
@@ -245,8 +208,8 @@ function attach_ynhdev()
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
-    backend start $BOX 2>/dev/null || true
-    backend exec $BOX --cwd /ynh-dev -- /bin/bash
+    incus start $BOX 2>/dev/null || true
+    incus exec $BOX --cwd /ynh-dev -- /bin/bash
 }
 
 function destroy_ynhdev()
@@ -255,8 +218,8 @@ function destroy_ynhdev()
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
-    backend stop $BOX
-    backend delete $BOX
+    incus stop $BOX
+    incus delete $BOX
 }
 
 function rebuild_ynhdev()
@@ -268,14 +231,14 @@ function rebuild_ynhdev()
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
     set -x
-    backend info $BOX-rebuild >/dev/null && backend delete $BOX-rebuild --force
-    backend launch images:debian/$DIST/amd64 $BOX-rebuild  -c security.nesting=true -c security.privileged=true
+    incus info $BOX-rebuild >/dev/null && incus delete $BOX-rebuild --force
+    incus launch images:debian/$DIST/amd64 $BOX-rebuild  -c security.nesting=true -c security.privileged=true
     sleep 5
-    backend exec $BOX-rebuild -- apt install curl -y
+    incus exec $BOX-rebuild -- apt install curl -y
     INSTALL_SCRIPT="https://install.yunohost.org/$DIST"
-    backend exec $BOX-rebuild -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d $YNH_BRANCH"
-    backend stop $BOX-rebuild
-    backend publish $BOX-rebuild --alias $BOX-base
+    incus exec $BOX-rebuild -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d $YNH_BRANCH"
+    incus stop $BOX-rebuild
+    incus publish $BOX-rebuild --alias $BOX-base
     set +x
 }
 

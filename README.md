@@ -51,11 +51,11 @@ your capacities and resources when aiming to setup a development environment.
 Yunohost can be developed on using a combination of the following technologies:
 
 - Git (any version is sufficient)
-- LXD (>= 2.x) (though only tested with 3.x for now)
+- Incus
 
 Because LXC are containers, they are typically lightweight and quick to start and stop.
 But you may find the initial setup complex (in particular network configuration).
-LXD makes managing an LXC ecosystem much simpler.
+Incus makes managing an LXC ecosystem much simpler.
 
 This local development path allows to work without an internet connection,
 but be aware that it will *not* allow you to easily test your email stack
@@ -86,7 +86,7 @@ Yunohost can be deployed as a typical install on a remote VPS. You can then use
 This method can potentially be faster than the local development environment
 assuming you have familiarity with working on VPS machines, if you always have
 internet connectivity when working, and if you're okay with paying a fee. It
-is also a good option if the required system dependencies (LXD/LXC, Vagrant,
+is also a good option if the required system dependencies (Incus/LXC, Vagrant,
 Virtualbox, etc.) are not easily available to you on your distribution.
 
 Please be aware that this method should **not** be used for a end-user facing
@@ -107,43 +107,38 @@ Here is the development flow:
 
 First you need to install the system dependencies.
 
-`ynh-dev` essentially requires Git and the LXD/LXC ecosystem. Be careful that
-**LXD can conflict with other installed virtualization technologies such as
+`ynh-dev` essentially requires Git and the Incus/LXC ecosystem. Be careful that
+**Incus/LXC can conflict with other installed virtualization technologies such as
 libvirt or vanilla LXCs**, especially because they all require a daemon based
 on DNSmasq and therefore require to listen on port 53.
 
-On a Debian-based system (regular Debian, Ubuntu, Mint ...), LXD can be
-installed using `snapd`. On other systems like Archlinux, you will probably also
-be able to install `snapd` using the system package manager (or even
-`lxd` directly).
+Incus can be installed with your Linux distribution package manager, such as:
 
 ```bash
-apt install git snapd
-sudo snap install core
-sudo snap install lxd
-
-## Adding lxc/lxd to /usr/local/bin to make sure we can use them easily even
-## with sudo for which the PATH is defined in /etc/sudoers and probably doesn't
-## include /snap/bin
-sudo ln -s /snap/bin/lxc /usr/local/bin/lxc
-sudo ln -s /snap/bin/lxd /usr/local/bin/lxd
+apt install incus
 ```
 
-Then you shall initialize LXD which will ask you a bunch of question. Usually
+You then need to add yourself in the incus-admin group, to run incus without sudo every time:
+
+```bash
+sudo usermod -a -G incus-admin $(whoami)
+```
+
+Then you shall initialize Incus which will ask you a bunch of question. Usually
 answering the default (just pressing enter) to all questions is fine.
 
 ```bash
-sudo lxd init
+incus admin init
 ```
 
 Pre-built images are centralized on `devbaseimgs.yunohost.org` and we'll download them from there to speed things up:
 
 ```bash
-sudo lxc remote add yunohost https://devbaseimgs.yunohost.org --public
+incus remote add yunohost https://devbaseimgs.yunohost.org --public
 ```
 
 On Archlinux-based distributions (Arch, Manjaro, ...) it was found that it's needed
-that LXC/LXD will throw some error about "newuidmap failed to write mapping / Failed
+that Incus/LXC will throw some error about "newuidmap failed to write mapping / Failed
 to set up id mapping" ... It can be [fixed with the following](https://discuss.linuxcontainers.org/t/solved-arch-linux-containers-only-run-when-security-privileged-true/4006/4) :
 
 ```bash
@@ -175,11 +170,17 @@ cd ynh-dev  # if not already done
 ./ynh-dev start
 ```
 
-This should automatically download from `devbaseimgs.yunohost.org` a pre-build ynh-dev LXC image running Yunohost unstable, and create a fresh container from it.
+This should automatically download from `devbaseimgs.yunohost.org` a pre-build
+ynh-dev LXC image running Yunohost unstable, and create a fresh container from it.
 
-After starting the LXC, your terminal will automatically be attached to it. If you later disconnect from the LXC, you can go back in with `./ynh-dev attach`. Later, you might want to destroy the LXC. You can do so with `./ynh-dev destroy`.
+After starting the LXC, your terminal will automatically be attached to it. If you
+later disconnect from the LXC, you can go back in with `./ynh-dev attach`. Later,
+you might want to destroy the LXC. You can do so with `./ynh-dev destroy`.
 
-If you container **doesn't have an ip address nor access to internet**, this is likely because you either have a conflict with another virtualization system or that a program running on the host is using the port 53 and therefore prevent LXD's dnsmasq to run correctly (as stated before in the setup section.)
+If you container **doesn't have an ip address nor access to internet**, this is
+likely because you either have a conflict with another virtualization system or
+that a program running on the host is using the port 53 and therefore prevent
+Incus's dnsmasq to run correctly (as stated before in the setup section.)
 
 ### 3. Development and container testing
 
@@ -215,7 +216,7 @@ Note that `./ynh-dev use-git yunohost-admin` has a particular behavior: it start
 
 ### Advanced: using snapshots
 
-You can check `lxc snapshot --help` to learn how to manage lxc snapshots.
+You can check `incus snapshot --help` to learn how to manage incus snapshots.
 
 ### Alternative: Using Only Virtualbox
 
@@ -226,9 +227,9 @@ for more.
 
 ### Troubleshooting
 
-If you experiment network issues with your lxd during rebuild container steps. Probably your container are not able to get a local IP with DHCP.
+If you experiment network issues with your incus during rebuild container steps. Probably your container are not able to get a local IP with DHCP.
 
-It could be due to bridge conflict (for example if you have lxc installed too) or dnsmasq port already used.
+It could be due to bridge conflict (for example if you have incus installed too) or dnsmasq port already used.
 
 This [ticket](https://github.com/YunoHost/issues/issues/1664) could help.
 
