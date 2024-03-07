@@ -199,12 +199,13 @@ function start_ynhdev()
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
+    local ARCH=$(dpkg --print-architecture)
 
     if ! sudo lxc info $BOX &>/dev/null
     then
         if ! sudo lxc image info $BOX-base &>/dev/null
         then
-            LXC_BASE="ynh-dev-$DIST-amd64-$YNH_BRANCH-base"
+            LXC_BASE="ynh-dev-$DIST-$ARCH-$YNH_BRANCH-base"
             sudo lxc launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true \
             || critical "Failed to launch the container ?"
         else
@@ -246,10 +247,36 @@ function rebuild_ynhdev()
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
+    local ARCH=$(dpkg --print-architecture)
 
     set -x
     sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
-    sudo lxc launch images:debian/$DIST/amd64 $BOX-rebuild  -c security.nesting=true -c security.privileged=true
+    if [[ ${ARCH} -eq "armhf" ]] ;
+    then
+        sudo apt install debootstrap -y
+        sudo mkdir -p ~/lxc-images/debian-$DIST/img
+        sudo debootstrap $DIST ~/lxc-images/debian-$DIST/img
+        sudo tar -czf ~/lxc-images/debian-$DIST/rootfs.tar.gz -C ~/lxc-images/debian-$DIST/img .
+        sudo cat << EOF > ~/lxc-images/debian-$DIST/metadata.yaml
+creation_date: $(date +%s)
+properties:
+architecture: "$ARCH"
+description: "Yunohost Debian ($DIST)"
+os: "debian"
+release: "$DIST"
+EOF
+        sudo tar -czf ~/lxc-images/debian-$DIST/metadata.tar.gz -C ~/lxc-images/debian-$DIST/ metadata.yaml
+        sudo lxc image import ~/lxc-images/debian-$DIST/metadata.tar.gz ~/lxc-images/debian-$DIST/rootfs.tar.gz --alias $BOX-rebuild
+        sudo lxc launch $BOX-rebuild $BOX-rebuild -c security.nesting=true -c security.privileged=true
+        sudo lxc exec $BOX-rebuild -- dhclient
+        sudo lxc exec $BOX-rebuild -- bash -c "cat << EOF > /etc/network/interfaces.d/eth0
+auto eth0
+iface eth0 inet dhcp
+allow-hotplug eth0
+EOF"
+    else
+        sudo lxc launch images:debian/$DIST/$ARCH $BOX-rebuild -c security.nesting=true -c security.privileged=true
+    fi
     sleep 5
     sudo lxc exec $BOX-rebuild -- apt install curl -y
     INSTALL_SCRIPT="https://install.yunohost.org/$DIST"

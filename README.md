@@ -116,7 +116,7 @@ libvirt or vanilla LXCs**, especially because they all require a daemon based
 on DNSmasq and therefore require to listen on port 53.
 
 On a Debian-based system (regular Debian, Ubuntu, Mint ...), LXD can be
-installed using `snapd`. On other systems like Archlinux, you will probably also
+installed using `snapd` or directly with `apt` since bookworm . On other systems like Archlinux, you will probably also
 be able to install `snapd` using the system package manager (or even
 `lxd` directly).
 
