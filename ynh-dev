@@ -3,12 +3,12 @@
 function show_usage() {
     cat <<EOF
 
-  ${BLUE}On the host, to manage the LXC${NORMAL}
-  ${BLUE}==============================${NORMAL}
+  ${BLUE}On the host, to manage boxes${NORMAL}
+  ${BLUE}============================${NORMAL}
 
-  start [DIST] [NAME] [YNH_BRANCH]   (Create and) starts a LXC (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
-  attach [DIST] [NAME] [YNH_BRANCH] Attach an already started LXC (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
-  destroy [DIST] [NAME] [YNH_BRANCH] Destroy the ynh-dev LXC (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  start [DIST] [NAME] [YNH_BRANCH]   (Create and) starts a box (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  attach [DIST] [NAME] [YNH_BRANCH] Attach an already started box (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  destroy [DIST] [NAME] [YNH_BRANCH] Destroy the ynh-dev box (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
   rebuild [DIST] [NAME] [YNH_BRANCH] Rebuild a fresh, up-to-date box (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
 
   ${BLUE}Inside the dev instance${NORMAL}
@@ -175,42 +175,49 @@ function prepare_cache_and_deps() {
 #               Actions                                          #
 ##################################################################
 
-function check_lxd_setup()
+function check_incus_setup()
 {
-    # Check lxd is installed somehow
-    [[ -e /snap/bin/lxd ]] || which lxd &>/dev/null \
-        || critical "You need to have LXD installed for ynh-dev to be usable from the host machine. Refer to the README to know how to install it."
-
-    # Check that we'll be able to use lxc/lxd using sudo (for which the PATH is defined in /etc/sudoers and probably doesn't include /snap/bin)
-    if [[ ! -e /usr/bin/lxc ]] && [[ ! -e /usr/bin/lxd ]] && [[ -e /snap ]]
-    then
-        [[ -e /usr/local/bin/lxc ]] && [[ -e /usr/local/bin/lxd ]] \
-            || critical "You might want to add lxc and lxd inside /usr/local/bin so that there's no tricky PATH issue with sudo. If you installed lxd/lxc with snapd, this should do the trick: sudo ln -s /snap/bin/lxc /usr/local/bin/lxc && sudo ln -s /snap/bin/lxd /usr/local/bin/lxd"
+    # Check incus is installed somehow
+    if ! which incus &>/dev/null; then
+        critical "You need to have Incus installed for ynh-dev to be usable from the host machine. Refer to the README to know how to install it."
+    fi
+    if ! id -nG "$(whoami)" | grep -qw "incus-admin"; then
+        critical "You need to be in the incus-admin group!"
     fi
 
-    ip a | grep -q lx[cd]br0 \
-        || critical "There is no 'lxcbr0' or 'lxdbr0' interface... Did you ran 'lxd init' ?"
+    ip a | grep -q incusbr0 \
+        || warn "There is no 'incusbr0' interface... Did you ran 'incus admin init' ?"
+
+    set_incus_remote
+}
+
+function set_incus_remote()
+{
+    configured=$(incus remote list -f json | jq 'has("yunohost")')
+    if [[ "$configured" != "true" ]]; then
+        incus remote add yunohost https://devbaseimgs.yunohost.org --public
+    fi
 }
 
 function start_ynhdev()
 {
-    check_lxd_setup
+    check_incus_setup
 
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
-    if ! sudo lxc info $BOX &>/dev/null
+    if ! incus info $BOX &>/dev/null
     then
-        if ! sudo lxc image info $BOX-base &>/dev/null
+        if ! incus image info $BOX-base &>/dev/null
         then
             LXC_BASE="ynh-dev-$DIST-amd64-$YNH_BRANCH-base"
-            sudo lxc launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true \
+            incus launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true \
             || critical "Failed to launch the container ?"
         else
-            sudo lxc launch $BOX-base $BOX -c security.nesting=true -c security.privileged=true
+            incus launch $BOX-base $BOX -c security.nesting=true -c security.privileged=true
         fi
-        sudo lxc config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f $(pwd))"
+        incus config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f $(pwd))"
         info "Now attaching to the container"
     else
         info "Attaching to existing container"
@@ -221,41 +228,41 @@ function start_ynhdev()
 
 function attach_ynhdev()
 {
-    check_lxd_setup
+    check_setup
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
-    sudo lxc start $BOX 2>/dev/null || true
-    sudo lxc exec $BOX --cwd /ynh-dev -- /bin/bash
+    incus start $BOX 2>/dev/null || true
+    incus exec $BOX --cwd /ynh-dev -- /bin/bash
 }
 
 function destroy_ynhdev()
 {
-    check_lxd_setup
+    check_setup
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
-    sudo lxc stop $BOX
-    sudo lxc delete $BOX
+    incus stop $BOX
+    incus delete $BOX
 }
 
 function rebuild_ynhdev()
 {
-    check_lxd_setup
+    check_setup
 
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
     set -x
-    sudo lxc info $BOX-rebuild >/dev/null && sudo lxc delete $BOX-rebuild --force
-    sudo lxc launch images:debian/$DIST/amd64 $BOX-rebuild  -c security.nesting=true -c security.privileged=true
+    incus info $BOX-rebuild >/dev/null && incus delete $BOX-rebuild --force
+    incus launch images:debian/$DIST/amd64 $BOX-rebuild  -c security.nesting=true -c security.privileged=true
     sleep 5
-    sudo lxc exec $BOX-rebuild -- apt install curl -y
+    incus exec $BOX-rebuild -- apt install curl -y
     INSTALL_SCRIPT="https://install.yunohost.org/$DIST"
-    sudo lxc exec $BOX-rebuild -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d $YNH_BRANCH"
-    sudo lxc stop $BOX-rebuild
-    sudo lxc publish $BOX-rebuild --alias $BOX-base
+    incus exec $BOX-rebuild -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d $YNH_BRANCH"
+    incus stop $BOX-rebuild
+    incus publish $BOX-rebuild --alias $BOX-base
     set +x
 }
 
