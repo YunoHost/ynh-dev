@@ -1,0 +1,32 @@
+name: Python formatting with Black and Ruff
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  format:
+    name: Formatting with Black and Ruff
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check files using the black formatter
+      uses: psf/black@stable
+      id: black
+      with:
+        options: "."
+      continue-on-error: true
+
+    - uses: actions/setup-python@v2
+    - name: Install Ruff
+      run: pip install ruff
+
+    - name: Ruff check and fix
+      run: |
+        ruff check .
+        ruff check --fix .
+
+    - uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: 'Python formatting fixes from Black and Ruff'

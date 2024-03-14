@@ -1,0 +1,25 @@
+name: Python Lint with Ruff and Mypy
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+    - name: Install Ruff and Mypy
+      run: pip install ruff
+
+    - name: Ruff check
+      run: |
+        ruff check .
+
+    - name: mypy check
+      run: |
+        yes | mypy src --install-types || true
+        mypy .
