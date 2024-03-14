@@ -27,6 +27,6 @@ jobs:
         ruff check .
         ruff check --fix .
 
-    - uses: stefanzweifel/git-auto-commit-action@v4
+    - uses: stefanzweifel/git-auto-commit-action@v5
       with:
         commit_message: 'Python formatting fixes from Black and Ruff'
