@@ -19,7 +19,8 @@ jobs:
       run: |
         ruff check .
 
-    - name: mypy check
-      run: |
-        yes | mypy . --install-types || true
-        mypy .
+    - name: Mypy install types
+      run: yes | mypy . --install-types || true
+
+    - name: Mypy check
+      run: mypy .
