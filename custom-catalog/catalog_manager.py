@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 
-import sys
-import os
 import json
-import toml
-import yaml
+import os
+import sys
 import time
 from collections import OrderedDict
+
+import toml
+import yaml
 
 CATALOG_LIST_PATH = "/etc/yunohost/apps_catalog.yml"
 assert os.path.exists(
@@ -44,7 +45,8 @@ def build(folder=DEFAULT_APPS_FOLDER):
 
         apps[app_dict["id"]] = app_dict
 
-    # We also remove the app install question and resources parts which aint needed anymore by webadmin etc (or at least we think ;P)
+    # We also remove the app install question and resources parts which aint needed
+    # anymore by webadmin etc (or at least we think ;P)
     for app in apps.values():
         if "manifest" in app and "install" in app["manifest"]:
             del app["manifest"]["install"]

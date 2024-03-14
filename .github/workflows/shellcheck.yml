@@ -2,6 +2,7 @@ name: Run Shellcheck on push and PR
 
 on:
   push:
+    branches: [master]
   pull_request:
 
 jobs:

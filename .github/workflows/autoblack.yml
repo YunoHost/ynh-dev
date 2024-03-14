@@ -1,8 +1,9 @@
 name: Check / auto apply Black
 on:
   push:
-      branches:
-          - master
+    branches:
+    - master
+
 jobs:
   black:
     name: Check / auto apply black
