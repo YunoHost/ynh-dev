@@ -230,7 +230,7 @@ function start_ynhdev()
 
 function attach_ynhdev()
 {
-    check_setup
+    check_incus_setup
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
@@ -240,7 +240,7 @@ function attach_ynhdev()
 
 function destroy_ynhdev()
 {
-    check_setup
+    check_incus_setup
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
@@ -250,7 +250,7 @@ function destroy_ynhdev()
 
 function rebuild_ynhdev()
 {
-    check_setup
+    check_incus_setup
 
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
