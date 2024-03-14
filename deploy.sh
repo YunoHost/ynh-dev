@@ -1,9 +1,8 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 set -x
 
 git clone https://github.com/yunohost/ynh-dev
-cd ./ynh-dev
+cd ./ynh-dev || exit 1
 git clone https://github.com/YunoHost/moulinette
 git clone https://github.com/YunoHost/yunohost
 git clone https://github.com/YunoHost/yunohost-admin

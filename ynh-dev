@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2155,SC2034,SC2164
+
 function show_usage() {
     cat <<EOF
 
@@ -33,27 +35,27 @@ EOF
 function main()
 {
     local ACTION="$1"
-    local ARGUMENTS="${@:2}"
+    local ARGUMENTS=("${@:2}")
 
     [ -z "$ACTION" ] && show_usage && exit 0
 
     case "${ACTION}" in
 
-        help|-h|--help)            show_usage     $ARGUMENTS ;;
+        help|-h|--help)            show_usage     "${ARGUMENTS[@]}" ;;
 
-        start|--start)             start_ynhdev   $ARGUMENTS ;;
-        attach|--attach)           attach_ynhdev  $ARGUMENTS ;;
-        destroy|--destroy)         destroy_ynhdev $ARGUMENTS ;;
-        rebuild|--rebuild)         rebuild_ynhdev $ARGUMENTS ;;
+        start|--start)             start_ynhdev   "${ARGUMENTS[@]}" ;;
+        attach|--attach)           attach_ynhdev  "${ARGUMENTS[@]}" ;;
+        destroy|--destroy)         destroy_ynhdev "${ARGUMENTS[@]}" ;;
+        rebuild|--rebuild)         rebuild_ynhdev "${ARGUMENTS[@]}" ;;
 
-        ip|--ip)                   show_vm_ip     $ARGUMENTS ;;
-        use-git|--use-git)         use_git        $ARGUMENTS ;;
-        dev|--dev)                 dev            $ARGUMENTS ;;
-        test|--test)               run_tests      $ARGUMENTS ;;
+        ip|--ip)                   show_vm_ip     "${ARGUMENTS[@]}" ;;
+        use-git|--use-git)         use_git        "${ARGUMENTS[@]}" ;;
+        dev|--dev)                 dev            "${ARGUMENTS[@]}" ;;
+        test|--test)               run_tests      "${ARGUMENTS[@]}" ;;
 
-        catalog|--catalog)         catalog        $ARGUMENTS ;;
+        catalog|--catalog)         catalog        "${ARGUMENTS[@]}" ;;
 
-        rebuild-api-doc|--rebuild-api-doc)   rebuild_api_doc   $ARGUMENTS ;;
+        rebuild-api-doc|--rebuild-api-doc)   rebuild_api_doc   "${ARGUMENTS[@]}" ;;
 
         *)              critical "Unknown action ${ACTION}." ;;
     esac
@@ -118,9 +120,9 @@ function create_sym_link() {
     local DEST=$1
     local LINK=$2
     # Remove current sources if not a symlink
-    [ -L "$LINK" ] || rm -rf $LINK
+    [ -L "$LINK" ] || rm -rf "$LINK"
     # Symlink from Git repository
-    ln -sfn $DEST $LINK
+    ln -sfn "$DEST" "$LINK"
 }
 
 function prepare_cache_and_deps() {
@@ -207,17 +209,17 @@ function start_ynhdev()
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
-    if ! incus info $BOX &>/dev/null
+    if ! incus info "$BOX" &>/dev/null
     then
-        if ! incus image info $BOX-base &>/dev/null
+        if ! incus image info "$BOX-base" &>/dev/null
         then
             LXC_BASE="ynh-dev-$DIST-amd64-$YNH_BRANCH-base"
-            incus launch yunohost:$LXC_BASE $BOX -c security.nesting=true -c security.privileged=true \
+            incus launch "yunohost:$LXC_BASE" "$BOX" -c security.nesting=true -c security.privileged=true \
             || critical "Failed to launch the container ?"
         else
-            incus launch $BOX-base $BOX -c security.nesting=true -c security.privileged=true
+            incus launch "$BOX-base" "$BOX" -c security.nesting=true -c security.privileged=true
         fi
-        incus config device add $BOX ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f $(pwd))"
+        incus config device add "$BOX" ynhdev-shared-folder disk path=/ynh-dev source="$(readlink -f "$(pwd)")"
         info "Now attaching to the container"
     else
         info "Attaching to existing container"
@@ -232,8 +234,8 @@ function attach_ynhdev()
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
-    incus start $BOX 2>/dev/null || true
-    incus exec $BOX --cwd /ynh-dev -- /bin/bash
+    incus start "$BOX" 2>/dev/null || true
+    incus exec "$BOX" --cwd /ynh-dev -- /bin/bash
 }
 
 function destroy_ynhdev()
@@ -242,8 +244,8 @@ function destroy_ynhdev()
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
-    incus stop $BOX
-    incus delete $BOX
+    incus stop "$BOX"
+    incus delete "$BOX"
 }
 
 function rebuild_ynhdev()
@@ -255,14 +257,14 @@ function rebuild_ynhdev()
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
     set -x
-    incus info $BOX-rebuild >/dev/null && incus delete $BOX-rebuild --force
-    incus launch images:debian/$DIST/amd64 $BOX-rebuild  -c security.nesting=true -c security.privileged=true
+    incus info "$BOX-rebuild" >/dev/null && incus delete "$BOX-rebuild" --force
+    incus launch "images:debian/$DIST/amd64" "$BOX-rebuild"  -c security.nesting=true -c security.privileged=true
     sleep 5
-    incus exec $BOX-rebuild -- apt install curl -y
+    incus exec "$BOX-rebuild" -- apt install curl -y
     INSTALL_SCRIPT="https://install.yunohost.org/$DIST"
-    incus exec $BOX-rebuild -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d $YNH_BRANCH"
-    incus stop $BOX-rebuild
-    incus publish $BOX-rebuild --alias $BOX-base
+    incus exec "$BOX-rebuild" -- /bin/bash -c "curl $INSTALL_SCRIPT | bash -s -- -a -d $YNH_BRANCH"
+    incus stop "$BOX-rebuild"
+    incus publish "$BOX-rebuild" --alias "$BOX-base"
     set +x
 }
 
@@ -277,8 +279,7 @@ function use_git()
     assert_inside_vm
     local PACKAGES=("$@")
 
-    if [ "$PACKAGES" = "" ]
-    then
+    if [ "${#PACKAGES[@]}" -eq 0 ]; then
         PACKAGES=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
     fi
 
@@ -312,17 +313,14 @@ function use_git()
                 ;;
             yunohost)
 
-                for FILE in $(ls /ynh-dev/yunohost/bin/)
-                do
+                for FILE in /ynh-dev/yunohost/bin/*; do
                     create_sym_link "/ynh-dev/yunohost/bin/$FILE" "/usr/bin/$FILE"
                 done
 
-                for FILE in $(ls /ynh-dev/yunohost/conf/metronome/modules/)
-                do
+                for FILE in /ynh-dev/yunohost/conf/metronome/modules/*; do
                     create_sym_link "/ynh-dev/yunohost/conf/metronome/modules/$FILE" "/usr/lib/metronome/modules/$FILE"
                 done
-                for FILE in $(ls /ynh-dev/yunohost/share/)
-                do
+                for FILE in /ynh-dev/yunohost/share/*; do
                     create_sym_link "/ynh-dev/yunohost/share/$FILE" "/usr/share/yunohost/$FILE"
                 done
                 create_sym_link "/ynh-dev/yunohost/hooks" "/usr/share/yunohost/hooks"
@@ -464,7 +462,7 @@ function dev()
     journalctl --no-pager --no-hostname -u yunohost-api -u yunohost-portal-api -n 0 -f &
     JOURNALCTL_PID=$!
 
-    trap "kill $JOURNALCTL_PID; exit" SIGINT
+    trap 'kill $JOURNALCTL_PID; exit' SIGINT
 
     while ! inotifywait -q -e modify /usr/lib/python3/dist-packages/{moulinette,yunohost}/{*.py,*/*.py}
     do
@@ -477,9 +475,8 @@ function dev()
 function run_tests()
 {
     assert_inside_vm
-    local PACKAGES="$@"
-    for PACKAGE in $PACKAGES;
-    do
+    local PACKAGES=("$@")
+    for PACKAGE in "${PACKAGES[@]}"; do
         TEST_FUNCTION=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $3}')
         TEST_MODULE=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $2}')
         PACKAGE=$(echo "$PACKAGE" | tr '/:' ' ' | awk '{print $1}')
@@ -492,8 +489,7 @@ function run_tests()
                     apt-get install python3-pip -y
                     pip3 install pytest pytest-sugar --break-system-packages
                 fi
-                for DEP in "pytest-mock requests-mock mock"
-                do
+                for DEP in pytest-mock requests-mock mock; do
                     if [ -z "$(pip3 show $DEP)" ]; then
                         info "Installing $DEP with pip3"
                         pip3 install $DEP --break-system-packages
@@ -586,6 +582,4 @@ function rebuild_api_doc()
     success "You should now open yunohost/doc/api.html using your favorite browser"
 }
 
-
-
-main $@
+main "$@"
