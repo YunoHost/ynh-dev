@@ -9,7 +9,9 @@ import time
 from collections import OrderedDict
 
 CATALOG_LIST_PATH = "/etc/yunohost/apps_catalog.yml"
-assert os.path.exists(CATALOG_LIST_PATH), f"Catalog list yaml file '{CATALOG_LIST_PATH} does not exists"
+assert os.path.exists(
+    CATALOG_LIST_PATH
+), f"Catalog list yaml file '{CATALOG_LIST_PATH} does not exists"
 
 now = time.time()
 my_env = os.environ.copy()
@@ -61,6 +63,7 @@ def build(folder=DEFAULT_APPS_FOLDER):
     if fail:
         sys.exit(1)
 
+
 def build_app_dict(app, infos, folder):
     app_folder = os.path.join(folder, app + "_ynh")
 
@@ -99,6 +102,7 @@ def build_app_dict(app, infos, folder):
         ),
     }
 
+
 def reset():
     with open(CATALOG_LIST_PATH, "w") as f:
         catalog_list = [{"id": "default", "url": "https://app.yunohost.org/default/"}]
@@ -113,6 +117,7 @@ def add():
             catalog_list.append({"id": "custom", "url": None})
             with open(CATALOG_LIST_PATH, "w") as f:
                 yaml.safe_dump(catalog_list, f, default_flow_style=False)
+
 
 def override():
     with open(CATALOG_LIST_PATH, "w") as f:
