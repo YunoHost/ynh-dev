@@ -118,13 +118,8 @@ Incus can be installed on Debian 13 or Ubuntu 24.04 with the command:
 apt install incus
 ```
 
-If you have an older dsitribution, the installation can be made by following the
-installation guide(https://github.com/zabbly/incus):
-
-```bash
-mkdir -p /etc/apt/keyrings/
-curl -fsSL https://pkgs.zabbly.com/key.asc -o /etc/apt/keyrings/zabbly.asc
-```
+If you have an older distribution, you need to add the Zabbly repositry to your package manager.
+To do so please follow the installation guide that you can find on https://github.com/zabbly/incus.
 
 You then need to add yourself in the incus-admin group, to run incus without sudo every time:
 
