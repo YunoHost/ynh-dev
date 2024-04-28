@@ -112,11 +112,14 @@ First you need to install the system dependencies.
 libvirt or vanilla LXCs**, especially because they all require a daemon based
 on DNSmasq and therefore require to listen on port 53.
 
-Incus can be installed with your Linux distribution package manager, such as:
+Incus can be installed on Debian 13 or Ubuntu 24.04 with the following command:
 
 ```bash
 apt install incus
 ```
+
+If you have an older distribution, you need to add the Zabbly repositry to your package manager.  
+To do so please follow the installation guide that you can find on <https://github.com/zabbly/incus>.
 
 You then need to add yourself in the incus-admin group, to run incus without sudo every time:
 
