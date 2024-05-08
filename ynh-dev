@@ -180,7 +180,7 @@ function prepare_cache_and_deps() {
 function check_incus_setup()
 {
     # Check incus is installed somehow
-    if ! which incus &>/dev/null; then
+    if ! command -v incus &>/dev/null; then
         critical "You need to have Incus installed for ynh-dev to be usable from the host machine. Refer to the README to know how to install it."
     fi
     if ! id -nG "$(whoami)" | grep -qw "incus-admin"; then
@@ -455,7 +455,7 @@ function dev()
 {
     assert_inside_vm
 
-    which inotifywait &>/dev/null || critical "You should first run: apt install inotify-tools"
+    command -v inotifywait &>/dev/null || critical "You should first run: apt install inotify-tools"
 
     info "Now monitoring for changes in python files, restarting yunohost-api and yunohost-portal-api when changes occur!"
 
