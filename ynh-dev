@@ -195,6 +195,11 @@ function check_incus_setup()
 
 function set_incus_remote()
 {
+    # Check jq is installed somehow
+    if ! command -v jq &>/dev/null; then
+        critical "You need jq installed for ynh-dev"
+    fi
+
     configured=$(incus remote list -f json | jq 'has("yunohost")')
     if [[ "$configured" != "true" ]]; then
         incus remote add yunohost https://devbaseimgs.yunohost.org --public
