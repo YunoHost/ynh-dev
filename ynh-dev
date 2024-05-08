@@ -183,7 +183,7 @@ function check_incus_setup()
     if ! command -v incus &>/dev/null; then
         critical "You need to have Incus installed for ynh-dev to be usable from the host machine. Refer to the README to know how to install it."
     fi
-    if ! id -nG "$(whoami)" | grep -qw "incus-admin"; then
+    if ! id -nG "$(whoami)" | grep -qw "incus-admin" && [ ! $(id -u) -eq 0 ]; then
         critical "You need to be in the incus-admin group!"
     fi
 
