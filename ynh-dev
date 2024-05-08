@@ -313,14 +313,14 @@ function use_git()
                 ;;
             yunohost)
 
-                for FILE in /ynh-dev/yunohost/bin/*; do
+                for FILE in $(ls /ynh-dev/yunohost/bin/); do
                     create_sym_link "/ynh-dev/yunohost/bin/$FILE" "/usr/bin/$FILE"
                 done
 
-                for FILE in /ynh-dev/yunohost/conf/metronome/modules/*; do
+                for FILE in $(ls /ynh-dev/yunohost/conf/metronome/modules/); do
                     create_sym_link "/ynh-dev/yunohost/conf/metronome/modules/$FILE" "/usr/lib/metronome/modules/$FILE"
                 done
-                for FILE in /ynh-dev/yunohost/share/*; do
+                for FILE in $(ls /ynh-dev/yunohost/share/); do
                     create_sym_link "/ynh-dev/yunohost/share/$FILE" "/usr/share/yunohost/$FILE"
                 done
                 create_sym_link "/ynh-dev/yunohost/hooks" "/usr/share/yunohost/hooks"
