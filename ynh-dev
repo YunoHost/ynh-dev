@@ -330,7 +330,9 @@ function use_git()
                 done
                 create_sym_link "/ynh-dev/yunohost/hooks" "/usr/share/yunohost/hooks"
                 create_sym_link "/ynh-dev/yunohost/helpers/helpers" "/usr/share/yunohost/helpers"
-                create_sym_link "/ynh-dev/yunohost/helpers" "/usr/share/yunohost/helpers.d"
+                for HELPER_DIR in $(ls -d /ynh-dev/yunohost/helpers/helpers*.d); do
+                    create_sym_link "$HELPER_DIR" "/usr/share/yunohost/$(basename $HELPER_DIR)"
+                done
                 create_sym_link "/ynh-dev/yunohost/conf" "/usr/share/yunohost/conf"
                 create_sym_link "/ynh-dev/yunohost/locales" "/usr/share/yunohost/locales"
                 create_sym_link "/ynh-dev/yunohost/src" "/usr/lib/python3/dist-packages/yunohost"
