@@ -329,6 +329,7 @@ function use_git()
                     create_sym_link "/ynh-dev/yunohost/share/$FILE" "/usr/share/yunohost/$FILE"
                 done
                 create_sym_link "/ynh-dev/yunohost/hooks" "/usr/share/yunohost/hooks"
+                create_sym_link "/ynh-dev/yunohost/helpers/helpers" "/usr/share/yunohost/helpers"
                 create_sym_link "/ynh-dev/yunohost/helpers" "/usr/share/yunohost/helpers.d"
                 create_sym_link "/ynh-dev/yunohost/conf" "/usr/share/yunohost/conf"
                 create_sym_link "/ynh-dev/yunohost/locales" "/usr/share/yunohost/locales"
