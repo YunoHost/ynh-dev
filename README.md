@@ -200,9 +200,11 @@ Incus's dnsmasq to run correctly (as stated before in the setup section.)
 
 ### 3. Development and container testing
 
-After SSH-ing inside the container, you should notice that the *directory* `/ynh-dev` is a shared folder with your host. In particular, it contains the various git clones `yunohost`, `yunohost-admin` and so on - as well as the `./ynh-dev` script itself.
+After SSH-ing inside the container, you should notice that the *directory* `/ynh-dev` is a shared folder with your host.
+In particular, it contains the various git clones `yunohost`, `yunohost-admin` and so on - as well as the `./ynh-dev` script itself.
 
-**Most of the time, the first thing you'll want to do is to start by running `yunohost tools postinstall` as the first command** (except if you are working on something that happens before the postinstall).
+**Most of the time, the first thing you'll want to do is to start by running `yunohost tools postinstall` as the first command**
+(except if you are working on something that happens before the postinstall).
 
 Inside the container, `./ynh-dev` can be used to link the git clones living in the host to the code being ran inside the container.
 
@@ -212,15 +214,22 @@ For instance, after running:
 ./ynh-dev use-git yunohost
 ```
 
-The code of the git clone `'yunohost'` will be directly available inside the container. Which mean that running any `yunohost` command inside the container will use the code from the host... This allows to develop with any tool you want on your host, then test the changes in the container.
+The code of the git clone `'yunohost'` will be directly available inside the container.
+Which mean that running any `yunohost` command inside the container will use the code from the host...
+This allows to develop with any tool you want on your host, then test the changes in the container.
 
-The `use-git` action can be used for any package among `yunohost`, `yunohost-admin`, `moulinette` and `ssowat` with similar consequences. You might want to run use-git several times depending on what you want to develop precisely.
+The `use-git` action can be used for any package among `yunohost`, `yunohost-admin`, `moulinette` and `ssowat` with similar consequences.
+You might want to run use-git several times depending on what you want to develop precisely.
+
+When using `use-git` on package `yunohost`, please do it also on its dependency package `moulinette`.
+Both packages should be on branch `bookworm`.
 
 ***Note***: The `use-git` operation can't be reverted now. Do **not** do this in production.
 
 ### 4. Testing the web interface
 
-You should be able to access the web interface via the IP address of the container. The IP can be known from inside the container using either from `ip a` or with `./ynh-dev ip`.
+You should be able to access the web interface via the IP address of the container.
+The IP can be known from inside the container using either from `ip a` or with `./ynh-dev ip`.
 
 If you want to access to the interface using the domain name, you shall tweak your `/etc/hosts` and add a line such as:
 
@@ -228,7 +237,9 @@ If you want to access to the interface using the domain name, you shall tweak yo
 111.222.333.444 yolo.test
 ```
 
-Note that `./ynh-dev use-git yunohost-admin` has a particular behavior: it starts a `gulp` watcher that shall re-compile automatically any changes in the javascript code. Hence this particular `use-git` will keep running until you kill it after your work is done.
+Note that `./ynh-dev use-git yunohost-admin` has a particular behavior: it starts a `gulp` watcher
+that shall re-compile automatically any changes in the javascript code. Hence this particular `use-git`
+will keep running until you kill it after your work is done.
 
 ### Advanced: using snapshots
 
