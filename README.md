@@ -249,6 +249,11 @@ It could be due to bridge conflict (for example if you have incus installed too)
 
 This [ticket](https://github.com/YunoHost/issues/issues/1664) could help.
 
+If you have docker and incus, and your dns resolution inside incus container does not work at all, you can try:
+```
+sudo iptables -I DOCKER-USER -i incusbr0 -o eno1 -j ACCEPT
+```
+
 ## Remote Development Environment
 
 Here is the development flow:
