@@ -183,7 +183,7 @@ function check_incus_setup()
     if ! command -v incus &>/dev/null; then
         critical "You need to have Incus installed for ynh-dev to be usable from the host machine. Refer to the README to know how to install it."
     fi
-    if ! id -nG "$(whoami)" | grep -qw "incus-admin" && [ ! $(id -u) -eq 0 ]; then
+    if ! id -nG "$(whoami)" | grep -qw "incus-admin" && [ ! "$(id -u)" -eq 0 ]; then
         critical "You need to be in the incus-admin group!"
     fi
 
@@ -318,21 +318,22 @@ function use_git()
                 ;;
             yunohost)
 
-                for FILE in $(ls /ynh-dev/yunohost/bin/); do
-                    create_sym_link "/ynh-dev/yunohost/bin/$FILE" "/usr/bin/$FILE"
-                done
+                while IFS= read -r -d '' FILE; do
+                    create_sym_link "$FILE" "/usr/bin/${FILE##*/}"
+                done < <(find /ynh-dev/yunohost/bin/ -mindepth 1 -maxdepth 1 -print0)
+                mkdir -p "/usr/lib/metronome/modules"
+                while IFS= read -r -d '' FILE; do
+                    create_sym_link "$FILE" "/usr/lib/metronome/modules/${FILE##*/}"
+                done < <(find /ynh-dev/yunohost/conf/metronome/modules/ -mindepth 1 -maxdepth 1 -print0)
+                while IFS= read -r -d '' FILE; do
+                    create_sym_link "$FILE" "/usr/share/yunohost/${FILE##*/}"
+                done < <(find /ynh-dev/yunohost/share/ -mindepth 1 -maxdepth 1 -print0)
 
-                for FILE in $(ls /ynh-dev/yunohost/conf/metronome/modules/); do
-                    create_sym_link "/ynh-dev/yunohost/conf/metronome/modules/$FILE" "/usr/lib/metronome/modules/$FILE"
-                done
-                for FILE in $(ls /ynh-dev/yunohost/share/); do
-                    create_sym_link "/ynh-dev/yunohost/share/$FILE" "/usr/share/yunohost/$FILE"
-                done
                 create_sym_link "/ynh-dev/yunohost/hooks" "/usr/share/yunohost/hooks"
                 create_sym_link "/ynh-dev/yunohost/helpers/helpers" "/usr/share/yunohost/helpers"
-                for HELPER_DIR in $(ls -d /ynh-dev/yunohost/helpers/helpers*.d); do
-                    create_sym_link "$HELPER_DIR" "/usr/share/yunohost/$(basename $HELPER_DIR)"
-                done
+                while IFS= read -r -d '' HELPER_DIR; do
+                    create_sym_link "$HELPER_DIR" "/usr/share/yunohost/${HELPER_DIR##*/}"
+                done < <(find /ynh-dev/yunohost/helpers/ -mindepth 1 -maxdepth 1 -name "helpers*.d" -print0)
                 create_sym_link "/ynh-dev/yunohost/conf" "/usr/share/yunohost/conf"
                 create_sym_link "/ynh-dev/yunohost/locales" "/usr/share/yunohost/locales"
                 create_sym_link "/ynh-dev/yunohost/src" "/usr/lib/python3/dist-packages/yunohost"
