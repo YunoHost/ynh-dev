@@ -206,7 +206,7 @@ function set_incus_remote()
         remote_url=null
     fi
     if [[ "$remote_url" == "null" ]]; then
-        incus remote add yunohost https://repo.yunohost.org/incus --protocol simplestream --public
+        incus remote add yunohost https://repo.yunohost.org/incus --protocol simplestreams --public
     fi
 }
 

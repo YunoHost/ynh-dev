@@ -150,7 +150,7 @@ incus admin init
 Pre-built images are centralized on `https://repo.yunohost.org/incus` and we'll download them from there to speed things up:
 
 ```bash
-incus remote add yunohost https://repo.yunohost.org/incus --protocol simplestream --public
+incus remote add yunohost https://repo.yunohost.org/incus --protocol simplestreams --public
 ```
 
 On Archlinux-based distributions (Arch, Manjaro, ...) it was found that it's needed
