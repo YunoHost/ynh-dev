@@ -147,10 +147,10 @@ answering the default (just pressing enter) to all questions is fine.
 incus admin init
 ```
 
-Pre-built images are centralized on `devbaseimgs.yunohost.org` and we'll download them from there to speed things up:
+Pre-built images are centralized on `https://repo.yunohost.org/incus` and we'll download them from there to speed things up:
 
 ```bash
-incus remote add yunohost https://devbaseimgs.yunohost.org --public
+incus remote add yunohost https://repo.yunohost.org/incus --protocol simplestream --public
 ```
 
 On Archlinux-based distributions (Arch, Manjaro, ...) it was found that it's needed
@@ -186,7 +186,7 @@ cd ynh-dev  # if not already done
 ./ynh-dev start
 ```
 
-This should automatically download from `devbaseimgs.yunohost.org` a pre-build
+This should automatically download from `https://repo.yunohost.org/incus` a pre-build
 ynh-dev LXC image running Yunohost unstable, and create a fresh container from it.
 
 After starting the LXC, your terminal will automatically be attached to it. If you

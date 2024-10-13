@@ -200,9 +200,13 @@ function set_incus_remote()
         critical "You need jq installed for ynh-dev"
     fi
 
-    configured=$(incus remote list -f json | jq 'has("yunohost")')
-    if [[ "$configured" != "true" ]]; then
-        incus remote add yunohost https://devbaseimgs.yunohost.org --public
+    remote_url=$(incus remote list -f json | jq '.yunohost.Addr')
+    if [[ "${remote_url}" == *"devbaseimgs"* ]]; then
+        incus remote remove yunohost
+        remote_url=null
+    fi
+    if [[ "$remote_url" == "null" ]]; then
+        incus remote add yunohost https://repo.yunohost.org/incus --protocol simplestream --public
     fi
 }
 
@@ -218,7 +222,7 @@ function start_ynhdev()
     then
         if ! incus image info "$BOX-base" &>/dev/null
         then
-            LXC_BASE="ynh-dev-$DIST-amd64-$YNH_BRANCH-base"
+            LXC_BASE="yunohost/$DIST-$YNH_BRANCH/dev"
             incus launch "yunohost:$LXC_BASE" "$BOX" -c security.nesting=true -c security.privileged=true \
             || critical "Failed to launch the container ?"
         else
