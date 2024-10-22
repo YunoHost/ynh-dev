@@ -15,7 +15,6 @@ Please report issues on the following repository: <https://github.com/yunohost/i
     - [3. Development and container testing](#3-development-and-container-testing)
     - [4. Testing the web interface](#4-testing-the-web-interface)
     - [Advanced: using snapshots](#advanced-using-snapshots)
-    - [Alternative: Using Only Virtualbox](#alternative-using-only-virtualbox)
     - [Troubleshooting](#troubleshooting)
   - [Remote Development Environment](#remote-development-environment)
     - [1. Setup your VPS and install YunoHost](#1-setup-your-vps-and-install-yunohost)
@@ -66,18 +65,6 @@ for these cases.
 If choosing this path, please keep reading at the [local development
 environment](#local-development-environment) section.
 
-Alternatively, you may be able to setup a local environnement using Vagrant and
-Virtualbox which is kinda more resource-hungry because it is fully virtualized,
-but might be more familiar and user-friendly if you already know your way around
-Virtualbox's UI.
-
-- Virtualbox (>= 6.x)
-- Vagrant (>= ?.?.?)
-- Vagrant-virtualbox (>= ?.?.?)
-
-See the [Alternative: Only Virtualbox](#alternative-using-only-virtualbox)
-section for more info.
-
 ### Remote Development Path
 
 Yunohost can be deployed as a typical install on a remote VPS. You can then use
@@ -86,8 +73,8 @@ Yunohost can be deployed as a typical install on a remote VPS. You can then use
 This method can potentially be faster than the local development environment
 assuming you have familiarity with working on VPS machines, if you always have
 internet connectivity when working, and if you're okay with paying a fee. It
-is also a good option if the required system dependencies (Incus/LXC, Vagrant,
-Virtualbox, etc.) are not easily available to you on your distribution.
+is also a good option if the required system dependencies (Incus/LXC, Virtualbox,
+etc.) are not easily available to you on your distribution.
 
 Please be aware that this method should **not** be used for a end-user facing
 production environment.
@@ -233,13 +220,6 @@ Note that `./ynh-dev use-git yunohost-admin` has a particular behavior: it start
 ### Advanced: using snapshots
 
 You can check `incus snapshot --help` to learn how to manage incus snapshots.
-
-### Alternative: Using Only Virtualbox
-
-A Vagrant and Virtualbox (without LXC) guide is provided on another branch of
-this repository. This is a known working setup used by some developers. Please
-see the ["virtualbox" branch](https://github.com/YunoHost/ynh-dev/tree/virtualbox#develop-on-your-local-machine)
-for more.
 
 ### Troubleshooting
 
