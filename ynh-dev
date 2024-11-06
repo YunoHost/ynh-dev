@@ -137,39 +137,19 @@ function prepare_cache_and_deps() {
 
     # Vite require node v14 to parse modern syntax
     local DISTRO="$(lsb_release -s -c)"
-    local YARN=$([ "$DISTRO" == "bullseye" ] && echo "yarnpkg" || echo "yarn")
-
-    if [ "$DISTRO" == "bullseye" ]
-    then
-        if [[ ! $(node -v) == v14* ]]
-        then
-            info "Installing node v14..."
-            KEYRING=/usr/share/keyrings/nodesource.gpg
-            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | sudo tee "$KEYRING" >/dev/null
-            gpg --no-default-keyring --keyring "$KEYRING" --list-keys
-            VERSION=node_14.x
-            echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-
-            apt update
-            apt install nodejs -y
-            # to return to nodejs debian version
-            # apt purge nodejs && rm -r /etc/apt/sources.list.d/nodesource.list && apt install nodejs
-            export NODE_PATH=/usr/lib/nodejs:/usr/share/nodejs
-        fi
-    fi
 
     # install yarn if not already
-    if [[ $(dpkg-query -W -f='${Status}' "$YARN" 2>/dev/null | grep -c "ok installed") -eq 0 ]];
+    if [[ $(dpkg-query -W -f='${Status}' yarn 2>/dev/null | grep -c "ok installed") -eq 0 ]];
     then
         info "Installing yarn…"
         apt update
-        apt install "$YARN"
+        apt install yarn
     fi
 
     pushd "$CACHE_PATH"
     # Install dependencies with yarn forced to lock file versions (equivalent to `npm ci`)
     info "Installing dependencies ... (this may take a while)"
-    "$YARN" install --frozen-lockfile
+    yarn install --frozen-lockfile
     popd
 }
 
@@ -380,11 +360,10 @@ EOF
                 fi
 
                 local DISTRO="$(lsb_release -s -c)"
-                local YARN=$([ "$DISTRO" == "bullseye" ] && echo "yarnpkg" || echo "yarn")
 
                 cd "$DEV_PATH"
                 info "Now running dev server"
-                "$YARN" dev --host
+                yarn dev --host
                 ;;
             yunohost-admin-build)
                 if [[ ! -e "/usr/share/yunohost/admin-bkp" ]]
@@ -394,10 +373,9 @@ EOF
                 fi
 
                 local DISTRO="$(lsb_release -s -c)"
-                local YARN=$([ "$DISTRO" == "bullseye" ] && echo "yarnpkg" || echo "yarn")
 
                 cd /ynh-dev/yunohost-admin/app
-                "$YARN" build
+                yarn build
 
                 create_sym_link "/ynh-dev/yunohost-admin/app/dist" "/usr/share/yunohost/admin"
 
