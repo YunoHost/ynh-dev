@@ -214,6 +214,8 @@ function start_ynhdev()
         info "Attaching to existing container"
     fi
 
+    incus exec "$BOX" dhclient
+
     attach_ynhdev "$@"
 }
 
