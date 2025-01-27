@@ -484,9 +484,7 @@ function install_package_linter()
         git clone https://github.com/YunoHost/package_linter
         cd package_linter
         python -m venv ./venv
-        source venv/bin/activate
-        pip install -r requirements.txt
-        deactivate
+        /ynh-dev/package_linter/venv/bin/pip install -r requirements.txt
         popd
     fi
 }
