@@ -479,7 +479,7 @@ function install_tox()
 }
 function install_package_linter()
 {
-    if [ ! -f /ynh-dev/package_linter/package_linter.py > /dev/null 2>&1 ] ; then
+    if [ ! -f /ynh-dev/package_linter/package_linter.py ] > /dev/null 2>&1 ; then
         pushd /ynh-dev
         git clone https://github.com/YunoHost/package_linter
         cd package_linter
