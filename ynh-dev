@@ -513,8 +513,8 @@ function run_linters()
                 ;;
             *)
                 install_package_linter
-                pushd /ynh-dev/apps/$PACKAGE
-                /ynh-dev/package_linter/venv/bin/python3 /ynh-dev/package_linter/package_linter.py /ynh-dev/apps/$PACKAGE
+                pushd "/ynh-dev/apps/$PACKAGE"
+                /ynh-dev/package_linter/venv/bin/python3 /ynh-dev/package_linter/package_linter.py "/ynh-dev/apps/$PACKAGE"
                 popd
                 ;;
 
