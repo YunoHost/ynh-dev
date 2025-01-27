@@ -18,6 +18,9 @@ function show_usage() {
 
   ip              Give the ip of the guest container
   use-git [PKG]   Use Git repositories from dev environment path
+  lint [PKG]      Lint source code from core or app packages.
+                  e.g. ./ynh-dev lint yunohost
+                  e.g. ./ynh-dev lint nextcloud_ynh
   test [PKG]      Deploy, update and run tests for some packages
                   Tests for single modules and functions can ran with
                   e.g. ./ynh-dev test yunohost/appurl:urlavailable
@@ -51,6 +54,7 @@ function main()
         ip|--ip)                   show_vm_ip     "${ARGUMENTS[@]}" ;;
         use-git|--use-git)         use_git        "${ARGUMENTS[@]}" ;;
         dev|--dev)                 dev            "${ARGUMENTS[@]}" ;;
+        lint|--lint)               run_linters      "${ARGUMENTS[@]}" ;;
         test|--test)               run_tests      "${ARGUMENTS[@]}" ;;
 
         catalog|--catalog)         catalog        "${ARGUMENTS[@]}" ;;
@@ -463,6 +467,59 @@ function dev()
         systemctl restart yunohost-api yunohost-portal-api
     done
 
+}
+
+function install_tox()
+{
+    if ! type "/root/.local/bin/tox" > /dev/null 2>&1; then
+        info "> Installing tox ..."
+        apt-get install pipx -y
+        pipx install tox
+    fi
+}
+function install_package_linter()
+{
+    if [ ! -f /ynh-dev/package_linter/package_linter.py ] > /dev/null 2>&1 ; then
+        pushd /ynh-dev
+        git clone https://github.com/YunoHost/package_linter
+        cd package_linter
+        python -m venv ./venv
+        /ynh-dev/package_linter/venv/bin/pip install -r requirements.txt
+        popd
+    fi
+}
+function run_linters()
+{
+    assert_inside_vm
+    local PACKAGES=("$@")
+    for PACKAGE in "${PACKAGES[@]}"; do
+        case $PACKAGE in
+            yunohost)
+                install_tox
+                pushd /ynh-dev/yunohost
+                /root/.local/bin/tox run
+                /root/.local/bin/tox run -e py311-mypy
+                popd
+                ;;
+            moulinette)
+                install_tox
+                pushd /ynh-dev/moulinette
+                /root/.local/bin/tox run
+                /root/.local/bin/tox run -e py311-mypy
+                popd
+                ;;
+            ssowat|yunohost-portal|yunohost-admin)
+                echo "Linter not implemented for $PACKAGE"
+                ;;
+            *)
+                install_package_linter
+                pushd "/ynh-dev/apps/$PACKAGE"
+                /ynh-dev/package_linter/venv/bin/python3 /ynh-dev/package_linter/package_linter.py "/ynh-dev/apps/$PACKAGE"
+                popd
+                ;;
+
+        esac
+    done
 }
 
 function run_tests()
