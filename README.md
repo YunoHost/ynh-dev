@@ -283,6 +283,83 @@ Any `yunohost` command will run from the code of the git clone.
 
 The `use-git` action can be used for any package among `yunohost`, `yunohost-admin`, `moulinette` and `ssowat` with similar consequences.
 
+### 4. Run with a graphical debugger
+
+You can pilote your code with a graphical debugger like the one inside vscodium or with vimspector.
+
+You have to run your `yunohost` command prefixed by `./ynh-dev debug `, for example:
+```
+./ynh-dev debug yunohost user list
+```
+The command will be suspended until a graphical debugger attach this process through the port 5678.
+
+#### With vim
+1. Setup vimspector in your .vimrc, for example with Vundle:
+```
+Bundle 'puremourning/vimspector'
+
+let g:vimspector_enable_mappings = 'HUMAN'
+"packadd! vimspector
+let g:vimspector_install_gadgets = [ 'debugpy']
+```
+2. Run vim, and install vimspector and debugpy gadget
+```
+:PluginInstall
+:VimspectorInstall
+```
+3. Configure a `.vimspector.json` at the root of your project:
+```
+{
+  "configurations": {
+    "run": {
+      "adapter": "multi-session",
+      "filetypes": [ "python" ], // optional
+      "configuration": {
+        "request": "attach",
+        "pathMappings": [
+          {"localRoot": "~/PATH_TO_YOUR_CODE/ynh-dev/yunohost/src/", "remoteRoot": "/usr/lib/python3/dist-packages/yunohost/"}
+        ],
+        "justMyCode": false
+      }
+    }
+  }
+}
+```
+4. Reopen vim, set some breakpoints with F9 and start with F5
+
+#### With vscodium
+Note: the workspace needs to be a trusted workspace, if you don't trust a big repo like yunohost, you can still copy src python directory into a trusted workspace...
+
+1. Install python extension in vscodium
+2. Setup a launch.json at the root of your workspace
+```
+{
+    // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
+    // Pointez pour afficher la description des attributs existants.
+    // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Remote Attach",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "IP_OF_YOUR_INCUS",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/src/",
+                    "remoteRoot": "/usr/lib/python3/dist-packages/yunohost/"
+                }
+            ],
+            "justMyCode": false
+        }
+    ]
+}
+```
+3. Set some breakpoint and click on `Execute and debug` or F5
+
 ## Further Resources
 
 - [yunohost.org/dev](https://yunohost.org/dev)
