@@ -24,6 +24,8 @@ function show_usage() {
   test [PKG]      Deploy, update and run tests for some packages
                   Tests for single modules and functions can ran with
                   e.g. ./ynh-dev test yunohost/appurl:urlavailable
+  debug YNH_COMMAND  Allow to attach a graphical debugger like vscodium or vimspector on 5678 port
+                  e.g. ./ynh-dev debug yunohost user list
   dev             Watch python files and restart yunohost-api and yunohost-portal-api when changes occur
   catalog
       build       Rebuild the custom catalog
@@ -56,6 +58,7 @@ function main()
         dev|--dev)                 dev            "${ARGUMENTS[@]}" ;;
         lint|--lint)               run_linters      "${ARGUMENTS[@]}" ;;
         test|--test)               run_tests      "${ARGUMENTS[@]}" ;;
+        debug|--debug)               run_debug      "${ARGUMENTS[@]}" ;;
 
         catalog|--catalog)         catalog        "${ARGUMENTS[@]}" ;;
 
@@ -573,6 +576,14 @@ function run_tests()
                 ;;
         esac
     done
+}
+function run_debug() {
+    if ! dpkg -l |grep python3-debugpy > /dev/null
+    then
+        apt install -y python3-debugpy
+    fi
+    yunohost firewall allow Both 5678 -4 > /dev/null 2> /dev/null
+    python3 -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 --wait-for-client "/usr/bin/$@"
 }
 
 function catalog()
