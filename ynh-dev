@@ -583,7 +583,7 @@ function run_debug() {
         apt install -y python3-debugpy
     fi
     yunohost firewall allow Both 5678 -4 > /dev/null 2> /dev/null
-    python3 -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 --wait-for-client /usr/bin/$@
+    python3 -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 --wait-for-client "/usr/bin/$@"
 }
 
 function catalog()
