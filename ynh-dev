@@ -24,7 +24,7 @@ function show_usage() {
   test [PKG]      Deploy, update and run tests for some packages
                   Tests for single modules and functions can ran with
                   e.g. ./ynh-dev test yunohost/appurl:urlavailable
-  dev             Watch python files and restart yunohost-api and yunohost-portal-api when changes occur
+  api             Start yunohost-api and yunohost-portal-api in debug mode in the current terminal, and auto-restart them when code changes
   catalog
       build       Rebuild the custom catalog
       add         Add the custom catalog in Yunohost catalog list
@@ -53,8 +53,8 @@ function main()
 
         ip|--ip)                   show_vm_ip     "${ARGUMENTS[@]}" ;;
         use-git|--use-git)         use_git        "${ARGUMENTS[@]}" ;;
-        dev|--dev)                 dev            "${ARGUMENTS[@]}" ;;
-        lint|--lint)               run_linters      "${ARGUMENTS[@]}" ;;
+        api|--api)                 api            "${ARGUMENTS[@]}" ;;
+        lint|--lint)               run_linters    "${ARGUMENTS[@]}" ;;
         test|--test)               run_tests      "${ARGUMENTS[@]}" ;;
 
         catalog|--catalog)         catalog        "${ARGUMENTS[@]}" ;;
@@ -448,23 +448,34 @@ $IP $MAIN_DOMAIN"
     done
 }
 
-function dev()
+function api()
 {
     assert_inside_vm
 
     command -v inotifywait &>/dev/null || critical "You should first run: apt install inotify-tools"
 
+    function kill_and_restart_api()
+    {
+        systemctl --quiet is-active yunohost-api && systemctl stop yunohost-api || true
+        systemctl --quiet is-active yunohost-portal-api && systemctl stop yunohost-portal-api || true
+        for PID in $(pgrep -f yunohost-api) $(pgrep -f yunohost-portal-api); do kill $PID; done
+        yunohost-api --debug &
+        yunohost-portal-api --debug &
+    }
+
     info "Now monitoring for changes in python files, restarting yunohost-api and yunohost-portal-api when changes occur!"
 
-    journalctl --no-pager --no-hostname -u yunohost-api -u yunohost-portal-api -n 0 -f &
-    JOURNALCTL_PID=$!
+    kill_and_restart_api
+    trap 'for PID in $(pgrep -f yunohost-api) $(pgrep -f yunohost-portal-api); do kill $PID; done; exit' SIGINT
 
-    trap 'kill $JOURNALCTL_PID; exit' SIGINT
-
-    while ! inotifywait -q -e modify /usr/lib/python3/dist-packages/{moulinette,yunohost}/{*.py,*/*.py}
+    while { inotifywait --quiet -r -e modify /ynh-dev/yunohost/share /ynh-dev/yunohost/locales/ /ynh-dev/yunohost/src /ynh-dev/moulinette/moulinette --exclude "(test_|\.pyc)" || true; }
     do
+        echo ""
+        echo "=========================="
         info "Restarting services"
-        systemctl restart yunohost-api yunohost-portal-api
+        echo "=========================="
+        echo ""
+        kill_and_restart_api
     done
 
 }
