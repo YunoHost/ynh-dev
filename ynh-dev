@@ -2,6 +2,14 @@
 
 # shellcheck disable=SC2155,SC2034,SC2164
 
+set -e -o pipefail
+
+if (( $(lsb_release -rs) >= 12 )); then
+    YARN_CMD=yarnpkg
+else
+    YARN_CMD=yarn
+fi
+
 function show_usage() {
     cat <<EOF
 
@@ -17,7 +25,9 @@ function show_usage() {
   ${BLUE}=======================${NORMAL}
 
   ip              Give the ip of the guest container
-  use-git [PKG]   Use Git repositories from dev environment path
+  use-git [--skip-yarn-install,-s] [PKG]
+                  Use Git repositories from dev environment path.
+                  -s option skips yarn install in case you want to install NPM packages outside the container yourself.
   lint [PKG]      Lint source code from core or app packages.
                   e.g. ./ynh-dev lint yunohost
                   e.g. ./ynh-dev lint nextcloud_ynh
@@ -132,29 +142,33 @@ function create_sym_link() {
 function prepare_cache_and_deps() {
     local DEV_PATH="$1"
     local CACHE_PATH="$2"
+    local SKIP_YARN_INSTALL=${3:-false}
 
     mkdir -p "$CACHE_PATH"
-    # create_sym_link "$DEV_PATH/.env" "$CACHE_PATH/.env"
-    create_sym_link "$CACHE_PATH/node_modules" "$DEV_PATH/node_modules"
+    
     create_sym_link "$DEV_PATH/package.json" "$CACHE_PATH/package.json"
     create_sym_link "$DEV_PATH/yarn.lock" "$CACHE_PATH/yarn.lock"
+    
 
     # Vite require node v14 to parse modern syntax
     local DISTRO="$(lsb_release -s -c)"
 
     # install yarn if not already
-    if [[ $(dpkg-query -W -f='${Status}' yarn 2>/dev/null | grep -c "ok installed") -eq 0 ]];
+    if [[ $(dpkg-query -W -f='${Status}' $YARN_CMD 2>/dev/null | grep -c "ok installed") -eq 0 ]];
     then
-        info "Installing yarn…"
-        apt update
-        apt install yarn
+        info "Installing $YARN_CMD…"
+        apt update -y
+        apt install -y $YARN_CMD
     fi
-
-    pushd "$CACHE_PATH"
-    # Install dependencies with yarn forced to lock file versions (equivalent to `npm ci`)
-    info "Installing dependencies ... (this may take a while)"
-    yarn install --frozen-lockfile
-    popd
+    
+    if [[ $SKIP_YARN_INSTALL != true ]]; then
+        create_sym_link "$CACHE_PATH/node_modules" "$DEV_PATH/node_modules"
+        pushd "$CACHE_PATH"
+        # Install dependencies with yarn forced to lock file versions (equivalent to `npm ci`)
+        info "Installing dependencies ... (this may take a while)"
+        $YARN_CMD install --frozen-lockfile
+        popd
+    fi
 }
 
 ##################################################################
@@ -272,7 +286,20 @@ function show_vm_ip()
 function use_git()
 {
     assert_inside_vm
-    local PACKAGES=("$@")
+    local ARGS=("$@")
+    local SKIP_YARN_INSTALL=false
+    declare -a PACKAGES
+    
+    for i in "${!ARGS[@]}"; do
+        case ${ARGS[i]} in
+            --skip-yarn-install|-s)
+                SKIP_YARN_INSTALL=true
+            ;;
+            *)
+                PACKAGES+=(${ARGS[i]})
+            ;;
+        esac
+    done
 
     if [ "${#PACKAGES[@]}" -eq 0 ]; then
         PACKAGES=('moulinette' 'ssowat' 'yunohost' 'yunohost-admin')
@@ -308,6 +335,11 @@ function use_git()
                 ;;
             yunohost)
 
+                # Refresh dependencies from control file
+                apt install -y devscripts
+                mk-build-deps --install --tool='apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --yes' /ynh-dev/yunohost/debian/control
+                find . -name "yunohost-build-deps*" -delete
+
                 while IFS= read -r -d '' FILE; do
                     create_sym_link "$FILE" "/usr/bin/${FILE##*/}"
                 done < <(find /ynh-dev/yunohost/bin/ -mindepth 1 -maxdepth 1 -print0)
@@ -338,38 +370,41 @@ function use_git()
 
                 local DEV_PATH="/ynh-dev/yunohost-admin/app"
                 local CACHE_PATH="/var/cache/ynh-dev/yunohost-admin"
-
-                create_sym_link "/ynh-dev/yunohost-admin/app/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
-                prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH"
+                prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH" $SKIP_YARN_INSTALL
 
                 cd "$CACHE_PATH"
-
-                # Inject container ip in .env file
-                # Used by vite to expose itself on network and proxy api requests.
-                IP=$(hostname -I | tr ' ' '\n' | grep "\.")
-                echo "VITE_IP=$IP" > .env
 
                 # Allow port 8080 in config file or else the dev server will stop working after postinstall
                 if [[ ! -e /etc/yunohost/installed ]]
                 then
                     python3 - <<EOF
 import os, yaml
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
+
 setting_file = "/etc/yunohost/firewall.yml"
 assert os.path.exists(setting_file), "Firewall yaml file %s does not exists ?" % setting_file
 with open(setting_file) as f:
-    settings = yaml.load(f)
+    settings = yaml.load(f, Loader)
     if 8080 not in settings["ipv4"]["TCP"]:
         settings["ipv4"]["TCP"].append(8080)
+    if 8080 not in settings["ipv6"]["TCP"]:
+        settings["ipv6"]["TCP"].append(8080)
         with open(setting_file, "w") as f:
             yaml.safe_dump(settings, f, default_flow_style=False)
 EOF
                 fi
 
-                local DISTRO="$(lsb_release -s -c)"
-
                 cd "$DEV_PATH"
+                systemctl start yunohost-api
+                # Inject container ip in .env file
+                # Used by vite to expose itself on network and proxy api requests.
+                echo "VITE_IP=$(hostname -I | tr ' ' '\n' | grep "\.")" > "$DEV_PATH/.env"
+                create_sym_link "$DEV_PATH/.env" "$CACHE_PATH/.env"
                 info "Now running dev server"
-                yarn dev --host
+                $YARN_CMD dev --host &
                 ;;
             yunohost-admin-build)
                 if [[ ! -e "/usr/share/yunohost/admin-bkp" ]]
@@ -381,7 +416,7 @@ EOF
                 local DISTRO="$(lsb_release -s -c)"
 
                 cd /ynh-dev/yunohost-admin/app
-                yarn build
+                $YARN_CMD build
 
                 create_sym_link "/ynh-dev/yunohost-admin/app/dist" "/usr/share/yunohost/admin"
 
@@ -411,11 +446,11 @@ If not already, add your instance's IP into '/etc/yunohost/.portal-api-allowed-c
 $IP $MAIN_DOMAIN"
                 fi
 
-                prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH"
+                prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH" $SKIP_YARN_INSTALL
 
                 cd "$DEV_PATH"
                 info "Now running dev server"
-                yarn dev --host
+                $YARN_CMD dev --host
                 ;;
             yunohost-portal-build)
                 assert_yunohost_is_installed
@@ -430,10 +465,10 @@ $IP $MAIN_DOMAIN"
                     mv "$SOURCE_PATH" "$SOURCE_PATH-bkp"
                 fi
 
-                prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH"
+                prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH" $SKIP_YARN_INSTALL
 
                 cd "$DEV_PATH"
-                yarn generate
+                $YARN_CMD generate
 
                 create_sym_link "$DEV_PATH/.output/public" "$SOURCE_PATH"
 
