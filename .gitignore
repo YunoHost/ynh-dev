@@ -16,3 +16,8 @@ ssowat
 # Folders
 apps
 backup
+
+
+__pycache__/
+.mypy_cache/
+.ruff_cache/
