@@ -311,10 +311,6 @@ function use_git()
                 while IFS= read -r -d '' FILE; do
                     create_sym_link "$FILE" "/usr/bin/${FILE##*/}"
                 done < <(find /ynh-dev/yunohost/bin/ -mindepth 1 -maxdepth 1 -print0)
-                mkdir -p "/usr/lib/metronome/modules"
-                while IFS= read -r -d '' FILE; do
-                    create_sym_link "$FILE" "/usr/lib/metronome/modules/${FILE##*/}"
-                done < <(find /ynh-dev/yunohost/conf/metronome/modules/ -mindepth 1 -maxdepth 1 -print0)
                 while IFS= read -r -d '' FILE; do
                     create_sym_link "$FILE" "/usr/share/yunohost/${FILE##*/}"
                 done < <(find /ynh-dev/yunohost/share/ -mindepth 1 -maxdepth 1 -print0)
