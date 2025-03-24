@@ -328,7 +328,7 @@ function use_git()
                 create_sym_link "/ynh-dev/yunohost/locales" "/usr/share/yunohost/locales"
                 create_sym_link "/ynh-dev/yunohost/src" "/usr/lib/python3/dist-packages/yunohost"
 
-                python3 "/ynh-dev/yunohost/doc/generate_bash_completion.py"
+                python3 "/ynh-dev/yunohost/doc/generate_bash_completion.py" -o "/ynh-dev/yunohost/doc/bash-completion.sh"
                 create_sym_link "/ynh-dev/yunohost/doc/bash-completion.sh" "/etc/bash_completion.d/yunohost"
 
                 success "Now using Git repository for YunoHost"
