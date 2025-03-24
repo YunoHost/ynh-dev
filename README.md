@@ -105,6 +105,11 @@ Incus can be installed on Debian 13 or Ubuntu 24.04 with the following command:
 apt install incus
 ```
 
+On Debian 12 or LMDE 6:
+```bash
+apt install incus-base
+```
+
 If you have an older distribution, you need to add the Zabbly repository to your package manager.  
 To do so please follow the installation guide that you can find on <https://github.com/zabbly/incus>.
 
