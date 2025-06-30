@@ -562,21 +562,22 @@ function run_tests()
                 # Run tests
                 info "Running tests for YunoHost"
                 [ -e "/etc/yunohost/installed" ] || critical "You should run postinstallation before running tests :s."
-                if [[ -z "$TEST_MODULE" ]]
-                then
-                    cd /ynh-dev/yunohost/
-                    py.test tests
+
+                # ./src/tests is being moved to ./tests, this small patch supports both paths
+                if [[ -e "/ynh-dev/yunohost/src/tests" ]]; then
                     cd /ynh-dev/yunohost/src
-                    py.test tests
                 else
-                    cd /ynh-dev/yunohost/src
-                    if [[ -z "$TEST_FUNCTION" ]]
-                    then
-                        py.test tests/test_"$TEST_MODULE".py
-                    else
-                        py.test tests/test_"$TEST_MODULE".py::test_"$TEST_FUNCTION"
+                    cd /ynh-dev/yunohost
+                fi
+
+                testpath=tests
+                if [[ -n "$TEST_MODULE" ]]; then
+                    testpath="${testpath}/test_${TEST_MODULE}.py"
+                    if [[ -n "$TEST_FUNCTION" ]]; then
+                        testpath="${testpath}::test_${TEST_FUNCTION}"
                     fi
                 fi
+                pytest "$testpath"
                 ;;
         esac
     done
