@@ -553,8 +553,15 @@ function run_tests()
                     fi
                 done
 
+                # ./src/tests is being moved to ./tests, this small patch supports both paths
+                if [[ -e "/ynh-dev/yunohost/tests/conftest.py" ]]; then
+                    tests_parentdir=/ynh-dev/yunohost
+                else
+                    tests_parentdir=/ynh-dev/yunohost/src
+                fi
+
                 # Apps for test
-                cd /ynh-dev/yunohost/src/tests
+                cd "$tests_parentdir/tests"
                 [ -d "apps" ] || git clone https://github.com/YunoHost/test_apps ./apps
                 cd apps
                 git pull > /dev/null 2>&1
@@ -563,13 +570,6 @@ function run_tests()
                 info "Running tests for YunoHost"
                 [ -e "/etc/yunohost/installed" ] || critical "You should run postinstallation before running tests :s."
 
-                # ./src/tests is being moved to ./tests, this small patch supports both paths
-                if [[ -e "/ynh-dev/yunohost/src/tests" ]]; then
-                    cd /ynh-dev/yunohost/src
-                else
-                    cd /ynh-dev/yunohost
-                fi
-
                 testpath=tests
                 if [[ -n "$TEST_MODULE" ]]; then
                     testpath="${testpath}/test_${TEST_MODULE}.py"
@@ -577,6 +577,7 @@ function run_tests()
                         testpath="${testpath}::test_${TEST_FUNCTION}"
                     fi
                 fi
+                cd "$tests_parentdir"
                 pytest "$testpath"
                 ;;
         esac
