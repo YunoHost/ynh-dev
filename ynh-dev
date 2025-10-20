@@ -543,8 +543,9 @@ function run_tests()
                 # Pytest and tests dependencies
                 if ! type "pytest" > /dev/null 2>&1; then
                     info "> Installing pytest ..."
+                    apt-get update
                     apt-get install python3-pip -y
-                    pip3 install pytest pytest-sugar --break-system-packages
+                    pip3 install pytest pytest-sugar pytest-cov --break-system-packages
                 fi
                 for DEP in pytest-mock requests-mock mock; do
                     if [ -z "$(pip3 show $DEP)" ]; then
