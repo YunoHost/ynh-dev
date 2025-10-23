@@ -454,7 +454,7 @@ function api()
     {
         systemctl --quiet is-active yunohost-api && systemctl stop yunohost-api || true
         systemctl --quiet is-active yunohost-portal-api && systemctl stop yunohost-portal-api || true
-        for PID in $(pgrep -f yunohost-api) $(pgrep -f yunohost-portal-api); do kill $PID; done
+        for PID in $(pgrep -f yunohost-api) $(pgrep -f yunohost-portal-api); do kill "$PID"; done
         yunohost-api --debug &
         yunohost-portal-api --debug &
     }
