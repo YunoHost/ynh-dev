@@ -244,30 +244,31 @@ In packages like `yunohost`, you have automated non-regression tests at your dis
 >
 > And run `yunohost tool postinstall` like for the other container.
 
-To run the tests, supposing you already have run `./ynh-dev use-git PKG`, inside the container, you may run:
+To run the tests, assuming you have already run `./ynh-dev use-git PKG` within the container, you can use the following command:
 
 ```bash
 ./ynh-dev test PKG
 ```
 
-Say you want to run all the Python tests of Yunohost (not the bash helpers tests though):
+For example, to run all Python tests for Yunohost (excluding bash helper tests):
 
 ```bash
 ./ynh-dev test yunohost
 ```
 
-Or specifically the test file `tests/test_appurl.py`:
+To run tests for a specific file, such as `tests/test_appurl.py`:
 
 ```bash
 ./ynh-dev test yunohost appurl
 ```
 
-Or even exclusively the test function named `test_urlavailable()` inside that test file:
+Or, to run a specific test function, like `test_urlaavailable()` within the `tests/test_appurl.py` file:
+
 ```bash
 ./ynh-dev test yunohost/appurl:urlavailable
 ```
 
-Note that `./ynh-dev test` will install all the required dependencies (`pip`, `pytest`, `mock`) for you.
+Note that `./ynh-dev test` automatically installs the necessary dependencies (`pip`, `pytest`, `mock`) for test execution.
 
 ### Advanced: using snapshots
 
