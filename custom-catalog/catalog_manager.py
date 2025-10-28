@@ -1,17 +1,18 @@
 #!/usr/bin/python3
 
-import sys
-import os
 import json
-import toml
-import yaml
+import os
+import sys
 import time
 from collections import OrderedDict
+from pathlib import Path
+from typing import Any
 
-CATALOG_LIST_PATH = "/etc/yunohost/apps_catalog.yml"
-assert os.path.exists(
-    CATALOG_LIST_PATH
-), f"Catalog list yaml file '{CATALOG_LIST_PATH} does not exists"
+import toml
+import yaml
+
+CATALOG_LIST_PATH = Path("/etc/yunohost/apps_catalog.yml").resolve()
+assert CATALOG_LIST_PATH.exists(), f"Catalog list yaml file '{CATALOG_LIST_PATH} does not exists"
 
 now = time.time()
 my_env = os.environ.copy()
@@ -21,13 +22,14 @@ DEFAULT_APPS_FOLDER = "/ynh-dev/custom-catalog/"
 DEFAULT_APP_BRANCH = "master"
 
 
-def build(folder=DEFAULT_APPS_FOLDER):
-    assert os.path.exists(folder), f"'{folder}' doesn't exists."
+def build(folder: Path | str = DEFAULT_APPS_FOLDER) -> None:
+    folder = Path(folder)
+    assert folder.exists(), f"'{folder}' doesn't exists."
 
-    app_list_path = os.path.join(folder, "apps.json")
-    assert os.path.exists(app_list_path), "no 'apps.json' app list found."
+    app_list_path = folder / "apps.json"
+    assert app_list_path.exists(), "no 'apps.json' app list found."
 
-    with open(app_list_path) as f:
+    with app_list_path.open() as f:
         app_list = json.load(f)
 
     apps = {}
@@ -44,37 +46,38 @@ def build(folder=DEFAULT_APPS_FOLDER):
 
         apps[app_dict["id"]] = app_dict
 
-    # We also remove the app install question and resources parts which aint needed anymore by webadmin etc (or at least we think ;P)
+    # We also remove the app install question and resources parts which aint needed
+    # anymore by webadmin etc (or at least we think ;P)
     for app in apps.values():
         if "manifest" in app and "install" in app["manifest"]:
             del app["manifest"]["install"]
         if "manifest" in app and "resources" in app["manifest"]:
             del app["manifest"]["resources"]
 
-    output_file = os.path.join(folder, "catalog.json")
+    output_file = folder / "catalog.json"
     data = {
         "apps": apps,
         "from_api_version": 3,
     }
 
-    with open(output_file, "w") as f:
+    with output_file.open("w") as f:
         f.write(json.dumps(data, sort_keys=True, indent=2))
 
     if fail:
         sys.exit(1)
 
 
-def build_app_dict(app, infos, folder):
-    app_folder = os.path.join(folder, app + "_ynh")
+def build_app_dict(app: str, infos: dict[str, Any], folder: Path) -> dict[str, Any]:
+    app_folder = folder / f"{app}_ynh"
 
     # Build the dict with all the infos
-    manifest_toml = os.path.join(app_folder, "manifest.toml")
-    manifest_json = os.path.join(app_folder, "manifest.json")
-    if os.path.exists(manifest_toml):
-        with open(manifest_toml) as f:
+    manifest_toml = app_folder / "manifest.toml"
+    manifest_json = app_folder / "manifest.json"
+    if manifest_toml.exists():
+        with manifest_toml.open() as f:
             manifest = toml.load(f, _dict=OrderedDict)
     else:
-        with open(manifest_json) as f:
+        with manifest_json.open() as f:
             manifest = json.load(f, _dict=OrderedDict)
 
     return {
@@ -94,32 +97,27 @@ def build_app_dict(app, infos, folder):
         "category": infos.get("category", None),
         "subtags": infos.get("subtags", []),
         "potential_alternative_to": infos.get("potential_alternative_to", []),
-        "antifeatures": list(
-            set(
-                list(manifest.get("antifeatures", {}).keys())
-                + infos.get("antifeatures", [])
-            )
-        ),
+        "antifeatures": list(set(list(manifest.get("antifeatures", {}).keys()) + infos.get("antifeatures", []))),
     }
 
 
-def reset():
-    with open(CATALOG_LIST_PATH, "w") as f:
+def reset() -> None:
+    with CATALOG_LIST_PATH.open("w") as f:
         catalog_list = [{"id": "default", "url": "https://app.yunohost.org/default/"}]
         yaml.safe_dump(catalog_list, f, default_flow_style=False)
 
 
-def add():
-    with open(CATALOG_LIST_PATH) as f:
+def add() -> None:
+    with CATALOG_LIST_PATH.open("r") as f:
         catalog_list = yaml.load(f, Loader=yaml.FullLoader)
         ids = [catalog["id"] for catalog in catalog_list]
         if "custom" not in ids:
             catalog_list.append({"id": "custom", "url": None})
-            with open(CATALOG_LIST_PATH, "w") as f:
+            with CATALOG_LIST_PATH.open("w") as f:
                 yaml.safe_dump(catalog_list, f, default_flow_style=False)
 
 
-def override():
-    with open(CATALOG_LIST_PATH, "w") as f:
+def override() -> None:
+    with CATALOG_LIST_PATH.open("w") as f:
         catalog_list = [{"id": "custom", "url": None}]
         yaml.safe_dump(catalog_list, f, default_flow_style=False)

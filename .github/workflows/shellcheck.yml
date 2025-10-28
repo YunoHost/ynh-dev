@@ -2,6 +2,7 @@ name: Run Shellcheck on push and PR
 
 on:
   push:
+    branches: [master]
   pull_request:
 
 jobs:
@@ -9,7 +10,7 @@ jobs:
     name: Shellcheck
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Run ShellCheck
       uses: ludeeus/action-shellcheck@master
       with:
