@@ -14,6 +14,7 @@ Please report issues on the following repository: <https://github.com/yunohost/i
     - [2. Manage YunoHost's dev LXCs](#2-manage-yunohosts-dev-lxcs)
     - [3. Development and container testing](#3-development-and-container-testing)
     - [4. Testing the web interface](#4-testing-the-web-interface)
+    - [5. Running the automated tests](#5-running-the-automated-tests)
     - [Advanced: using snapshots](#advanced-using-snapshots)
     - [Troubleshooting](#troubleshooting)
   - [Remote Development Environment](#remote-development-environment)
@@ -232,6 +233,47 @@ If you want to access to the interface using the domain name, you shall tweak yo
 Note that `./ynh-dev use-git yunohost-admin` has a particular behavior: it starts a `gulp` watcher
 that shall re-compile automatically any changes in the javascript code. Hence this particular `use-git`
 will keep running until you kill it after your work is done.
+
+### 5. Running the automated tests
+
+In packages like `yunohost`, you have automated non-regression tests at your disposal (that you may change if you want to suggest changes).
+
+> [!TIP]
+> You might be interested in creating a separate incus container to run your tests than for the one you use for packages
+>
+> In such case, you may initiate or attach the container with a specific name, like:
+>
+> ```bash
+> ./ynh-dev start bookworm ynh-test
+> ```
+>
+> And run `yunohost tools postinstall` like for the other container.
+
+To run the tests, assuming you have already run `./ynh-dev use-git PKG` within the container, you can use the following command:
+
+```bash
+./ynh-dev test PKG
+```
+
+For example, to run all Python tests for Yunohost (excluding bash helper tests):
+
+```bash
+./ynh-dev test yunohost
+```
+
+To run tests for a specific file, such as `tests/test_appurl.py`:
+
+```bash
+./ynh-dev test yunohost appurl
+```
+
+Or, to run a specific test function, like `test_urlaavailable()` within the `tests/test_appurl.py` file:
+
+```bash
+./ynh-dev test yunohost/appurl:urlavailable
+```
+
+Note that `./ynh-dev test` automatically installs the necessary dependencies (`pip`, `pytest`, `mock`) for test execution.
 
 ### Advanced: using snapshots
 
