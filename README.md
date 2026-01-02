@@ -242,7 +242,7 @@ In packages like `yunohost`, you have automated non-regression tests at your dis
 > ./ynh-dev start bookworm ynh-test
 > ```
 >
-> And run `yunohost tool postinstall` like for the other container.
+> And run `yunohost tools postinstall` like for the other container.
 
 To run the tests, assuming you have already run `./ynh-dev use-git PKG` within the container, you can use the following command:
 
