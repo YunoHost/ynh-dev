@@ -229,6 +229,12 @@ If you want to access to the interface using the domain name, you shall tweak yo
 111.222.333.444 yolo.test
 ```
 
+If the web interface show an error about unresponding Yunohost API, you can start it with:
+
+```bash
+sudo systemctl restart yunohost-api
+```
+
 Note that `./ynh-dev use-git yunohost-admin` has a particular behavior: it starts a `gulp` watcher
 that shall re-compile automatically any changes in the javascript code. Hence this particular `use-git`
 will keep running until you kill it after your work is done.
