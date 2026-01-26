@@ -120,17 +120,16 @@ You then need to add yourself in the incus-admin group, to run incus without sud
 sudo usermod -a -G incus-admin $(whoami)
 ```
 
-Now the group incus-admin should be present when you type the command:
+If you restart your session the group incus-admin should be present when you type the command:
 
 ```bash
 groups
 ```
 
-If not you need to create the group first:
+Instead of restarting your session, you can login into the group:
 
 ```bash
 newgrp incus-admin
-sudo usermod -a -G incus-admin $(whoami)
 ```
 
 Then you shall initialize Incus which will ask you a bunch of question. Usually
