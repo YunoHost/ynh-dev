@@ -1,3 +1,9 @@
+# Python stuff
+__pycache__/
+.*_cache/
+uv.lock
+.python-version
+
 # Apps
 *_ynh
 
@@ -11,6 +17,7 @@ Vagrantfile
 moulinette
 yunohost
 yunohost-admin
+yunohost-portal
 ssowat
 
 # Folders

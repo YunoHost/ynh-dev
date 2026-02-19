@@ -249,7 +249,7 @@ In packages like `yunohost`, you have automated non-regression tests at your dis
 > In such case, you may initiate or attach the container with a specific name, like:
 >
 > ```bash
-> ./ynh-dev start bookworm ynh-test
+> ./ynh-dev -d bookworm -v core-tests -b stable start
 > ```
 >
 > And run `yunohost tools postinstall` like for the other container.
@@ -293,7 +293,8 @@ It could be due to bridge conflict (for example if you have incus installed too)
 This [ticket](https://github.com/YunoHost/issues/issues/1664) could help.
 
 If you have docker and incus, and your dns resolution inside incus container does not work at all, you can try:
-```
+
+```bash
 sudo iptables -I DOCKER-USER -i incusbr0 -o eno1 -j ACCEPT
 ```
 
@@ -316,9 +317,9 @@ Depending on what you want to achieve, you might want to run the postinstall rig
 Deploy a `ynh-dev` folder at the root of the filesystem with:
 
 ```bash
-cd /
-curl https://raw.githubusercontent.com/yunohost/ynh-dev/master/deploy.sh | bash
+git clone https://github.com/yunohost/ynh-dev /ynh-dev
 cd /ynh-dev
+./ynh-dev init
 ```
 
 ### 3. Develop and test
