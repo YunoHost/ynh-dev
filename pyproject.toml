@@ -82,4 +82,5 @@ ignore = [
     "D200",     # unnecessary-multiline-docstring
     "D212",     # multi-line-summary-first-line
     "D401",     # non-imperative-mood
+    "FURB171",
 ]

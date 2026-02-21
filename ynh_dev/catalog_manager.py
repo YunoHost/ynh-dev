@@ -32,18 +32,19 @@ class Catalog:
         apps = {}
         fail = False
 
-        for app, infos in apps_list.items():
-            app = app.lower()
+        for app_, infos in apps_list.items():
+            app = app_.lower()
             try:
                 app_dict = self.build_app_dict(app, infos, folder)
-            except Exception as e:
+            except (OSError, json.JSONDecodeError, toml.TomlDecodeError) as e:
                 print(f"[\033[1m\033[31mFAIL\033[00m] Processing {app} failed: {e!s}")
                 fail = True
                 continue
 
             apps[app_dict["id"]] = app_dict
 
-        # We also remove the app install question and resources parts which aint needed anymore by webadmin etc (or at least we think ;P)
+        # We also remove the app install question and resources parts which aint
+        # needed anymore by webadmin etc (or at least we think ;P)
         for app in apps.values():
             if "manifest" in app and "install" in app["manifest"]:
                 del app["manifest"]["install"]

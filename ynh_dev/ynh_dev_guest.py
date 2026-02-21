@@ -186,7 +186,8 @@ class YunoHost:
             return notifier
 
         print(
-            "Monitoring for changes in python files, restarting yunohost-api and yunohost-portal-api when changes occur!"
+            "Monitoring for changes in python files, restarting yunohost-api and "
+            "yunohost-portal-api when changes occur!"
         )
         restart_api()
         atexit.register(kill_api)
@@ -381,7 +382,7 @@ PROJECTS: dict[str, Any] = {
 def main_container() -> None:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(title="container actions", required=True, dest="action")
-    ip = sub.add_parser("ip", help="Give the ip of the guest container")
+    action = sub.add_parser("ip", help="Give the ip of the guest container")
     action = sub.add_parser("use-git", help="Use Git repositories from dev environment path")
     action.add_argument("components", type=str, nargs="+", choices=PROJECTS)
     action = sub.add_parser("use-git-dev", help="Use Git repositories from dev environment path and start dev server")
