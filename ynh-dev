@@ -6,9 +6,11 @@ import os
 def main() -> None:
     if "container" in os.environ:
         from ynh_dev.ynh_dev_guest import main_container  # noqa: PLC0415
+
         main_container()
     else:
         from ynh_dev.ynh_dev_host import main_host  # noqa: PLC0415
+
         main_host()
 
 

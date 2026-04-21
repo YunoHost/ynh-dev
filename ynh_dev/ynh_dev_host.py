@@ -77,7 +77,6 @@ def main_host() -> None:
             incus.instance_delete(container)
 
 
-
 def clone_or_pull(url: str, path: Path) -> None:
     if path.exists():
         subprocess.check_call(["git", "pull"], cwd=path)
