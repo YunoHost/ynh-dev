@@ -1,0 +1,26 @@
+name: Lint with Mypy, Ruff
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install --group lint
+      - name: Run mypy
+        run: mypy ynh-dev ynh_dev
+      - uses: astral-sh/ruff-action@v3
+        with:
+          src: ynh-dev ynh_dev

@@ -1,0 +1,86 @@
+[project]
+name = "ynh-dev"
+version = "2.0"
+description = "Yunohost dev environment manager"
+readme = "README.md"
+authors = [
+    {name = "YunoHost", email = "yunohost@yunohost.org"}
+]
+requires-python = ">=3.11"
+
+dependencies = [
+    "pyinotify",
+]
+
+
+[dependency-groups]
+lint = [
+    "ruff",
+    "mypy>=1.18",
+    "types-toml",
+    "types-PyYAML",
+    "types-psutil",
+]
+
+[tool.uv]
+package = false
+
+[[tool.mypy.overrides]]
+module = ["pyinotify.*"]
+follow_untyped_imports = true
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "YTT",      # flake8-2020
+    "ANN",      # flake8-annotations
+    "BLE",      # flake8-blind-except
+    "B",        # flake8-bugbear
+    "A",        # flake8-builtins
+    "C4",       # flake8-comprehensions
+    "DTZ",      # flake8-datetimez
+    "ISC",      # flake8-implicit-str-concat
+    "ICN",      # flake8-import-conventions
+    # "LOG",      # flake8-logging
+    # "G",        # flake8-logging-format
+    "PIE",      # flake8-pie
+    "Q",        # flake8-quotes
+    "RET",      # flake8-return
+    "SIM",      # flake8-simplify
+    "SLOT",     # flake8-slots
+    "PTH",      # flake8-use-pathlib
+    "FLY",      # flynt
+    "I",        # isort
+    "N",        # pep8-naming
+    "PERF",     # Perflint
+    "E",        # pycodestyle
+    "W",        # pycodestyle
+    "F",        # Pyflakes
+    "PL",       # Pylint
+    "UP",       # pyupgrade
+    "FURB",     # refurb
+    "RUF",      # Ruff-specific rules
+    "TRY",      # tryceratops
+    # "D",
+]
+ignore = [
+    "ANN401",   # any-type
+    "COM812",   # missing-trailing-comma
+    "D203",     # incorrect-blank-line-before-class
+    "PLR0911",  # too-many-return-statements
+    "PLR0912",  # too-many-branches
+    "PLR0913",  # too-many-arguments
+    "PLR0915",  # too-many-statements
+    "PLR2004",  # magic-value-comparison
+    "UP009",    # utf8-encoding-declaration
+    "TRY003",   # raise-vanilla-args
+    "D100",     # undocumented-public-module
+    "D104",     # undocumented-public-package
+    "D105",     # undocumented-magic-method
+    "D200",     # unnecessary-multiline-docstring
+    "D212",     # multi-line-summary-first-line
+    "D401",     # non-imperative-mood
+    "FURB171",
+]
