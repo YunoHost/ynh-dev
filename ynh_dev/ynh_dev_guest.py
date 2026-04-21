@@ -7,7 +7,6 @@ import shutil
 import subprocess
 import textwrap
 from pathlib import Path
-from typing import Any
 
 import psutil
 import pyinotify
@@ -63,7 +62,24 @@ def symlink(target: Path, link: Path) -> None:
     link.symlink_to(target)
 
 
-class SSOWat:
+class Project:
+    def __init__(self, path: Path) -> None:
+        pass
+
+    def use(self, root: Path) -> None:
+        pass
+
+    def dev(self, root: Path) -> None:
+        pass
+
+    def lint(self) -> None:
+        pass
+
+    def test(self) -> None:
+        pass
+
+
+class SSOWat(Project):
     def __init__(self, path: Path) -> None:
         self.path = path
         self.name = "ssowat"
@@ -102,7 +118,7 @@ class SSOWat:
         print(f"Linker not implemented for {self.name}")
 
 
-class Moulinette:
+class Moulinette(Project):
     def __init__(self, path: Path) -> None:
         self.path = path
         self.name = "moulinette"
@@ -120,7 +136,7 @@ class Moulinette:
         subprocess.run([str(tox), "run", "-e", "py311-mypy"], cwd=self.path, check=False)
 
 
-class YunoHost:
+class YunoHost(Project):
     def __init__(self, path: Path) -> None:
         self.path = path
         self.name = "yunohost"
@@ -205,7 +221,7 @@ class YunoHost:
         clone_or_pull("https://github.com/YunoHost/test_apps", test_apps_dir)
 
 
-class YunoHostAdmin:
+class YunoHostAdmin(Project):
     def __init__(self, path: Path) -> None:
         self.path = path
         self.name = "yunohost-admin"
@@ -298,7 +314,7 @@ class YunoHostAdmin:
         # pytest "$testpath"
 
 
-class YunoHostPortal:
+class YunoHostPortal(Project):
     def __init__(self, path: Path) -> None:
         self.path = path
         self.name = "yunohost-portal"
@@ -370,7 +386,7 @@ def test_app(app: Path) -> None:
     )
 
 
-PROJECTS: dict[str, Any] = {
+PROJECTS: dict[str, type[Project]] = {
     "moulinette": Moulinette,
     "ssowat": SSOWat,
     "yunohost": YunoHost,
@@ -409,29 +425,30 @@ def main_container() -> None:
     catalog_sub.add_parser("reset", help="Reset the catalog list to Yunohost's default")
 
     args = parser.parse_args()
+    ynh_dev = Path("/ynh-dev")
 
     match args.action:
         case "ip":
             print("\n".join(ips()))
         case "use-git":
             for arg in args.components:
-                project = PROJECTS[arg](f"/ynh-dev/{arg}")
+                project = PROJECTS[arg](ynh_dev / arg)
                 project.use(Path("/"))
         case "use-git-dev":
             for arg in args.components:
-                project = PROJECTS[arg](f"/ynh-dev/{arg}")
+                project = PROJECTS[arg](ynh_dev / arg)
                 project.dev(Path("/"))
         case "lint":
             for arg in args.components:
-                project = PROJECTS[arg](f"/ynh-dev/{arg}")
+                project = PROJECTS[arg](ynh_dev / arg)
                 project.lint()
         case "test":
             for arg in args.components:
                 if arg in PROJECTS:
-                    project = PROJECTS[arg](f"/ynh-dev/{arg}")
+                    project = PROJECTS[arg](ynh_dev / arg)
                     project.test()
                 else:
-                    test_app(Path(f"/ynh-dev/apps/{args.component}"))
+                    test_app(ynh_dev / "apps" / args.component)
         case "catalog":
             getattr(Catalog(), args.catalog_action)()
 
