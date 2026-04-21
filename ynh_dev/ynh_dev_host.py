@@ -115,9 +115,9 @@ def check_incus_setup() -> None:
 
 
 def ensure_incus_remote() -> None:
-    remote_url = "https://repo.yunohost.org/incus/"
+    remote_url = "https://repo.yunohost.org/incus"
     if ynh_remote := Incus().remotes().get("yunohost"):
-        if (url := ynh_remote["Addr"]) != remote_url:
+        if (url := ynh_remote["Addr"].removesuffix("/")) != remote_url:
             logging.error(f"Remote yunohost has url {url} instead of {remote_url}!")
             sys.exit(1)
         return
