@@ -302,7 +302,7 @@ function use_git()
                 success "Now using Git repository for SSOwat"
                 ;;
             moulinette)
-                create_sym_link "/ynh-dev/moulinette/locales" "/usr/share/moulinette/locale"
+                create_sym_link "/ynh-dev/moulinette/locales" "/usr/share/moulinette/locales"
                 create_sym_link "/ynh-dev/moulinette/moulinette" "/usr/lib/python3/dist-packages/moulinette"
                 success "Now using Git repository for Moulinette"
                 ;;
