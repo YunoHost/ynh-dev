@@ -332,10 +332,10 @@ function use_git()
                 ;;
             yunohost-admin)
 
-                local DEV_PATH="/ynh-dev/yunohost-admin/app"
+                local DEV_PATH="/ynh-dev/yunohost-admin"
                 local CACHE_PATH="/var/cache/ynh-dev/yunohost-admin"
 
-                create_sym_link "/ynh-dev/yunohost-admin/app/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
+                create_sym_link "/ynh-dev/yunohost-admin/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
                 prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH"
 
                 cd "$CACHE_PATH"
@@ -376,10 +376,10 @@ EOF
 
                 local DISTRO="$(lsb_release -s -c)"
 
-                cd /ynh-dev/yunohost-admin/app
+                cd /ynh-dev/yunohost-admin
                 yarnpkg build
 
-                create_sym_link "/ynh-dev/yunohost-admin/app/dist" "/usr/share/yunohost/admin"
+                create_sym_link "/ynh-dev/yunohost-admin/dist" "/usr/share/yunohost/admin"
 
                 IP=$(hostname -I | tr ' ' '\n' | grep "\.")
                 success "App builded and available at https://$IP/yunohost/admin"
