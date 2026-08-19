@@ -198,7 +198,7 @@ function start_ynhdev()
 {
     check_incus_setup
 
-    local DIST=${1:-bookworm}
+    local DIST=${1:-trixie}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
