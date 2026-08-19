@@ -153,7 +153,7 @@ function prepare_cache_and_deps() {
     pushd "$CACHE_PATH"
     # Install dependencies with yarn forced to lock file versions (equivalent to `npm ci`)
     info "Installing dependencies ... (this may take a while)"
-    yarnpkg install --frozen-lockfile
+    yarnpkg install --immutable
     popd
 }
 
