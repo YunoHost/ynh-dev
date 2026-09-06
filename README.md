@@ -15,7 +15,7 @@ Please report issues on the following repository: <https://github.com/yunohost/i
     - [3. Development and container testing](#3-development-and-container-testing)
     - [4. Testing the web interface](#4-testing-the-web-interface)
     - [5. Running the automated tests](#5-running-the-automated-tests)
-    - [Advanced: using snapshots](#advanced-using-snapshots)
+    - [6. Using snapshots](#6-using-snapshots)
     - [Troubleshooting](#troubleshooting)
   - [Remote Development Environment](#remote-development-environment)
     - [1. Setup your VPS and install YunoHost](#1-setup-your-vps-and-install-yunohost)
@@ -111,7 +111,7 @@ On Debian 12 or LMDE 6:
 apt install incus-base
 ```
 
-If you have an older distribution, you need to add the Zabbly repository to your package manager.  
+If you have an older distribution, you need to add the Zabbly repository to your package manager.
 To do so please follow the installation guide that you can find on <https://github.com/zabbly/incus>.
 
 You then need to add yourself in the incus-admin group, to run incus without sudo every time:
@@ -280,9 +280,19 @@ Or, to run a specific test function, like `test_urlaavailable()` within the `tes
 
 Note that `./ynh-dev test` automatically installs the necessary dependencies (`pip`, `pytest`, `mock`) for test execution.
 
-### Advanced: using snapshots
+### 6. Using snapshots
 
-You can check `incus snapshot --help` to learn how to manage incus snapshots.
+Snapshots allows you to save the state of your container that you may restore later (to undo changes you may have done in the meantime).
+
+It is very convenient for example when you develop features around the Yunohost core.
+
+Snapshot are a feature of `incus`, and `ynh-dev` offers a wrapper to manage them easily.
+
+Check out all the commands by running this command:
+
+```bash
+./ynh-dev snapshot --help
+```
 
 ### Troubleshooting
 
