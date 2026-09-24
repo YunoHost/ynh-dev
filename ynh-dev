@@ -174,37 +174,37 @@ function container_info_opts() {
     HELP=false
     while true
     do
-            case "$1" in
-                -h|--help)
-                    HELP=true
-                    shift
-                    break
-                    ;;
-                -n|--name)
-                    NAME=$2
-                    shift 2
-                    ;;
-                -d|--dist)
-                    DIST=$2
-                    shift 2
-                    ;;
-                -b|--branch)
-                    YNH_BRANCH=$2
-                    shift 2
-                    ;;
-                --)
-                    shift
-                    break
-                    ;;
-                -*)
-                    echo "Not implemented: $1" >&2
-                    exit 1
-                    ;;
-                *)
-                    break
-                    ;;
-            esac
-        done
+        case "$1" in
+            -h|--help)
+                HELP=true
+                shift
+                break
+                ;;
+            -n|--name)
+                NAME=$2
+                shift 2
+                ;;
+            -d|--dist)
+                DIST=$2
+                shift 2
+                ;;
+            -b|--branch)
+                YNH_BRANCH=$2
+                shift 2
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -*)
+                echo "Not implemented: $1" >&2
+                exit 1
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
     BOX="${NAME:-ynh-dev}-${DIST:-$DEFAULT_DIST}-${YNH_BRANCH:-unstable}"
     REST="$*"
 }
