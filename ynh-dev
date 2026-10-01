@@ -58,7 +58,7 @@ function main()
         dev|--dev)                 dev            "${ARGUMENTS[@]}" ;;
         lint|--lint)               run_linters      "${ARGUMENTS[@]}" ;;
         test|--test)               run_tests      "${ARGUMENTS[@]}" ;;
-        debug|--debug)               run_debug      "${ARGUMENTS[@]}" ;;
+        debug|--debug)             run_debug      "${ARGUMENTS[@]}" ;;
 
         catalog|--catalog)         catalog        "${ARGUMENTS[@]}" ;;
 
@@ -578,7 +578,7 @@ function run_tests()
     done
 }
 function run_debug() {
-    if ! dpkg -l |grep python3-debugpy > /dev/null
+    if ! dpkg -l | grep -q python3-debugpy
     then
         apt install -y python3-debugpy
     fi
