@@ -195,7 +195,9 @@ Incus's dnsmasq to run correctly (as stated before in the setup section.)
 After SSH-ing inside the container, you should notice that the *directory* `/ynh-dev` is a shared folder with your host.
 In particular, it contains the various git clones `yunohost`, `yunohost-admin` and so on - as well as the `./ynh-dev` script itself.
 
-**Most of the time, the first thing you'll want to do is to start by running `yunohost tools postinstall` as the first command**
+Prior doing anything in the container, run `apt update && apt upgrade -y` to upgrade the Debian packages which potentially became stale since the image was built and avoid running into errors.
+
+**Then, most of the time, the first thing you'll want to do is to start by running `yunohost tools postinstall` as the first command**
 (except if you are working on something that happens before the postinstall).
 
 Inside the container, `./ynh-dev` can be used to link the git clones living in the host to the code being ran inside the container.
