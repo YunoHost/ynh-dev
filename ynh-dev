@@ -316,10 +316,35 @@ function rebuild_ynhdev()
     local DIST=${1:-bookworm}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
+    local ARCH=$(dpkg --print-architecture)
 
     set -x
     incus info "$BOX-rebuild" >/dev/null && incus delete "$BOX-rebuild" --force
-    incus launch "images:debian/$DIST/amd64" "$BOX-rebuild"  -c security.nesting=true -c security.privileged=true
+    if [[ "$ARCH" == "armhf" ]]; then
+        sudo apt install debootstrap -y
+        sudo mkdir -p ~/lxc-images/debian-$DIST/img
+        sudo debootstrap $DIST ~/lxc-images/debian-$DIST/img
+        sudo tar -czf ~/lxc-images/debian-$DIST/rootfs.tar.gz -C ~/lxc-images/debian-$DIST/img .
+        sudo cat << EOF > ~/lxc-images/debian-$DIST/metadata.yaml
+creation_date: $(date +%s)
+properties:
+architecture: "$ARCH"
+description: "Yunohost Debian ($DIST)"
+os: "debian"
+release: "$DIST"
+EOF
+        sudo tar -czf ~/lxc-images/debian-$DIST/metadata.tar.gz -C ~/lxc-images/debian-$DIST/ metadata.yaml
+        incus image import ~/lxc-images/debian-$DIST/metadata.tar.gz ~/lxc-images/debian-$DIST/rootfs.tar.gz --alias $BOX-rebuild
+        incus launch "$BOX-rebuild" "$BOX-rebuild" -c security.nesting=true -c security.privileged=true
+        incus exec "$BOX-rebuild" -- dhclient
+        incus exec "$BOX-rebuild" -- bash -c "cat << EOF > /etc/network/interfaces.d/eth0
+auto eth0
+iface eth0 inet dhcp
+allow-hotplug eth0
+EOF"
+    else
+        incus launch "images:debian/$DIST/$ARCH" "$BOX-rebuild" -c security.nesting=true -c security.privileged=true
+    fi
     sleep 5
     incus exec "$BOX-rebuild" -- apt install curl -y
     INSTALL_SCRIPT="https://install.yunohost.org/$DIST"
