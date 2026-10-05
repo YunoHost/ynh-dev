@@ -249,6 +249,18 @@ function set_incus_remote()
     fi
 }
 
+function dev_image() {
+    local dist=$1
+    local ynh_branch=$2
+    local kind=$3
+    local arch=$(dpkg --print-architecture)
+    local image="yunohost/$dist-$ynh_branch/$kind"
+    if [[ "$arch" != "amd64" ]]; then
+        image="$image/$arch"
+    fi
+    echo "$image"
+}
+
 function start_ynhdev()
 {
     check_incus_setup
@@ -261,8 +273,7 @@ function start_ynhdev()
     then
         if ! incus image info "$BOX-base" &>/dev/null
         then
-            LXC_BASE="yunohost/$DIST-$YNH_BRANCH/dev"
-            incus launch "yunohost:$LXC_BASE" "$BOX" -c security.nesting=true -c security.privileged=true \
+            incus launch "yunohost:$(dev_image "$DIST" "$YNH_BRANCH" "dev")" "$BOX" -c security.nesting=true -c security.privileged=true \
             || critical "Failed to launch the container ?"
         else
             incus launch "$BOX-base" "$BOX" -c security.nesting=true -c security.privileged=true
