@@ -8,10 +8,10 @@ function show_usage() {
   ${BLUE}On the host, to manage boxes${NORMAL}
   ${BLUE}============================${NORMAL}
 
-  start [DIST] [NAME] [YNH_BRANCH]   (Create and) starts a box (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
-  attach [DIST] [NAME] [YNH_BRANCH] Attach an already started box (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
-  destroy [DIST] [NAME] [YNH_BRANCH] Destroy the ynh-dev box (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
-  rebuild [DIST] [NAME] [YNH_BRANCH] Rebuild a fresh, up-to-date box (DIST=bookworm, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  start [DIST] [NAME] [YNH_BRANCH]   (Create and) starts a box (DIST=trixie, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  attach [DIST] [NAME] [YNH_BRANCH] Attach an already started box (DIST=trixie, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  destroy [DIST] [NAME] [YNH_BRANCH] Destroy the ynh-dev box (DIST=trixie, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  rebuild [DIST] [NAME] [YNH_BRANCH] Rebuild a fresh, up-to-date box (DIST=trixie, NAME=ynh-dev and YNH_BRANCH=unstable by default)
 
   ${BLUE}Inside the dev instance${NORMAL}
   ${BLUE}=======================${NORMAL}
@@ -226,7 +226,7 @@ function start_ynhdev()
 function attach_ynhdev()
 {
     check_incus_setup
-    local DIST=${1:-bookworm}
+    local DIST=${1:-trixie}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
     incus start "$BOX" 2>/dev/null || true
@@ -236,7 +236,7 @@ function attach_ynhdev()
 function destroy_ynhdev()
 {
     check_incus_setup
-    local DIST=${1:-bookworm}
+    local DIST=${1:-trixie}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
     incus stop "$BOX"
@@ -247,7 +247,7 @@ function rebuild_ynhdev()
 {
     check_incus_setup
 
-    local DIST=${1:-bookworm}
+    local DIST=${1:-trixie}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
