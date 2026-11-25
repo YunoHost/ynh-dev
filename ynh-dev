@@ -2,16 +2,24 @@
 
 # shellcheck disable=SC2155,SC2034,SC2164
 
+DEFAULT_DIST=trixie
+
 function show_usage() {
     cat <<EOF
 
   ${BLUE}On the host, to manage boxes${NORMAL}
   ${BLUE}============================${NORMAL}
 
-  start [DIST] [NAME] [YNH_BRANCH]   (Create and) starts a box (DIST=trixie, NAME=ynh-dev and YNH_BRANCH=unstable by default)
-  attach [DIST] [NAME] [YNH_BRANCH] Attach an already started box (DIST=trixie, NAME=ynh-dev and YNH_BRANCH=unstable by default)
-  destroy [DIST] [NAME] [YNH_BRANCH] Destroy the ynh-dev box (DIST=trixie, NAME=ynh-dev and YNH_BRANCH=unstable by default)
-  rebuild [DIST] [NAME] [YNH_BRANCH] Rebuild a fresh, up-to-date box (DIST=trixie, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+
+  start [DIST] [NAME] [YNH_BRANCH]   (Create and) starts a box (DIST=$DEFAULT_DIST, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  attach [DIST] [NAME] [YNH_BRANCH]  Attach an already started box (DIST=$DEFAULT_DIST, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  destroy [DIST] [NAME] [YNH_BRANCH] Destroy the ynh-dev box (DIST=$DEFAULT_DIST, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  rebuild [DIST] [NAME] [YNH_BRANCH] Rebuild a fresh, up-to-date box (DIST=$DEFAULT_DIST, NAME=ynh-dev and YNH_BRANCH=unstable by default)
+  snapshot [-d|--dist=DEBIAN_DISTRO] [-n|--name=NAME] [-b|--branch=(stable|testing|unstable)] [-h|--help]
+      create                         Create a new snapshot of the container
+      list                           List snapshots
+      delete                         Delete a snapshot
+      restore                        Restore a snapshot
 
   ${BLUE}Inside the dev instance${NORMAL}
   ${BLUE}=======================${NORMAL}
@@ -25,6 +33,8 @@ function show_usage() {
                   Tests for single modules and functions can ran with
                   e.g. ./ynh-dev test yunohost/appurl:urlavailable
   api             Start yunohost-api and yunohost-portal-api in debug mode in the current terminal, and auto-restart them when code changes
+  debug YNH_COMMAND  Allow to attach a graphical debugger like vscodium or vimspector on 5678 port
+                  e.g. ./ynh-dev debug yunohost user list
   catalog
       build       Rebuild the custom catalog
       add         Add the custom catalog in Yunohost catalog list
@@ -56,8 +66,10 @@ function main()
         api|--api)                 api            "${ARGUMENTS[@]}" ;;
         lint|--lint)               run_linters    "${ARGUMENTS[@]}" ;;
         test|--test)               run_tests      "${ARGUMENTS[@]}" ;;
+        debug|--debug)             run_debug      "${ARGUMENTS[@]}" ;;
 
         catalog|--catalog)         catalog        "${ARGUMENTS[@]}" ;;
+        snapshot|--snapshot)       snapshot       "${ARGUMENTS[@]}" ;;
 
         rebuild-api-doc|--rebuild-api-doc)   rebuild_api_doc   "${ARGUMENTS[@]}" ;;
 
@@ -83,33 +95,33 @@ readonly WHITE=$(printf '\033[39m')
 
 function success()
 {
-  local msg=${1}
-  echo "[${BOLD}${GREEN} OK ${NORMAL}] ${msg}"
+    local msg=${1}
+    echo "[${BOLD}${GREEN} OK ${NORMAL}] ${msg}"
 }
 
 function info()
 {
-  local msg=${1}
-  echo "[${BOLD}${BLUE}INFO${NORMAL}] ${msg}"
+    local msg=${1}
+    echo "[${BOLD}${BLUE}INFO${NORMAL}] ${msg}"
 }
 
 function warn()
 {
-  local msg=${1}
-  echo "[${BOLD}${ORANGE}WARN${NORMAL}] ${msg}" 2>&1
+    local msg=${1}
+    echo "[${BOLD}${ORANGE}WARN${NORMAL}] ${msg}" 2>&1
 }
 
 function error()
 {
-  local msg=${1}
-  echo "[${BOLD}${RED}FAIL${NORMAL}] ${msg}"  2>&1
+    local msg=${1}
+    echo "[${BOLD}${RED}FAIL${NORMAL}] ${msg}"  2>&1
 }
 
 function critical()
 {
-  local msg=${1}
-  echo "[${BOLD}${RED}CRIT${NORMAL}] ${msg}"  2>&1
-  exit 1
+    local msg=${1}
+    echo "[${BOLD}${RED}CRIT${NORMAL}] ${msg}"  2>&1
+    exit 1
 }
 
 function assert_inside_vm() {
@@ -157,6 +169,50 @@ function prepare_cache_and_deps() {
     popd
 }
 
+function container_info_opts() {
+    local params="$(getopt -o hn:d:b: -l help,name:,dist:,branch: --name "container info options" -- "$@")"
+
+    # NB: the `set` command redefines the positional arguments (aka $@).
+    eval set -- "$params"
+
+    HELP=false
+    while true
+    do
+        case "$1" in
+            -h|--help)
+                HELP=true
+                shift
+                break
+                ;;
+            -n|--name)
+                NAME=$2
+                shift 2
+                ;;
+            -d|--dist)
+                DIST=$2
+                shift 2
+                ;;
+            -b|--branch)
+                YNH_BRANCH=$2
+                shift 2
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -*)
+                echo "Not implemented: $1" >&2
+                exit 1
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+    BOX="${NAME:-ynh-dev}-${DIST:-$DEFAULT_DIST}-${YNH_BRANCH:-unstable}"
+    REST="$*"
+}
+
 ##################################################################
 #               Actions                                          #
 ##################################################################
@@ -194,6 +250,18 @@ function set_incus_remote()
     fi
 }
 
+function dev_image() {
+    local dist=$1
+    local ynh_branch=$2
+    local kind=$3
+    local arch=$(dpkg --print-architecture)
+    local image="yunohost/$dist-$ynh_branch/$kind"
+    if [[ "$arch" != "amd64" ]]; then
+        image="$image/$arch"
+    fi
+    echo "$image"
+}
+
 function start_ynhdev()
 {
     check_incus_setup
@@ -206,8 +274,7 @@ function start_ynhdev()
     then
         if ! incus image info "$BOX-base" &>/dev/null
         then
-            LXC_BASE="yunohost/$DIST-$YNH_BRANCH/dev"
-            incus launch "yunohost:$LXC_BASE" "$BOX" -c security.nesting=true -c security.privileged=true \
+            incus launch "yunohost:$(dev_image "$DIST" "$YNH_BRANCH" "dev")" "$BOX" -c security.nesting=true -c security.privileged=true \
             || critical "Failed to launch the container ?"
         else
             incus launch "$BOX-base" "$BOX" -c security.nesting=true -c security.privileged=true
@@ -585,6 +652,16 @@ function run_tests()
     done
 }
 
+function run_debug() {
+    if ! dpkg -l | grep -q python3-debugpy
+    then
+        apt install -y python3-debugpy
+    fi
+    yunohost firewall allow Both 5678 -4 > /dev/null
+    # shellcheck disable=SC2145 # We use a weird bash behaviour, don't warn about it!
+    python3 -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 --wait-for-client "/usr/bin/$@"
+}
+
 function catalog()
 {
     assert_inside_vm
@@ -640,6 +717,109 @@ function rebuild_api_doc()
     info "Rebuild swagger json/js according to actionsmap"
     python3 generate_api_doc.py
     success "You should now open yunohost/doc/api.html using your favorite browser"
+}
+
+function snapshot()
+{
+    check_incus_setup
+    local HELP
+    local DIST
+    local NAME
+    local YNH_BRANCH
+    local BOX
+    local REST
+    case "${1:-}" in
+        -*)
+            container_info_opts "$@"
+            eval set -- "$REST"
+            ACTION="${1:-}"
+            shift 1
+            ;;
+        *)
+            ACTION="${1:-}"
+            shift 1
+            container_info_opts "$@"
+            eval set -- "$REST"
+            ;;
+    esac
+
+    if [ -z "$ACTION" ] || [ "$ACTION" == "--" ]; then
+        if "$HELP" ; then
+            info "List of possible commands with snapshot:"
+            info ""
+            info "$ $0 snapshot list"
+            "$0" snapshot list --help
+            info ""
+            info "$ $0 snapshot create"
+            "$0" snapshot create --help
+            info ""
+            info "$ $0 snapshot delete"
+            "$0" snapshot delete --help
+            info ""
+            info "$ $0 snapshot restore"
+            "$0" snapshot restore --help
+            exit 0
+        fi
+        critical "one of these action required: create, list, delete or restore"
+    fi
+    local SNAPSHOT
+    get_snapshot_name() {
+        [ "$#" -eq 1 ] || critical "expected exactly one positional argument"
+        echo "$1"
+    }
+
+    case "${ACTION}" in
+        list)
+            if "$HELP"; then
+                info "List the snapshots available for restoration"
+                info "Usage: $0 snapshot list [-d|--dist=DIST] [-n|--name=NAME] [-b|--branch=BRANCH]"
+                exit 0
+            fi
+
+            info "The following snapshots are available for $NAME (incus container name: $BOX)"
+            incus snapshot list "$BOX"
+            ;;
+        create)
+            if "$HELP"; then
+                info "Create a new snapshot"
+                info "Usage: $0 snapshot create [-d|--dist=DIST] [-n|--name=NAME] [-b|--branch=BRANCH] SNAPSHOT_NAME"
+                exit 0
+            fi
+
+            SNAPSHOT=$(get_snapshot_name "$@")
+            if incus snapshot create "$BOX" "$SNAPSHOT"; then
+                success "✨ Snapshot \"$SNAPSHOT\" created for $NAME"
+            fi
+            ;;
+        delete)
+            if "$HELP"; then
+                info "Delete a snapshot"
+                info "Usage: $0 snapshot delete [-d|--dist=DIST] [-n|--name=NAME] [-b|--branch=BRANCH] SNAPSHOT_NAME"
+                exit 0
+            fi
+
+            SNAPSHOT=$(get_snapshot_name "$@")
+            info "Deleting snapshot $SNAPSHOT"
+            if incus snapshot delete "$BOX" "$SNAPSHOT"; then
+                success "💥 Snapshot \"$SNAPSHOT\" deleted for $NAME"
+            fi
+            ;;
+        restore)
+            if "$HELP"; then
+                info "Restore a snapshot"
+                info "Usage: $0 snapshot restore [-d|--dist=DIST] [-n|--name=NAME] [-b|--branch=BRANCH] SNAPSHOT_NAME"
+                exit 0
+            fi
+
+            SNAPSHOT=$(get_snapshot_name "$@")
+            if incus snapshot restore "$BOX" "$SNAPSHOT"; then
+                success "♻️ Snapshot \"$SNAPSHOT\" restored for $NAME"
+            fi
+            ;;
+        *)
+            critical "Unknown snapshot action '${ACTION}'."
+            ;;
+    esac
 }
 
 main "$@"

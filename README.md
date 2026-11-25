@@ -15,7 +15,7 @@ Please report issues on the following repository: <https://github.com/yunohost/i
     - [3. Development and container testing](#3-development-and-container-testing)
     - [4. Testing the web interface](#4-testing-the-web-interface)
     - [5. Running the automated tests](#5-running-the-automated-tests)
-    - [Advanced: using snapshots](#advanced-using-snapshots)
+    - [6. Using snapshots](#6-using-snapshots)
     - [Troubleshooting](#troubleshooting)
   - [Remote Development Environment](#remote-development-environment)
     - [1. Setup your VPS and install YunoHost](#1-setup-your-vps-and-install-yunohost)
@@ -111,7 +111,7 @@ On Debian 12 or LMDE 6:
 apt install incus-base
 ```
 
-If you have an older distribution, you need to add the Zabbly repository to your package manager.  
+If you have an older distribution, you need to add the Zabbly repository to your package manager.
 To do so please follow the installation guide that you can find on <https://github.com/zabbly/incus>.
 
 You then need to add yourself in the incus-admin group, to run incus without sudo every time:
@@ -282,9 +282,19 @@ Or, to run a specific test function, like `test_urlaavailable()` within the `tes
 
 Note that `./ynh-dev test` automatically installs the necessary dependencies (`pip`, `pytest`, `mock`) for test execution.
 
-### Advanced: using snapshots
+### 6. Using snapshots
 
-You can check `incus snapshot --help` to learn how to manage incus snapshots.
+Snapshots allows you to save the state of your container that you may restore later (to undo changes you may have done in the meantime).
+
+It is very convenient for example when you develop features around the Yunohost core.
+
+Snapshot are a feature of `incus`, and `ynh-dev` offers a wrapper to manage them easily.
+
+Check out all the commands by running this command:
+
+```bash
+./ynh-dev snapshot --help
+```
 
 ### Troubleshooting
 
@@ -336,6 +346,83 @@ For instance, after running:
 Any `yunohost` command will run from the code of the git clone.
 
 The `use-git` action can be used for any package among `yunohost`, `yunohost-admin`, `moulinette` and `ssowat` with similar consequences.
+
+### 4. Run with a graphical debugger
+
+You can pilote your code with a graphical debugger like the one inside vscodium or with vimspector.
+
+You have to run your `yunohost` command prefixed by `./ynh-dev debug `, for example:
+```
+./ynh-dev debug yunohost user list
+```
+The command will be suspended until a graphical debugger attach this process through the port 5678.
+
+#### With vim
+1. Setup vimspector in your .vimrc, for example with Vundle:
+```
+Bundle 'puremourning/vimspector'
+
+let g:vimspector_enable_mappings = 'HUMAN'
+"packadd! vimspector
+let g:vimspector_install_gadgets = [ 'debugpy']
+```
+2. Run vim, and install vimspector and debugpy gadget
+```
+:PluginInstall
+:VimspectorInstall
+```
+3. Configure a `.vimspector.json` at the root of your project:
+```
+{
+  "configurations": {
+    "run": {
+      "adapter": "multi-session",
+      "filetypes": [ "python" ], // optional
+      "configuration": {
+        "request": "attach",
+        "pathMappings": [
+          {"localRoot": "~/PATH_TO_YOUR_CODE/ynh-dev/yunohost/src/", "remoteRoot": "/usr/lib/python3/dist-packages/yunohost/"}
+        ],
+        "justMyCode": false
+      }
+    }
+  }
+}
+```
+4. Reopen vim, set some breakpoints with F9 and start with F5
+
+#### With vscodium
+Note: the workspace needs to be a trusted workspace, if you don't trust a big repo like yunohost, you can still copy src python directory into a trusted workspace...
+
+1. Install python extension in vscodium
+2. Setup a launch.json at the root of your workspace
+```
+{
+    // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
+    // Pointez pour afficher la description des attributs existants.
+    // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Remote Attach",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "IP_OF_YOUR_INCUS",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/src/",
+                    "remoteRoot": "/usr/lib/python3/dist-packages/yunohost/"
+                }
+            ],
+            "justMyCode": false
+        }
+    ]
+}
+```
+3. Set some breakpoint and click on `Execute and debug` or F5
 
 ## Further Resources
 
