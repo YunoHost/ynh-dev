@@ -229,6 +229,12 @@ If you want to access to the interface using the domain name, you shall tweak yo
 111.222.333.444 yolo.test
 ```
 
+You need to open the 8080 port on the container firewall with:
+
+```bash
+yunohost firewall open 8080 'Test port for yunohost-admin'
+```
+
 If the web interface show an error about unresponding Yunohost API, you can start it with:
 
 ```bash
@@ -302,9 +308,33 @@ It could be due to bridge conflict (for example if you have incus installed too)
 
 This [ticket](https://github.com/YunoHost/issues/issues/1664) could help.
 
-If you have docker and incus, and your dns resolution inside incus container does not work at all, you can try:
+If you have **Docker** and incus, there will probably be connectivity issues inside the container, for example your dns
+resolution does not work at all. Based
+[on this FAQ](https://linuxcontainers.org/incus/docs/main/howto/network_bridge_firewalld/#network-incus-docker), you can
+try:
+
+```bash
+sudo iptables -I DOCKER-USER -i incusbr0 -j ACCEPT
+sudo iptables -I DOCKER-USER -o incusbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 ```
-sudo iptables -I DOCKER-USER -i incusbr0 -o eno1 -j ACCEPT
+
+If you have **Mullvad VPN** and incus, your containers may fail to start with some cgroup related error message. This
+happens because Mullvad mounts a cgroup v1 dir inside the v2 used by incus, which refuses to continue. Based
+[on this post](https://github.com/mullvad/mullvadvpn-app/issues/10375), I've fixed by installation with:
+
+```bash
+# Create new mount for mullvad
+sudo mkdir -p /opt/net-cls-v1
+sudo mount -t cgroup -o net_cls net_cls /opt/net-cls-v1
+sudo chown -R root:root /opt/net-cls-v1
+
+# Patch mullvad systemd service
+sudo tee /lib/systemd/system/mullvad-daemon.service.d/change-cls-mount.conf << 'EOF'
+[Service]
+Environment="TALPID_NET_CLS_MOUNT_DIR=/opt/net-cls-v1/"
+EOF
+
+# Then restart the machine. Just reloading systemd and restarting the services didn't work for me
 ```
 
 ## Remote Development Environment
