@@ -399,10 +399,17 @@ function use_git()
                 ;;
             yunohost-admin)
 
-                local DEV_PATH="/ynh-dev/yunohost-admin/app"
+                local DISTRO="$(lsb_release -s -c)"
+
+                if [[ "$DISTRO" == "bookworm" ]]; then
+                    local DEV_PATH="/ynh-dev/yunohost-admin/app"
+                else
+                    # Changed by https://github.com/YunoHost/yunohost-admin/pull/695
+                    local DEV_PATH="/ynh-dev/yunohost-admin"
+                fi
                 local CACHE_PATH="/var/cache/ynh-dev/yunohost-admin"
 
-                create_sym_link "/ynh-dev/yunohost-admin/app/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
+                create_sym_link "$DEV_PATH/.env" "$CACHE_PATH/.env"
                 prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH"
 
                 cd "$CACHE_PATH"
@@ -427,8 +434,6 @@ with open(setting_file) as f:
             yaml.safe_dump(settings, f, default_flow_style=False)
 EOF
                 fi
-
-                local DISTRO="$(lsb_release -s -c)"
 
                 cd "$DEV_PATH"
                 info "Now running dev server"
