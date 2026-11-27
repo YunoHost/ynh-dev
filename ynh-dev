@@ -2,13 +2,14 @@
 
 # shellcheck disable=SC2155,SC2034,SC2164
 
-DEFAULT_DIST=bookworm
+DEFAULT_DIST=trixie
 
 function show_usage() {
     cat <<EOF
 
   ${BLUE}On the host, to manage boxes${NORMAL}
   ${BLUE}============================${NORMAL}
+
 
   start [DIST] [NAME] [YNH_BRANCH]   (Create and) starts a box (DIST=$DEFAULT_DIST, NAME=ynh-dev and YNH_BRANCH=unstable by default)
   attach [DIST] [NAME] [YNH_BRANCH]  Attach an already started box (DIST=$DEFAULT_DIST, NAME=ynh-dev and YNH_BRANCH=unstable by default)
@@ -154,17 +155,17 @@ function prepare_cache_and_deps() {
     local DISTRO="$(lsb_release -s -c)"
 
     # install yarn if not already
-    if [[ $(dpkg-query -W -f='${Status}' yarn 2>/dev/null | grep -c "ok installed") -eq 0 ]];
+    if [[ $(dpkg-query -W -f='${Status}' yarnpkg 2>/dev/null | grep -c "ok installed") -eq 0 ]];
     then
         info "Installing yarn…"
         apt update
-        apt install yarn
+        apt install yarnpkg
     fi
 
     pushd "$CACHE_PATH"
     # Install dependencies with yarn forced to lock file versions (equivalent to `npm ci`)
     info "Installing dependencies ... (this may take a while)"
-    yarn install --frozen-lockfile
+    yarnpkg install --immutable
     popd
 }
 
@@ -265,7 +266,7 @@ function start_ynhdev()
 {
     check_incus_setup
 
-    local DIST=${1:-bookworm}
+    local DIST=${1:-trixie}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
@@ -292,7 +293,7 @@ function start_ynhdev()
 function attach_ynhdev()
 {
     check_incus_setup
-    local DIST=${1:-bookworm}
+    local DIST=${1:-trixie}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
     incus start "$BOX" 2>/dev/null || true
@@ -302,7 +303,7 @@ function attach_ynhdev()
 function destroy_ynhdev()
 {
     check_incus_setup
-    local DIST=${1:-bookworm}
+    local DIST=${1:-trixie}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
     incus stop "$BOX"
@@ -313,7 +314,7 @@ function rebuild_ynhdev()
 {
     check_incus_setup
 
-    local DIST=${1:-bookworm}
+    local DIST=${1:-trixie}
     local YNH_BRANCH=${3:-unstable}
     local BOX=${2:-ynh-dev}-${DIST}-${YNH_BRANCH}
 
@@ -398,10 +399,17 @@ function use_git()
                 ;;
             yunohost-admin)
 
-                local DEV_PATH="/ynh-dev/yunohost-admin/app"
+                local DISTRO="$(lsb_release -s -c)"
+
+                if [[ "$DISTRO" == "bookworm" ]]; then
+                    local DEV_PATH="/ynh-dev/yunohost-admin/app"
+                else
+                    # Changed by https://github.com/YunoHost/yunohost-admin/pull/695
+                    local DEV_PATH="/ynh-dev/yunohost-admin"
+                fi
                 local CACHE_PATH="/var/cache/ynh-dev/yunohost-admin"
 
-                create_sym_link "/ynh-dev/yunohost-admin/app/.env" "/var/cache/ynh-dev/yunohost-admin/.env"
+                create_sym_link "$DEV_PATH/.env" "$CACHE_PATH/.env"
                 prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH"
 
                 cd "$CACHE_PATH"
@@ -427,11 +435,9 @@ with open(setting_file) as f:
 EOF
                 fi
 
-                local DISTRO="$(lsb_release -s -c)"
-
                 cd "$DEV_PATH"
                 info "Now running dev server"
-                yarn dev --host
+                yarnpkg dev --host
                 ;;
             yunohost-admin-build)
                 if [[ ! -e "/usr/share/yunohost/admin-bkp" ]]
@@ -443,7 +449,7 @@ EOF
                 local DISTRO="$(lsb_release -s -c)"
 
                 cd /ynh-dev/yunohost-admin/app
-                yarn build
+                yarnpkg build
 
                 create_sym_link "/ynh-dev/yunohost-admin/app/dist" "/usr/share/yunohost/admin"
 
@@ -477,7 +483,7 @@ $IP $MAIN_DOMAIN"
 
                 cd "$DEV_PATH"
                 info "Now running dev server"
-                yarn dev --host
+                yarnpkg dev --host
                 ;;
             yunohost-portal-build)
                 assert_yunohost_is_installed
@@ -495,7 +501,7 @@ $IP $MAIN_DOMAIN"
                 prepare_cache_and_deps "$DEV_PATH" "$CACHE_PATH"
 
                 cd "$DEV_PATH"
-                yarn generate
+                yarnpkg generate
 
                 create_sym_link "$DEV_PATH/.output/public" "$SOURCE_PATH"
 
